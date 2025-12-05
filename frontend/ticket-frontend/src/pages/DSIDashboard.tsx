@@ -1,4 +1,3 @@
-import React from "react";
 import { useEffect, useState } from "react";
 
 interface DSIDashboardProps {
@@ -60,11 +59,67 @@ function DSIDashboard({ token }: DSIDashboardProps) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showTicketsDropdown, setShowTicketsDropdown] = useState<boolean>(false);
   const [showReportsDropdown, setShowReportsDropdown] = useState<boolean>(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [selectedReport, setSelectedReport] = useState<string>("");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
   const [userInfo, setUserInfo] = useState<UserRead | null>(null);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [userRoleFilter, setUserRoleFilter] = useState<string>("all");
+  const [userStatusFilter, setUserStatusFilter] = useState<string>("all");
+  const [userAgencyFilter, setUserAgencyFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [usersPerPage] = useState<number>(10);
+  const [showAddUserModal, setShowAddUserModal] = useState<boolean>(false);
+  const [showEditUserModal, setShowEditUserModal] = useState<boolean>(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [newUser, setNewUser] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    agency: "",
+    role: "",
+    status: "actif",
+    password: "",
+    confirmPassword: "",
+    generateRandomPassword: true,
+    sendEmail: true
+  });
+  const [editUser, setEditUser] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    agency: "",
+    role: "",
+    status: "actif"
+  });
+
+  const handleEditUser = (user: any) => {
+    setEditingUser(user);
+    // Mapper les données de l'utilisateur au format du formulaire
+    let roleName = "";
+    if (user.role) {
+      if (typeof user.role === "object" && user.role.name) {
+        roleName = user.role.name;
+      } else if (typeof user.role === "string") {
+        roleName = user.role;
+      }
+    }
+    
+    const statusValue = user.is_active !== undefined ? (user.is_active ? "actif" : "inactif") : (user.status === "Actif" || user.status === "actif" ? "actif" : "inactif");
+    
+    setEditUser({
+      full_name: user.full_name || user.name || "",
+      email: user.email || "",
+      phone: user.phone || "",
+      agency: user.agency || "",
+      role: roleName,
+      status: statusValue
+    });
+    setShowEditUserModal(true);
+  };
 
   async function loadNotifications() {
     if (!token || token.trim() === "") {
@@ -176,6 +231,30 @@ function DSIDashboard({ token }: DSIDashboardProps) {
             email: meData.email,
             agency: meData.agency
           });
+          if (meData.role && meData.role.name) {
+            setUserRole(meData.role.name);
+            
+            // Charger tous les utilisateurs (si Admin)
+            if (meData.role.name === "Admin") {
+              try {
+                const usersRes = await fetch("http://localhost:8000/users/", {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                });
+                if (usersRes.ok) {
+                  const usersData = await usersRes.json();
+                  setAllUsers(usersData || []);
+                } else {
+                  console.error("Erreur chargement utilisateurs:", usersRes.status);
+                  setAllUsers([]);
+                }
+              } catch (err) {
+                console.error("Erreur chargement utilisateurs:", err);
+                setAllUsers([]);
+              }
+            }
+          }
         }
 
         // Charger les métriques (si l'endpoint existe)
@@ -194,23 +273,23 @@ function DSIDashboard({ token }: DSIDashboardProps) {
           console.log("Endpoint métriques non disponible");
         }
 
-        // Charger les notifications
-        await loadNotifications();
-        await loadUnreadCount();
-      } catch (err) {
-        console.error("Erreur chargement données:", err);
-      }
-    }
-    void loadData();
+         // Charger les notifications
+         await loadNotifications();
+         await loadUnreadCount();
+       } catch (err) {
+         console.error("Erreur chargement données:", err);
+       }
+     }
+     void loadData();
 
-    // Recharger les notifications toutes les 30 secondes
-    const interval = setInterval(() => {
-      void loadNotifications();
-      void loadUnreadCount();
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, [token]);
+     // Recharger les notifications toutes les 30 secondes
+     const interval = setInterval(() => {
+       void loadNotifications();
+       void loadUnreadCount();
+     }, 30000);
+     
+     return () => clearInterval(interval);
+   }, [token]);
 
   async function handleAssign(ticketId: string) {
     if (!selectedTechnician) {
@@ -610,6 +689,31 @@ function DSIDashboard({ token }: DSIDashboardProps) {
             </div>
           )}
         </div>
+        {userRole === "Admin" && (
+          <div 
+            onClick={() => setActiveSection("users")}
+            style={{ 
+              display: "flex", 
+              alignItems: "center", 
+              gap: "12px", 
+              padding: "12px 16px", 
+              cursor: "pointer",
+              color: "white",
+              borderRadius: "4px",
+              background: activeSection === "users" ? "rgba(255,255,255,0.1)" : "transparent"
+            }}
+          >
+            <div style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+            <div style={{ flex: 1 }}>Utilisateurs</div>
+          </div>
+        )}
         <div style={{ position: "relative" }}>
           <div 
             onClick={() => setShowReportsDropdown(!showReportsDropdown)}
@@ -729,6 +833,29 @@ function DSIDashboard({ token }: DSIDashboardProps) {
             </div>
           )}
         </div>
+        {userRole === "Admin" && (
+          <div 
+            onClick={() => setActiveSection("settings")}
+            style={{ 
+              display: "flex", 
+              alignItems: "center", 
+              gap: "12px", 
+              padding: "12px 16px", 
+              cursor: "pointer",
+              color: "white",
+              borderRadius: "4px",
+              background: activeSection === "settings" ? "rgba(255,255,255,0.1)" : "transparent"
+            }}
+          >
+            <div style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"></path>
+              </svg>
+            </div>
+            <div style={{ flex: 1 }}>Paramètres</div>
+          </div>
+        )}
       </div>
 
       {/* Main Content */}
@@ -1675,13 +1802,816 @@ function DSIDashboard({ token }: DSIDashboardProps) {
                   </div>
                 </div>
               )}
-            </>
-          )}
-        </div>
-      </div>
+             </>
+           )}
 
-      {/* Modal de notifications */}
-      {showNotifications && (
+           {activeSection === "users" && (() => {
+             // Filtrer les utilisateurs
+             let filteredUsers = allUsers;
+             
+             if (userRoleFilter !== "all") {
+               filteredUsers = filteredUsers.filter((u: any) => u.role?.name === userRoleFilter);
+             }
+             
+             if (userStatusFilter !== "all") {
+               filteredUsers = filteredUsers.filter((u: any) => {
+                 const isActive = u.is_active !== false;
+                 return userStatusFilter === "actif" ? isActive : !isActive;
+               });
+             }
+             
+             if (userAgencyFilter !== "all") {
+               filteredUsers = filteredUsers.filter((u: any) => u.agency === userAgencyFilter);
+             }
+             
+             if (searchQuery) {
+               filteredUsers = filteredUsers.filter((u: any) => 
+                 u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                 u.email?.toLowerCase().includes(searchQuery.toLowerCase())
+               );
+             }
+             
+             // Pagination
+             const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+             const startIndex = (currentPage - 1) * usersPerPage;
+             const endIndex = startIndex + usersPerPage;
+             const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+             
+             // Récupérer les rôles et agences uniques pour les filtres
+             const uniqueRoles = Array.from(new Set(allUsers.map((u: any) => u.role?.name).filter(Boolean)));
+             const uniqueAgencies = Array.from(new Set(allUsers.map((u: any) => u.agency).filter(Boolean)));
+             
+             return (
+               <>
+                 <h2 style={{ marginBottom: "24px", fontSize: "28px", fontWeight: "600", color: "#333" }}>Gestion des utilisateurs</h2>
+                 
+                 {/* Barre d'actions */}
+                 <div style={{ display: "flex", gap: "12px", marginBottom: "20px" }}>
+                   <button 
+                     onClick={() => setShowAddUserModal(true)}
+                     style={{ padding: "8px 16px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "14px" }}
+                   >
+                     [+ Ajouter un utilisateur]
+                   </button>
+                   <button style={{ padding: "8px 16px", backgroundColor: "#6c757d", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "14px" }}>
+                     [Importer CSV]
+                   </button>
+                   <button style={{ padding: "8px 16px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", fontSize: "14px" }}>
+                     [Exporter]
+                   </button>
+                 </div>
+                 
+                 {/* Filtres */}
+                 <div style={{ marginBottom: "16px" }}>
+                   <div style={{ display: "flex", gap: "16px", marginBottom: "12px", alignItems: "center", flexWrap: "wrap" }}>
+                     <span style={{ color: "#28a745", fontWeight: "500" }}>Filtrer :</span>
+                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                       <span style={{ color: "#28a745", fontWeight: "500" }}>Rôle :</span>
+                       <div style={{ position: "relative", display: "inline-block" }}>
+                         <select
+                           value={userRoleFilter}
+                           onChange={(e) => {
+                             setUserRoleFilter(e.target.value);
+                             setCurrentPage(1);
+                           }}
+                           style={{ 
+                             padding: "6px 24px 6px 12px", 
+                             borderRadius: "4px", 
+                             border: "1px solid #ddd", 
+                             backgroundColor: "white", 
+                             color: "#333", 
+                             fontSize: "14px", 
+                             cursor: "pointer",
+                             appearance: "none",
+                             WebkitAppearance: "none",
+                             MozAppearance: "none"
+                           }}
+                         >
+                           <option value="all">Tous</option>
+                           {uniqueRoles.map((role) => (
+                             <option key={role} value={role}>{role}</option>
+                           ))}
+                         </select>
+                         <span style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", color: "#666", pointerEvents: "none" }}>▼</span>
+                       </div>
+                     </div>
+                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                       <span style={{ color: "#28a745", fontWeight: "500" }}>Statut :</span>
+                       <div style={{ position: "relative", display: "inline-block" }}>
+                         <select
+                           value={userStatusFilter}
+                           onChange={(e) => {
+                             setUserStatusFilter(e.target.value);
+                             setCurrentPage(1);
+                           }}
+                           style={{ 
+                             padding: "6px 24px 6px 12px", 
+                             borderRadius: "4px", 
+                             border: "1px solid #ddd", 
+                             backgroundColor: "white", 
+                             color: "#333", 
+                             fontSize: "14px", 
+                             cursor: "pointer",
+                             appearance: "none",
+                             WebkitAppearance: "none",
+                             MozAppearance: "none"
+                           }}
+                         >
+                           <option value="all">Tous</option>
+                           <option value="actif">Actif</option>
+                           <option value="inactif">Inactif</option>
+                         </select>
+                         <span style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", color: "#666", pointerEvents: "none" }}>▼</span>
+                       </div>
+                     </div>
+                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                       <span style={{ color: "#28a745", fontWeight: "500" }}>Département :</span>
+                       <div style={{ position: "relative", display: "inline-block" }}>
+                         <select
+                           value={userAgencyFilter}
+                           onChange={(e) => {
+                             setUserAgencyFilter(e.target.value);
+                             setCurrentPage(1);
+                           }}
+                           style={{ 
+                             padding: "6px 24px 6px 12px", 
+                             borderRadius: "4px", 
+                             border: "1px solid #ddd", 
+                             backgroundColor: "white", 
+                             color: "#333", 
+                             fontSize: "14px", 
+                             cursor: "pointer",
+                             appearance: "none",
+                             WebkitAppearance: "none",
+                             MozAppearance: "none"
+                           }}
+                         >
+                           <option value="all">Tous</option>
+                           {uniqueAgencies.map((agency) => (
+                             <option key={agency} value={agency}>{agency}</option>
+                           ))}
+                         </select>
+                         <span style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", color: "#666", pointerEvents: "none" }}>▼</span>
+                       </div>
+                     </div>
+                   </div>
+                 </div>
+                 
+                 {/* Recherche */}
+                 <div style={{ marginBottom: "20px", display: "flex", alignItems: "center", gap: "8px" }}>
+                   <span style={{ color: "#333", fontWeight: "500" }}>Rechercher :</span>
+                   <input
+                     type="text"
+                     value={searchQuery}
+                     onChange={(e) => {
+                       setSearchQuery(e.target.value);
+                       setCurrentPage(1);
+                     }}
+                     placeholder="🔍 Rechercher un utilisateur..."
+                     style={{ flex: 1, maxWidth: "400px", padding: "8px 12px", borderRadius: "4px", border: "1px solid #ddd", fontSize: "14px" }}
+                   />
+                 </div>
+                 
+                 {/* Tableau des utilisateurs */}
+                 <table style={{ width: "100%", borderCollapse: "collapse", background: "white", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", border: "1px solid #e0e0e0" }}>
+                   <thead>
+                     <tr style={{ background: "#f8f9fa" }}>
+                       <th style={{ padding: "12px 16px", textAlign: "left", borderBottom: "1px solid #dee2e6", fontWeight: "600" }}>ID</th>
+                       <th style={{ padding: "12px 16px", textAlign: "left", borderBottom: "1px solid #dee2e6", fontWeight: "600" }}>Nom</th>
+                       <th style={{ padding: "12px 16px", textAlign: "left", borderBottom: "1px solid #dee2e6", fontWeight: "600" }}>Email</th>
+                       <th style={{ padding: "12px 16px", textAlign: "left", borderBottom: "1px solid #dee2e6", fontWeight: "600" }}>Rôle</th>
+                       <th style={{ padding: "12px 16px", textAlign: "left", borderBottom: "1px solid #dee2e6", fontWeight: "600" }}>Statut</th>
+                       <th style={{ padding: "12px 16px", textAlign: "left", borderBottom: "1px solid #dee2e6", fontWeight: "600" }}>Actions</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {paginatedUsers.length === 0 ? (
+                       <tr>
+                         <td colSpan={6} style={{ textAlign: "center", padding: "40px", color: "#999" }}>
+                           Aucun utilisateur trouvé
+                         </td>
+                       </tr>
+                     ) : (
+                       paginatedUsers.map((user: any, index: number) => {
+                         const isActive = user.is_active !== false;
+                         const displayId = startIndex + index + 1;
+                         return (
+                           <tr key={user.id} style={{ borderBottom: "1px solid #eee" }}>
+                             <td style={{ padding: "12px 16px" }}>{displayId}</td>
+                             <td style={{ padding: "12px 16px" }}>{user.full_name || "N/A"}</td>
+                             <td style={{ padding: "12px 16px" }}>{user.email || "N/A"}</td>
+                             <td style={{ padding: "12px 16px" }}>{user.role?.name || "N/A"}</td>
+                             <td style={{ padding: "12px 16px" }}>
+                               {isActive ? (
+                                 <span style={{ color: "#28a745", fontWeight: "500" }}>Actif ✓</span>
+                               ) : (
+                                 <span style={{ color: "#dc3545", fontWeight: "500" }}>Inactif ❌</span>
+                               )}
+                             </td>
+                             <td style={{ padding: "12px 16px" }}>
+                               <div style={{ display: "flex", gap: "8px" }}>
+                                 <button
+                                   onClick={() => handleEditUser(user)}
+                                   style={{ 
+                                     padding: "8px 16px", 
+                                     backgroundColor: "#17a2b8", 
+                                     border: "none", 
+                                     borderRadius: "4px", 
+                                     cursor: "pointer", 
+                                     fontSize: "14px",
+                                     color: "white",
+                                     fontWeight: "500"
+                                   }}
+                                 >
+                                   Modifier
+                                 </button>
+                                 <button
+                                   onClick={() => {
+                                     if (confirm(`Êtes-vous sûr de vouloir réinitialiser le mot de passe de ${user.full_name} ?`)) {
+                                       // TODO: Implémenter la réinitialisation du mot de passe
+                                       alert(`Réinitialisation du mot de passe pour ${user.full_name}`);
+                                     }
+                                   }}
+                                   style={{ 
+                                     padding: "8px 16px", 
+                                     backgroundColor: "#ff9800", 
+                                     border: "none", 
+                                     borderRadius: "4px", 
+                                     cursor: "pointer", 
+                                     fontSize: "14px",
+                                     color: "white",
+                                     fontWeight: "500"
+                                   }}
+                                 >
+                                   Réinitialiser
+                                 </button>
+                                 <button
+                                   onClick={() => {
+                                     if (confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur ${user.full_name} ? Cette action est irréversible.`)) {
+                                       // TODO: Implémenter la suppression
+                                       alert(`Suppression de l'utilisateur ${user.full_name}`);
+                                     }
+                                   }}
+                                   style={{ 
+                                     padding: "8px 16px", 
+                                     backgroundColor: "#dc3545", 
+                                     border: "none", 
+                                     borderRadius: "4px", 
+                                     cursor: "pointer", 
+                                     fontSize: "14px",
+                                     color: "white",
+                                     fontWeight: "500"
+                                   }}
+                                 >
+                                   Supprimer
+                                 </button>
+                               </div>
+                             </td>
+                           </tr>
+                         );
+                       })
+                     )}
+                   </tbody>
+                 </table>
+                 
+                 {/* Pagination */}
+                 <div style={{ marginTop: "20px", display: "flex", alignItems: "center", gap: "12px", justifyContent: "center" }}>
+                   <span style={{ color: "#333", fontWeight: "500" }}>Pagination :</span>
+                   <button
+                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                     disabled={currentPage === 1}
+                     style={{ padding: "6px 12px", backgroundColor: currentPage === 1 ? "#e0e0e0" : "#007bff", color: currentPage === 1 ? "#999" : "white", border: "none", borderRadius: "4px", cursor: currentPage === 1 ? "not-allowed" : "pointer", fontSize: "14px" }}
+                   >
+                     [&lt; Précédent]
+                   </button>
+                   <span style={{ color: "#333", fontSize: "14px" }}>Page {currentPage} sur {totalPages || 1}</span>
+                   <button
+                     onClick={() => setCurrentPage(prev => Math.min(totalPages || 1, prev + 1))}
+                     disabled={currentPage >= (totalPages || 1)}
+                     style={{ padding: "6px 12px", backgroundColor: currentPage >= (totalPages || 1) ? "#e0e0e0" : "#007bff", color: currentPage >= (totalPages || 1) ? "#999" : "white", border: "none", borderRadius: "4px", cursor: currentPage >= (totalPages || 1) ? "not-allowed" : "pointer", fontSize: "14px" }}
+                   >
+                     [Suivant &gt;]
+                   </button>
+                 </div>
+               </>
+             );
+           })()}
+         </div>
+       </div>
+
+       {/* Modal Ajouter un utilisateur */}
+       {showAddUserModal && (
+         <div 
+           onClick={() => setShowAddUserModal(false)}
+           style={{
+             position: "fixed",
+             top: 0,
+             left: 0,
+             right: 0,
+             bottom: 0,
+             background: "rgba(0,0,0,0.5)",
+             display: "flex",
+             alignItems: "center",
+             justifyContent: "center",
+             zIndex: 1000,
+             padding: "20px"
+           }}
+         >
+           <div 
+             onClick={(e) => e.stopPropagation()}
+             style={{
+               background: "white",
+               borderRadius: "12px",
+               width: "100%",
+               maxWidth: "600px",
+               maxHeight: "90vh",
+               overflowY: "auto",
+               boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+               padding: "24px"
+             }}
+           >
+             <div style={{ marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+               <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "600", color: "#333" }}>Ajouter un utilisateur</h2>
+               <button
+                 onClick={() => setShowAddUserModal(false)}
+                 style={{
+                   background: "none",
+                   border: "none",
+                   fontSize: "24px",
+                   cursor: "pointer",
+                   color: "#999",
+                   padding: "0",
+                   width: "24px",
+                   height: "24px",
+                   display: "flex",
+                   alignItems: "center",
+                   justifyContent: "center"
+                 }}
+               >
+                 ×
+               </button>
+             </div>
+
+             <form onSubmit={(e) => {
+               e.preventDefault();
+               // TODO: Implémenter la création de l'utilisateur
+               alert("Création de l'utilisateur (à implémenter)");
+               setShowAddUserModal(false);
+             }}>
+               {/* Informations Personnelles */}
+               <div style={{ marginBottom: "24px" }}>
+                 <h3 style={{ marginBottom: "16px", fontSize: "18px", fontWeight: "600", color: "#333" }}>Informations Personnelles</h3>
+                 <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "16px" }}>
+                   <div style={{ marginBottom: "16px" }}>
+                     <label style={{ display: "block", marginBottom: "8px", color: "#333", fontWeight: "500" }}>
+                       Nom Complet <span style={{ color: "#dc3545" }}>*</span>
+                     </label>
+                     <input
+                       type="text"
+                       required
+                       value={newUser.full_name}
+                       onChange={(e) => setNewUser({ ...newUser, full_name: e.target.value })}
+                       style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: "4px", fontSize: "14px" }}
+                       placeholder="Nom complet"
+                     />
+                   </div>
+                   <div style={{ marginBottom: "16px" }}>
+                     <label style={{ display: "block", marginBottom: "8px", color: "#333", fontWeight: "500" }}>
+                       Email <span style={{ color: "#dc3545" }}>*</span>
+                     </label>
+                     <input
+                       type="email"
+                       required
+                       value={newUser.email}
+                       onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                       style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: "4px", fontSize: "14px" }}
+                       placeholder="email@example.com"
+                     />
+                   </div>
+                   <div style={{ marginBottom: "16px" }}>
+                     <label style={{ display: "block", marginBottom: "8px", color: "#333", fontWeight: "500" }}>
+                       Numéro de Téléphone
+                     </label>
+                     <input
+                       type="tel"
+                       value={newUser.phone}
+                       onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
+                       style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: "4px", fontSize: "14px" }}
+                       placeholder="Numéro de téléphone"
+                     />
+                   </div>
+                   <div style={{ marginBottom: "16px" }}>
+                     <label style={{ display: "block", marginBottom: "8px", color: "#333", fontWeight: "500" }}>
+                       Département <span style={{ color: "#dc3545" }}>*</span>
+                     </label>
+                     <select
+                       required
+                       value={newUser.agency}
+                       onChange={(e) => setNewUser({ ...newUser, agency: e.target.value })}
+                       style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: "4px", fontSize: "14px" }}
+                     >
+                       <option value="">Sélectionner un département</option>
+                       {Array.from(new Set(allUsers.map((u: any) => u.agency).filter(Boolean))).map((agency) => (
+                         <option key={agency} value={agency}>{agency}</option>
+                       ))}
+                       <option value="Marketing">Marketing</option>
+                       <option value="IT">IT</option>
+                       <option value="Ressources Humaines">Ressources Humaines</option>
+                       <option value="Finance">Finance</option>
+                       <option value="Ventes">Ventes</option>
+                     </select>
+                   </div>
+                 </div>
+               </div>
+
+               {/* Rôle et Permissions */}
+               <div style={{ marginBottom: "24px" }}>
+                 <h3 style={{ marginBottom: "16px", fontSize: "18px", fontWeight: "600", color: "#333" }}>Rôle et Permissions</h3>
+                 <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "16px", borderLeft: "4px solid #007bff" }}>
+                   <div style={{ marginBottom: "20px" }}>
+                     <label style={{ display: "block", marginBottom: "12px", color: "#333", fontWeight: "500" }}>
+                       Rôle <span style={{ color: "#dc3545" }}>*</span>
+                     </label>
+                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                       {["Utilisateur", "Technicien (Matériel)", "Technicien (Applicatif)", "Secrétaire DSI", "Adjoint DSI", "DSI", "Administrateur"].map((role) => (
+                         <label key={role} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                           <input
+                             type="radio"
+                             name="role"
+                             value={role}
+                             checked={newUser.role === role}
+                             onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+                             required
+                             style={{ cursor: "pointer" }}
+                           />
+                           <span>{role}</span>
+                         </label>
+                       ))}
+                     </div>
+                   </div>
+                   <div style={{ borderTop: "1px solid #eee", paddingTop: "16px" }}>
+                     <label style={{ display: "block", marginBottom: "12px", color: "#333", fontWeight: "500" }}>
+                       Statut <span style={{ color: "#dc3545" }}>*</span>
+                     </label>
+                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                       {["Actif", "Inactif"].map((status) => (
+                         <label key={status} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                           <input
+                             type="radio"
+                             name="status"
+                             value={status.toLowerCase()}
+                             checked={newUser.status === status.toLowerCase()}
+                             onChange={(e) => setNewUser({ ...newUser, status: e.target.value })}
+                             required
+                             style={{ cursor: "pointer" }}
+                           />
+                           <span>{status}</span>
+                         </label>
+                       ))}
+                     </div>
+                   </div>
+                 </div>
+               </div>
+
+               {/* Mot de Passe */}
+               <div style={{ marginBottom: "24px" }}>
+                 <h3 style={{ marginBottom: "16px", fontSize: "18px", fontWeight: "600", color: "#333" }}>Mot de Passe</h3>
+                 <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "16px" }}>
+                   <div style={{ marginBottom: "16px" }}>
+                     <label style={{ display: "block", marginBottom: "8px", color: "#333", fontWeight: "500" }}>
+                       Mot de Passe <span style={{ color: "#dc3545" }}>*</span>
+                     </label>
+                     <input
+                       type="password"
+                       required={!newUser.generateRandomPassword}
+                       disabled={newUser.generateRandomPassword}
+                       value={newUser.password}
+                       onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                       style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: "4px", fontSize: "14px", backgroundColor: newUser.generateRandomPassword ? "#f5f5f5" : "white" }}
+                       placeholder="Mot de passe"
+                     />
+                   </div>
+                   <div style={{ marginBottom: "16px" }}>
+                     <label style={{ display: "block", marginBottom: "8px", color: "#333", fontWeight: "500" }}>
+                       Confirmer le Mot de Passe <span style={{ color: "#dc3545" }}>*</span>
+                     </label>
+                     <input
+                       type="password"
+                       required={!newUser.generateRandomPassword}
+                       disabled={newUser.generateRandomPassword}
+                       value={newUser.confirmPassword}
+                       onChange={(e) => setNewUser({ ...newUser, confirmPassword: e.target.value })}
+                       style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: "4px", fontSize: "14px", backgroundColor: newUser.generateRandomPassword ? "#f5f5f5" : "white" }}
+                       placeholder="Confirmer le mot de passe"
+                     />
+                   </div>
+                   <div style={{ marginBottom: "12px" }}>
+                     <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                       <input
+                         type="checkbox"
+                         checked={newUser.generateRandomPassword}
+                         onChange={(e) => setNewUser({ ...newUser, generateRandomPassword: e.target.checked })}
+                         style={{ cursor: "pointer" }}
+                       />
+                       <span>Générer un mot de passe aléatoire</span>
+                     </label>
+                   </div>
+                   <div>
+                     <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                       <input
+                         type="checkbox"
+                         checked={newUser.sendEmail}
+                         onChange={(e) => setNewUser({ ...newUser, sendEmail: e.target.checked })}
+                         style={{ cursor: "pointer" }}
+                       />
+                       <span>Envoyer les identifiants par email</span>
+                     </label>
+                   </div>
+                 </div>
+               </div>
+
+               {/* Boutons d'action */}
+               <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
+                 <button
+                   type="button"
+                   onClick={() => {
+                     setShowAddUserModal(false);
+                     setNewUser({
+                       full_name: "",
+                       email: "",
+                       phone: "",
+                       agency: "",
+                       role: "",
+                       status: "actif",
+                       password: "",
+                       confirmPassword: "",
+                       generateRandomPassword: true,
+                       sendEmail: true
+                     });
+                   }}
+                   style={{ 
+                     padding: "10px 20px", 
+                     backgroundColor: "#6c757d", 
+                     color: "white", 
+                     border: "none", 
+                     borderRadius: "4px", 
+                     cursor: "pointer", 
+                     fontSize: "14px"
+                   }}
+                 >
+                   [Annuler]
+                 </button>
+                 <button
+                   type="submit"
+                   style={{ 
+                     padding: "10px 20px", 
+                     backgroundColor: "#28a745", 
+                     color: "white", 
+                     border: "none", 
+                     borderRadius: "4px", 
+                     cursor: "pointer", 
+                     fontSize: "14px"
+                   }}
+                 >
+                   [Créer Utilisateur]
+                 </button>
+               </div>
+             </form>
+           </div>
+         </div>
+       )}
+
+       {/* Modal Modifier un utilisateur */}
+       {showEditUserModal && editingUser && (
+         <div 
+           onClick={() => {
+             setShowEditUserModal(false);
+             setEditingUser(null);
+           }}
+           style={{
+             position: "fixed",
+             top: 0,
+             left: 0,
+             right: 0,
+             bottom: 0,
+             background: "rgba(0,0,0,0.5)",
+             display: "flex",
+             alignItems: "center",
+             justifyContent: "center",
+             zIndex: 1000,
+             padding: "20px"
+           }}
+         >
+           <div 
+             onClick={(e) => e.stopPropagation()}
+             style={{
+               background: "white",
+               borderRadius: "12px",
+               width: "100%",
+               maxWidth: "600px",
+               maxHeight: "90vh",
+               overflowY: "auto",
+               boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+               padding: "24px"
+             }}
+           >
+             <div style={{ marginBottom: "24px" }}>
+               <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "600", color: "#333", marginBottom: "8px" }}>
+                 MODIFIER L'UTILISATEUR
+               </h2>
+               <p style={{ margin: 0, fontSize: "14px", color: "#666" }}>
+                 {editingUser.full_name || editingUser.name} (ID: {editingUser.id || editingUser.user_id})
+               </p>
+             </div>
+
+             <div style={{ borderTop: "1px solid #ddd", marginBottom: "24px" }}></div>
+
+             <form onSubmit={(e) => {
+               e.preventDefault();
+               // TODO: Implémenter la modification de l'utilisateur
+               alert("Modification de l'utilisateur (à implémenter)");
+               setShowEditUserModal(false);
+               setEditingUser(null);
+             }}>
+               {/* Informations Personnelles */}
+               <div style={{ marginBottom: "24px" }}>
+                 <h3 style={{ marginBottom: "16px", fontSize: "18px", fontWeight: "600", color: "#333" }}>Informations Personnelles</h3>
+                 <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "16px" }}>
+                   <div style={{ marginBottom: "16px" }}>
+                     <label style={{ display: "block", marginBottom: "8px", color: "#333", fontWeight: "500" }}>
+                       Nom Complet <span style={{ color: "#dc3545" }}>*</span>
+                     </label>
+                     <input
+                       type="text"
+                       required
+                       value={editUser.full_name}
+                       onChange={(e) => setEditUser({ ...editUser, full_name: e.target.value })}
+                       style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: "4px", fontSize: "14px" }}
+                       placeholder="Nom complet"
+                     />
+                   </div>
+                   <div style={{ marginBottom: "16px" }}>
+                     <label style={{ display: "block", marginBottom: "8px", color: "#333", fontWeight: "500" }}>
+                       Email <span style={{ color: "#dc3545" }}>*</span>
+                     </label>
+                     <input
+                       type="email"
+                       required
+                       value={editUser.email}
+                       onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+                       style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: "4px", fontSize: "14px" }}
+                       placeholder="email@example.com"
+                     />
+                   </div>
+                   <div style={{ marginBottom: "16px" }}>
+                     <label style={{ display: "block", marginBottom: "8px", color: "#333", fontWeight: "500" }}>
+                       Numéro de Téléphone
+                     </label>
+                     <input
+                       type="tel"
+                       value={editUser.phone || ""}
+                       onChange={(e) => setEditUser({ ...editUser, phone: e.target.value })}
+                       style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: "4px", fontSize: "14px" }}
+                       placeholder="Numéro de téléphone"
+                     />
+                   </div>
+                   <div style={{ marginBottom: "16px" }}>
+                     <label style={{ display: "block", marginBottom: "8px", color: "#333", fontWeight: "500" }}>
+                       Département <span style={{ color: "#dc3545" }}>*</span>
+                     </label>
+                     <select
+                       required
+                       value={editUser.agency}
+                       onChange={(e) => setEditUser({ ...editUser, agency: e.target.value })}
+                       style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: "4px", fontSize: "14px" }}
+                     >
+                       <option value="">Sélectionner un département</option>
+                       {Array.from(new Set(allUsers.map((u: any) => u.agency).filter(Boolean))).map((agency) => (
+                         <option key={agency} value={agency}>{agency}</option>
+                       ))}
+                       <option value="Marketing">Marketing</option>
+                       <option value="IT">IT</option>
+                       <option value="Ressources Humaines">Ressources Humaines</option>
+                       <option value="Finance">Finance</option>
+                       <option value="Ventes">Ventes</option>
+                     </select>
+                   </div>
+                 </div>
+               </div>
+
+               {/* Rôle et Permissions */}
+               <div style={{ marginBottom: "24px" }}>
+                 <h3 style={{ marginBottom: "16px", fontSize: "18px", fontWeight: "600", color: "#333" }}>Rôle et Permissions</h3>
+                 <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "16px", borderLeft: "4px solid #007bff" }}>
+                   <div style={{ marginBottom: "20px" }}>
+                     <label style={{ display: "block", marginBottom: "12px", color: "#333", fontWeight: "500" }}>
+                       Rôle <span style={{ color: "#dc3545" }}>*</span>
+                     </label>
+                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                       {["Utilisateur", "Technicien (Matériel)", "Technicien (Applicatif)", "Secrétaire DSI", "Adjoint DSI", "DSI", "Administrateur"].map((role) => (
+                         <label key={role} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                           <input
+                             type="radio"
+                             name="editRole"
+                             value={role}
+                             checked={editUser.role === role}
+                             onChange={(e) => setEditUser({ ...editUser, role: e.target.value })}
+                             required
+                             style={{ cursor: "pointer" }}
+                           />
+                           <span>{role}{editUser.role === role ? " (Sélectionné)" : ""}</span>
+                         </label>
+                       ))}
+                     </div>
+                   </div>
+                   <div style={{ borderTop: "1px solid #eee", paddingTop: "16px" }}>
+                     <label style={{ display: "block", marginBottom: "12px", color: "#333", fontWeight: "500" }}>
+                       Statut <span style={{ color: "#dc3545" }}>*</span>
+                     </label>
+                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                       {["Actif", "Inactif"].map((status) => (
+                         <label key={status} style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+                           <input
+                             type="radio"
+                             name="editStatus"
+                             value={status.toLowerCase()}
+                             checked={editUser.status === status.toLowerCase()}
+                             onChange={(e) => setEditUser({ ...editUser, status: e.target.value })}
+                             required
+                             style={{ cursor: "pointer" }}
+                           />
+                           <span>{status}{editUser.status === status.toLowerCase() ? " (Sélectionné)" : ""}</span>
+                         </label>
+                       ))}
+                     </div>
+                   </div>
+                 </div>
+               </div>
+
+               {/* Historique */}
+               <div style={{ marginBottom: "24px" }}>
+                 <h3 style={{ marginBottom: "16px", fontSize: "18px", fontWeight: "600", color: "#333" }}>Historique</h3>
+                 <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "16px" }}>
+                   <div style={{ marginBottom: "8px", paddingLeft: "8px", borderLeft: "2px solid #007bff" }}>
+                     <div style={{ fontSize: "14px", color: "#333" }}>
+                       Créé le : {editingUser.created_at ? new Date(editingUser.created_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" }) + " à " + new Date(editingUser.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "N/A"}
+                     </div>
+                   </div>
+                   <div style={{ marginBottom: "8px", paddingLeft: "8px", borderLeft: "2px solid #007bff" }}>
+                     <div style={{ fontSize: "14px", color: "#333" }}>
+                       Modifié le : {editingUser.updated_at ? new Date(editingUser.updated_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" }) + " à " + new Date(editingUser.updated_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "N/A"}
+                     </div>
+                   </div>
+                   <div style={{ paddingLeft: "8px", borderLeft: "2px solid #007bff" }}>
+                     <div style={{ fontSize: "14px", color: "#333" }}>
+                       Dernière connexion : {editingUser.last_login ? new Date(editingUser.last_login).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" }) + " à " + new Date(editingUser.last_login).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : "N/A"}
+                     </div>
+                   </div>
+                 </div>
+               </div>
+
+               {/* Boutons d'action */}
+               <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px", borderTop: "1px solid #eee", paddingTop: "16px" }}>
+                 <button
+                   type="button"
+                   onClick={() => {
+                     setShowEditUserModal(false);
+                     setEditingUser(null);
+                   }}
+                   style={{ 
+                     padding: "10px 20px", 
+                     backgroundColor: "#6c757d", 
+                     color: "white", 
+                     border: "none", 
+                     borderRadius: "4px", 
+                     cursor: "pointer", 
+                     fontSize: "14px"
+                   }}
+                 >
+                   [Annuler]
+                 </button>
+                 <button
+                   type="submit"
+                   style={{ 
+                     padding: "10px 20px", 
+                     backgroundColor: "#28a745", 
+                     color: "white", 
+                     border: "none", 
+                     borderRadius: "4px", 
+                     cursor: "pointer", 
+                     fontSize: "14px"
+                   }}
+                 >
+                   [Enregistrer Modifications]
+                 </button>
+               </div>
+             </form>
+           </div>
+         </div>
+       )}
+
+       {/* Modal de notifications */}
+       {showNotifications && (
         <div 
           onClick={() => setShowNotifications(false)}
           style={{

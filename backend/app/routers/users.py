@@ -84,3 +84,33 @@ def list_technicians(
     
     return result
 
+
+@router.get("/", response_model=List[schemas.UserRead])
+def list_all_users(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(require_role("Admin")),
+):
+    """Liste tous les utilisateurs (Admin uniquement)"""
+    users = db.query(models.User).all()
+    
+    result = []
+    for user in users:
+        user_dict = {
+            "id": user.id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "agency": user.agency,
+            "phone": user.phone,
+            "role": {
+                "id": user.role.id,
+                "name": user.role.name,
+                "description": user.role.description
+            },
+            "status": user.status,
+            "specialization": user.specialization,
+            "is_active": user.status == "actif" if hasattr(user, "status") else True
+        }
+        result.append(user_dict)
+    
+    return result
+
