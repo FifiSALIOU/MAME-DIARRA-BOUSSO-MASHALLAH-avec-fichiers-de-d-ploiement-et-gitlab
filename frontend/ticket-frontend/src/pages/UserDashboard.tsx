@@ -45,11 +45,41 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
     return storedToken || "";
   });
   
+  // NOTE: Ces catégories sont des exemples. Elles peuvent être facilement remplacées 
+  // par de vraies données provenant d'une API ou d'une base de données.
+  // Pour modifier ces catégories, remplacez simplement les tableaux ci-dessous.
+  const CATEGORIES_MATERIEL = [
+    "Ordinateur portable",
+    "Ordinateur de bureau",
+    "Imprimante",
+    "Scanner",
+    "Écran/Moniteur",
+    "Clavier/Souris",
+    "Réseau (Switch, Routeur)",
+    "Serveur",
+    "Téléphone/IP Phone",
+    "Autre matériel"
+  ];
+  
+  const CATEGORIES_APPLICATIF = [
+    "Système d'exploitation",
+    "Logiciel bureautique",
+    "Application métier",
+    "Email/Messagerie",
+    "Navigateur web",
+    "Base de données",
+    "Sécurité/Antivirus",
+    "Application web",
+    "API/Service",
+    "Autre applicatif"
+  ];
+  
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("moyenne");
   const [type, setType] = useState("materiel");
+  const [category, setCategory] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [validationTicket, setValidationTicket] = useState<string | null>(null);
@@ -91,12 +121,15 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
       });
       if (res.ok) {
         const data = await res.json();
+        console.log("Tickets chargés:", data);
         setTickets(data);
       } else if (res.status === 401) {
         // Token invalide, rediriger vers la page de connexion
         localStorage.removeItem("token");
         localStorage.removeItem("userRole");
         window.location.href = "/";
+      } else {
+        console.error("Erreur lors du chargement des tickets:", res.status, res.statusText);
       }
     } catch (err) {
       console.error("Erreur lors du chargement des tickets:", err);
@@ -227,6 +260,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
         description: description.trim(),
         priority: priority.toLowerCase(),
         type: type.toLowerCase(),
+        category: category.trim() || undefined,
       };
       
       console.log("Envoi de la requête de création de ticket...", requestBody);
@@ -248,8 +282,11 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
         try {
           const errorData = await res.json();
           errorMessage = errorData.detail || errorMessage;
+          console.error("Détails de l'erreur:", errorData);
         } catch {
           // Si on ne peut pas parser le JSON, utiliser le message par défaut
+          const textError = await res.text();
+          console.error("Erreur (texte):", textError);
         }
         throw new Error(errorMessage);
       }
@@ -261,6 +298,12 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
       setDescription("");
       setPriority("moyenne");
       setType("materiel");
+      setCategory("");
+      setShowCreateModal(false);
+      // S'assurer que la section est sur dashboard pour voir les tickets
+      setActiveSection("dashboard");
+      // Attendre un peu pour laisser le temps au backend de finaliser
+      await new Promise(resolve => setTimeout(resolve, 500));
       await loadTickets();
       await loadNotifications();
       await loadUnreadCount();
@@ -1724,6 +1767,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                     setDescription("");
                     setPriority("moyenne");
                     setType("materiel");
+                    setCategory("");
                   }}
                   style={{
                     background: "none",
@@ -1748,11 +1792,8 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                   <strong>Erreur :</strong> {error}
                 </div>
               )}
-              <form onSubmit={(e) => {
-                handleCreate(e);
-                if (!error) {
-                  setShowCreateModal(false);
-                }
+              <form onSubmit={async (e) => {
+                await handleCreate(e);
               }}>
         <div style={{ marginBottom: "16px" }}>
           <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>Titre</label>
@@ -1779,11 +1820,31 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
           <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>Type</label>
           <select
             value={type}
-            onChange={(e) => setType(e.target.value)}
+            onChange={(e) => {
+              setType(e.target.value);
+              // Réinitialiser la catégorie quand le type change
+              setCategory("");
+            }}
             style={{ width: "100%", padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }}
           >
             <option value="materiel">Matériel</option>
             <option value="applicatif">Applicatif</option>
+          </select>
+        </div>
+        <div style={{ marginBottom: "16px" }}>
+          <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>Catégorie</label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            disabled={loading}
+            style={{ width: "100%", padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }}
+          >
+            <option value="">Sélectionner une catégorie...</option>
+            {(type === "materiel" ? CATEGORIES_MATERIEL : CATEGORIES_APPLICATIF).map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
           </select>
         </div>
         <div style={{ marginBottom: "16px" }}>
@@ -1802,14 +1863,14 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                 <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
                   <button type="submit" disabled={loading || !title.trim() || !description.trim()} style={{
                     flex: 1,
-                    padding: "12px 24px",
-                    backgroundColor: "#28a745",
+                    padding: "8px 16px",
+                    backgroundColor: "#475569",
                     color: "white",
                     border: "none",
-                    borderRadius: "8px",
+                    borderRadius: "6px",
                     cursor: "pointer",
-                    fontSize: "14px",
-                    fontWeight: "600"
+                    fontSize: "13px",
+                    fontWeight: "500"
                   }}>
                     {loading ? "Création en cours..." : "Soumettre le ticket"}
                   </button>
@@ -1822,15 +1883,17 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                       setDescription("");
                       setPriority("moyenne");
                       setType("materiel");
+                      setCategory("");
                     }}
                     style={{
-                      padding: "12px 24px",
-                      background: "#f5f5f5",
-                      border: "1px solid #ddd",
-                      borderRadius: "8px",
+                      padding: "8px 16px",
+                      background: "transparent",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
                       cursor: "pointer",
-                      fontSize: "14px",
-                      fontWeight: "600"
+                      fontSize: "13px",
+                      fontWeight: "500",
+                      color: "#1f2937"
                     }}
                   >
                     Annuler

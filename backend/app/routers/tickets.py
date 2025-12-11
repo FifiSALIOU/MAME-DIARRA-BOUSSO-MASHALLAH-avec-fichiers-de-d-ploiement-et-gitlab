@@ -33,6 +33,7 @@ def create_ticket(
         description=ticket_in.description,
         type=ticket_in.type,
         priority=ticket_in.priority,
+        category=ticket_in.category,  # Catégorie du ticket
         creator_id=current_user.id,
         user_agency=current_user.agency,  # Enregistrer l'agence de l'utilisateur créateur
         status=models.TicketStatus.EN_ATTENTE_ANALYSE,

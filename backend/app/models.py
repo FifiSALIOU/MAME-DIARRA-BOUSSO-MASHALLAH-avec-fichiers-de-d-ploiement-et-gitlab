@@ -91,6 +91,7 @@ class Ticket(Base):
     type = Column(Enum(TicketType), nullable=False)
     priority = Column(Enum(TicketPriority), nullable=False, default=TicketPriority.MOYENNE)
     status = Column(Enum(TicketStatus), nullable=False, default=TicketStatus.EN_ATTENTE_ANALYSE)
+    category = Column(String(100), nullable=True)  # Catégorie du ticket (ex: Réseau, Logiciel, Matériel, etc.)
 
     creator_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     technician_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)

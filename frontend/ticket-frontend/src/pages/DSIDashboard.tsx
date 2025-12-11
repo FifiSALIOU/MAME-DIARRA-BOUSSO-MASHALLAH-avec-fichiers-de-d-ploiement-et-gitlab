@@ -13,8 +13,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  PieChart,
-  Pie,
   Cell
 } from "recharts";
 
@@ -60,9 +58,10 @@ interface Technician {
   resolved_today?: number;
   avg_resolution_time_days?: number;
   avg_response_time_minutes?: number;
-  success_rate?: number;
+  status?: string;
   availability_status?: string;
   last_login_at?: string | null;
+  success_rate?: number;
   workload_ratio?: string;
   work_hours?: string;
 }
@@ -85,13 +84,16 @@ interface UserRead {
 function DSIDashboard({ token }: DSIDashboardProps) {
   const [allTickets, setAllTickets] = useState<Ticket[]>([]);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
-  const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
   const [selectedTechnician, setSelectedTechnician] = useState<string>("");
   const [assignmentNotes, setAssignmentNotes] = useState<string>("");
   const [reopenTicketId, setReopenTicketId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState<string>("");
   const [loadingRejectionReason, setLoadingRejectionReason] = useState<boolean>(false);
   const [showReopenModal, setShowReopenModal] = useState<boolean>(false);
+  const [showReassignModal, setShowReassignModal] = useState<boolean>(false);
+  const [reassignTicketId, setReassignTicketId] = useState<string | null>(null);
+  const [showAssignModal, setShowAssignModal] = useState<boolean>(false);
+  const [assignTicketId, setAssignTicketId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [metrics, setMetrics] = useState({
     openTickets: 0,
@@ -101,7 +103,6 @@ function DSIDashboard({ token }: DSIDashboardProps) {
   const [activeSection, setActiveSection] = useState<string>("dashboard");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showTicketsDropdown, setShowTicketsDropdown] = useState<boolean>(false);
-  const [showTechniciansDropdown, setShowTechniciansDropdown] = useState<boolean>(false);
   const [showReportsDropdown, setShowReportsDropdown] = useState<boolean>(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState<boolean>(false);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -122,7 +123,7 @@ function DSIDashboard({ token }: DSIDashboardProps) {
   const [techSpecializationFilter, setTechSpecializationFilter] = useState<string>("all");
   const [selectedTechnicianDetails, setSelectedTechnicianDetails] = useState<Technician | null>(null);
   const [showTechnicianDetailsModal, setShowTechnicianDetailsModal] = useState<boolean>(false);
-  const [loadingTechnicianStats, setLoadingTechnicianStats] = useState<boolean>(false);
+  const [, setLoadingTechnicianStats] = useState<boolean>(false);
   const [showEditTechnicianModal, setShowEditTechnicianModal] = useState<boolean>(false);
   const [editingTechnician, setEditingTechnician] = useState<Technician | null>(null);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState<boolean>(false);
@@ -326,7 +327,7 @@ function DSIDashboard({ token }: DSIDashboardProps) {
   const [testResult, setTestResult] = useState<any>(null);
   
   // États pour les logs d'envoi
-  const [emailLogs, setEmailLogs] = useState<Array<{
+  const [emailLogs] = useState<Array<{
     id: number;
     date: string;
     recipient: string;
@@ -374,25 +375,6 @@ function DSIDashboard({ token }: DSIDashboardProps) {
     };
   });
   
-  // États pour les rapports
-  const [selectedReportType, setSelectedReportType] = useState<string | null>(null);
-  const [recentReports, setRecentReports] = useState<Array<{
-    id: number;
-    report: string;
-    generatedBy: string;
-    date: string;
-  }>>(() => {
-    const saved = localStorage.getItem("recentReports");
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    // Rapports par défaut
-    return [
-      { id: 1, report: "Performance Janvier 2024", generatedBy: "Admin", date: "01/02/2024" },
-      { id: 2, report: "Tickets par Département", generatedBy: "DSI", date: "31/01/2024" },
-      { id: 3, report: "Satisfaction Utilisateurs", generatedBy: "Admin", date: "30/01/2024" }
-    ];
-  });
   
   // Mettre à jour les états locaux quand on entre dans la section Apparence
   useEffect(() => {
@@ -1097,8 +1079,10 @@ function DSIDashboard({ token }: DSIDashboardProps) {
           const ticketsData = await ticketsRes.json();
           setAllTickets(ticketsData);
         }
-        setSelectedTicket(null);
         setSelectedTechnician("");
+        setAssignmentNotes("");
+        setShowAssignModal(false);
+        setAssignTicketId(null);
         alert("Ticket assigné avec succès");
       } else {
         const error = await res.json();
@@ -1129,6 +1113,7 @@ function DSIDashboard({ token }: DSIDashboardProps) {
         body: JSON.stringify({
           technician_id: selectedTechnician,
           reason: "Réassignation par DSI",
+          notes: assignmentNotes || undefined,
         }),
       });
 
@@ -1142,8 +1127,10 @@ function DSIDashboard({ token }: DSIDashboardProps) {
           const ticketsData = await ticketsRes.json();
           setAllTickets(ticketsData);
         }
-        setSelectedTicket(null);
         setSelectedTechnician("");
+        setAssignmentNotes("");
+        setShowReassignModal(false);
+        setReassignTicketId(null);
         alert("Ticket réassigné avec succès");
       } else {
         const error = await res.json();
@@ -1155,6 +1142,25 @@ function DSIDashboard({ token }: DSIDashboardProps) {
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleReassignClick(ticketId: string) {
+    setReassignTicketId(ticketId);
+    setSelectedTechnician("");
+    setAssignmentNotes("");
+    setShowReassignModal(true);
+  }
+
+  function handleAssignClick(ticketId: string) {
+    setAssignTicketId(ticketId);
+    setSelectedTechnician("");
+    setAssignmentNotes("");
+    setShowAssignModal(true);
+  }
+
+  // Fonction helper pour vérifier si l'utilisateur peut escalader
+  function canEscalate(): boolean {
+    return userRole === "Adjoint DSI" || userRole === "DSI" || userRole === "Admin";
   }
 
   async function handleEscalate(ticketId: string) {
@@ -1316,7 +1322,6 @@ function DSIDashboard({ token }: DSIDashboardProps) {
           const ticketsData = await ticketsRes.json();
           setAllTickets(ticketsData);
         }
-        setSelectedTicket(null);
         setSelectedTechnician("");
         setAssignmentNotes("");
         setReopenTicketId(null);
@@ -1577,7 +1582,7 @@ function DSIDashboard({ token }: DSIDashboardProps) {
       .filter(([_, tickets]) => tickets.length > 1)
       .sort((a, b) => b[1].length - a[1].length)
       .slice(0, 10)
-      .map(([key, tickets]) => ({
+      .map(([_, tickets]) => ({
         titre: tickets[0].title,
         occurrences: tickets.length,
         dernier: tickets.sort((a, b) => {
@@ -2282,8 +2287,8 @@ function DSIDashboard({ token }: DSIDashboardProps) {
         </div>
       </div>
 
-      {/* Tableau des tickets */}
-      <h3 style={{ marginTop: "32px", marginBottom: "16px", fontSize: "22px", fontWeight: "600", color: "#333" }}>Tickets en attente d'analyse</h3>
+      {/* Tableau des tickets récents */}
+      <h3 style={{ marginTop: "32px", marginBottom: "16px", fontSize: "22px", fontWeight: "600", color: "#333" }}>Tickets Récents</h3>
       <table style={{ width: "100%", borderCollapse: "collapse", background: "white", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}>
         <thead>
           <tr style={{ background: "#f8f9fa" }}>
@@ -2297,14 +2302,27 @@ function DSIDashboard({ token }: DSIDashboardProps) {
           </tr>
         </thead>
         <tbody>
-          {allTickets.length === 0 ? (
-            <tr>
-              <td colSpan={7} style={{ textAlign: "center", padding: "20px", color: "#999" }}>
-                Aucun ticket
-              </td>
-            </tr>
-          ) : (
-            allTickets.map((t) => (
+          {(() => {
+            // Trier les tickets par date de création (plus récents en premier) et prendre les 5 premiers
+            const recentTickets = [...allTickets]
+              .sort((a, b) => {
+                const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                return dateB - dateA; // Tri décroissant (plus récent en premier)
+              })
+              .slice(0, 5); // Prendre les 5 premiers
+
+            if (recentTickets.length === 0) {
+              return (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: "center", padding: "20px", color: "#999" }}>
+                    Aucun ticket
+                  </td>
+                </tr>
+              );
+            }
+
+            return recentTickets.map((t) => (
               <tr key={t.id} style={{ borderBottom: "1px solid #eee" }}>
                 <td style={{ padding: "12px 16px" }}>#{t.number}</td>
                 <td style={{ padding: "12px 16px" }}>{t.title}</td>
@@ -2358,309 +2376,50 @@ function DSIDashboard({ token }: DSIDashboardProps) {
                 <td style={{ padding: "12px 16px" }}>
                   {t.status === "en_attente_analyse" ? (
                     // Actions pour tickets en attente
-                    selectedTicket === t.id ? (
-                      <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
-                        <select
-                          value={selectedTechnician}
-                          onChange={(e) => setSelectedTechnician(e.target.value)}
-                          style={{ padding: "4px 8px", fontSize: "12px", minWidth: "150px" }}
-                        >
-                          <option value="">Sélectionner un technicien</option>
-                          {getFilteredTechnicians(t.type).map((tech) => (
-                            <option key={tech.id} value={tech.id}>
-                              {tech.full_name}
-                            </option>
-                          ))}
-                        </select>
-                        <button
-                          onClick={() => handleAssign(t.id)}
-                          disabled={loading || !selectedTechnician}
-                          style={{ 
-                            fontSize: "12px", 
-                            padding: "6px 12px", 
-                            backgroundColor: loading || !selectedTechnician ? "#e5e7eb" : "#dbeafe", 
-                            color: loading || !selectedTechnician ? "#9ca3af" : "#1e40af", 
-                            border: `1px solid ${loading || !selectedTechnician ? "#d1d5db" : "#93c5fd"}`,
-                            borderRadius: "20px", 
-                            cursor: loading || !selectedTechnician ? "not-allowed" : "pointer",
-                            fontWeight: "500",
-                            transition: "all 0.2s ease",
-                            opacity: loading || !selectedTechnician ? 0.6 : 1
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!loading && selectedTechnician) {
-                              e.currentTarget.style.backgroundColor = "#bfdbfe";
-                              e.currentTarget.style.borderColor = "#60a5fa";
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!loading && selectedTechnician) {
-                              e.currentTarget.style.backgroundColor = "#dbeafe";
-                              e.currentTarget.style.borderColor = "#93c5fd";
-                            }
-                          }}
-                        >
-                          Confirmer
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedTicket(null);
-                            setSelectedTechnician("");
-                          }}
-                          style={{ 
-                            fontSize: "12px", 
-                            padding: "6px 12px", 
-                            backgroundColor: "#e5e7eb", 
-                            color: "#374151", 
-                            border: "1px solid #d1d5db",
-                            borderRadius: "20px", 
-                            cursor: "pointer",
-                            fontWeight: "500",
-                            transition: "all 0.2s ease"
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = "#d1d5db";
-                            e.currentTarget.style.borderColor = "#9ca3af";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "#e5e7eb";
-                            e.currentTarget.style.borderColor = "#d1d5db";
-                          }}
-                        >
-                          Annuler
-                        </button>
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                        <button
-                          onClick={() => setSelectedTicket(t.id)}
-                          disabled={loading}
-                          style={{ 
-                            fontSize: "12px", 
-                            padding: "6px 12px", 
-                            backgroundColor: "#dbeafe", 
-                            color: "#1e40af", 
-                            border: "1px solid #93c5fd",
-                            borderRadius: "20px", 
-                            cursor: loading ? "not-allowed" : "pointer",
-                            fontWeight: "500",
-                            transition: "all 0.2s ease",
-                            opacity: loading ? 0.6 : 1
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!loading) {
-                              e.currentTarget.style.backgroundColor = "#bfdbfe";
-                              e.currentTarget.style.borderColor = "#60a5fa";
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!loading) {
-                              e.currentTarget.style.backgroundColor = "#dbeafe";
-                              e.currentTarget.style.borderColor = "#93c5fd";
-                            }
-                          }}
-                        >
-                          Assigner
-                        </button>
+                    <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                      <button
+                        onClick={() => handleAssignClick(t.id)}
+                        disabled={loading}
+                        style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
+                      >
+                        Assigner
+                      </button>
+                      {canEscalate() && (
                         <button
                           onClick={() => handleEscalate(t.id)}
                           disabled={loading}
-                          style={{ 
-                            fontSize: "12px", 
-                            padding: "6px 12px", 
-                            backgroundColor: "#fed7aa", 
-                            color: "#9a3412", 
-                            border: "1px solid #fdba74",
-                            borderRadius: "20px", 
-                            cursor: loading ? "not-allowed" : "pointer",
-                            fontWeight: "500",
-                            transition: "all 0.2s ease",
-                            opacity: loading ? 0.6 : 1
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!loading) {
-                              e.currentTarget.style.backgroundColor = "#fcd34d";
-                              e.currentTarget.style.borderColor = "#f59e0b";
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!loading) {
-                              e.currentTarget.style.backgroundColor = "#fed7aa";
-                              e.currentTarget.style.borderColor = "#fdba74";
-                            }
-                          }}
+                          style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#ff9800", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
                         >
                           Escalader
                         </button>
-                      </div>
-                    )
+                      )}
+                    </div>
                   ) : t.status === "assigne_technicien" || t.status === "en_cours" ? (
                     // Actions pour tickets assignés/en cours
-                    selectedTicket === t.id ? (
-                      <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
-                        <select
-                          value={selectedTechnician}
-                          onChange={(e) => setSelectedTechnician(e.target.value)}
-                          style={{ padding: "4px 8px", fontSize: "12px", minWidth: "150px" }}
-                        >
-                          <option value="">Sélectionner un technicien</option>
-                          {getFilteredTechnicians(t.type).map((tech) => (
-                            <option key={tech.id} value={tech.id}>
-                              {tech.full_name}
-                            </option>
-                          ))}
-                        </select>
-                        <button
-                          onClick={() => handleReassign(t.id)}
-                          disabled={loading}
-                          style={{ 
-                            fontSize: "12px", 
-                            padding: "6px 12px", 
-                            backgroundColor: "#dbeafe", 
-                            color: "#1e40af", 
-                            border: "1px solid #93c5fd",
-                            borderRadius: "20px", 
-                            cursor: loading ? "not-allowed" : "pointer",
-                            fontWeight: "500",
-                            transition: "all 0.2s ease",
-                            opacity: loading ? 0.6 : 1
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!loading) {
-                              e.currentTarget.style.backgroundColor = "#bfdbfe";
-                              e.currentTarget.style.borderColor = "#60a5fa";
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!loading) {
-                              e.currentTarget.style.backgroundColor = "#dbeafe";
-                              e.currentTarget.style.borderColor = "#93c5fd";
-                            }
-                          }}
-                        >
-                          Confirmer
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedTicket(null);
-                            setSelectedTechnician("");
-                          }}
-                          style={{ 
-                            fontSize: "12px", 
-                            padding: "6px 12px", 
-                            backgroundColor: "#e5e7eb", 
-                            color: "#374151", 
-                            border: "1px solid #d1d5db",
-                            borderRadius: "20px", 
-                            cursor: "pointer",
-                            fontWeight: "500",
-                            transition: "all 0.2s ease"
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = "#d1d5db";
-                            e.currentTarget.style.borderColor = "#9ca3af";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "#e5e7eb";
-                            e.currentTarget.style.borderColor = "#d1d5db";
-                          }}
-                        >
-                          Annuler
-                        </button>
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                        <button
-                          onClick={() => setSelectedTicket(t.id)}
-                          disabled={loading}
-                          style={{ 
-                            fontSize: "12px", 
-                            padding: "6px 12px", 
-                            backgroundColor: "#dbeafe", 
-                            color: "#1e40af", 
-                            border: "1px solid #93c5fd",
-                            borderRadius: "20px", 
-                            cursor: loading ? "not-allowed" : "pointer",
-                            fontWeight: "500",
-                            transition: "all 0.2s ease",
-                            opacity: loading ? 0.6 : 1
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!loading) {
-                              e.currentTarget.style.backgroundColor = "#bfdbfe";
-                              e.currentTarget.style.borderColor = "#60a5fa";
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!loading) {
-                              e.currentTarget.style.backgroundColor = "#dbeafe";
-                              e.currentTarget.style.borderColor = "#93c5fd";
-                            }
-                          }}
-                        >
-                          Réassigner
-                        </button>
+                    <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                      <button
+                        onClick={() => handleReassignClick(t.id)}
+                        disabled={loading}
+                        style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#17a2b8", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
+                      >
+                        Réassigner
+                      </button>
+                      {canEscalate() && (
                         <button
                           onClick={() => handleEscalate(t.id)}
                           disabled={loading}
-                          style={{ 
-                            fontSize: "12px", 
-                            padding: "6px 12px", 
-                            backgroundColor: "#fed7aa", 
-                            color: "#9a3412", 
-                            border: "1px solid #fdba74",
-                            borderRadius: "20px", 
-                            cursor: loading ? "not-allowed" : "pointer",
-                            fontWeight: "500",
-                            transition: "all 0.2s ease",
-                            opacity: loading ? 0.6 : 1
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!loading) {
-                              e.currentTarget.style.backgroundColor = "#fcd34d";
-                              e.currentTarget.style.borderColor = "#f59e0b";
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!loading) {
-                              e.currentTarget.style.backgroundColor = "#fed7aa";
-                              e.currentTarget.style.borderColor = "#fdba74";
-                            }
-                          }}
+                          style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#ff9800", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
                         >
                           Escalader
                         </button>
-                      </div>
-                    )
+                      )}
+                    </div>
                   ) : t.status === "resolu" ? (
                     // Action pour tickets résolus
                     <button
                       onClick={() => handleClose(t.id)}
                       disabled={loading}
-                      style={{ 
-                        fontSize: "12px", 
-                        padding: "6px 12px", 
-                        backgroundColor: "#d1fae5", 
-                        color: "#065f46", 
-                        border: "1px solid #6ee7b7",
-                        borderRadius: "20px", 
-                        cursor: loading ? "not-allowed" : "pointer",
-                        fontWeight: "500",
-                        transition: "all 0.2s ease",
-                        opacity: loading ? 0.6 : 1
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!loading) {
-                          e.currentTarget.style.backgroundColor = "#a7f3d0";
-                          e.currentTarget.style.borderColor = "#34d399";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!loading) {
-                          e.currentTarget.style.backgroundColor = "#d1fae5";
-                          e.currentTarget.style.borderColor = "#6ee7b7";
-                        }
-                      }}
+                      style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
                     >
                       Clôturer
                     </button>
@@ -2669,30 +2428,7 @@ function DSIDashboard({ token }: DSIDashboardProps) {
                     <button
                       onClick={() => handleReopenClick(t.id)}
                       disabled={loading}
-                      style={{ 
-                        fontSize: "12px", 
-                        padding: "6px 12px", 
-                        backgroundColor: "#dbeafe", 
-                        color: "#1e40af", 
-                        border: "1px solid #93c5fd",
-                        borderRadius: "20px", 
-                        cursor: loading ? "not-allowed" : "pointer",
-                        fontWeight: "500",
-                        transition: "all 0.2s ease",
-                        opacity: loading ? 0.6 : 1
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!loading) {
-                          e.currentTarget.style.backgroundColor = "#bfdbfe";
-                          e.currentTarget.style.borderColor = "#60a5fa";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!loading) {
-                          e.currentTarget.style.backgroundColor = "#dbeafe";
-                          e.currentTarget.style.borderColor = "#93c5fd";
-                        }
-                      }}
+                      style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
                     >
                       Réouvrir
                     </button>
@@ -2704,8 +2440,8 @@ function DSIDashboard({ token }: DSIDashboardProps) {
                   )}
                 </td>
               </tr>
-            ))
-          )}
+            ));
+          })()}
         </tbody>
       </table>
             </>
@@ -2788,90 +2524,17 @@ function DSIDashboard({ token }: DSIDashboardProps) {
                         </td>
                         <td style={{ padding: "12px 16px" }}>
                           {t.status === "en_attente_analyse" ? (
-                            selectedTicket === t.id ? (
-                              <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
-                                <select
-                                  value={selectedTechnician}
-                                  onChange={(e) => setSelectedTechnician(e.target.value)}
-                                  style={{ padding: "4px 8px", fontSize: "12px", minWidth: "150px" }}
-                                >
-                                  <option value="">Sélectionner un technicien</option>
-                                  {getFilteredTechnicians(t.type).map((tech) => (
-                                    <option key={tech.id} value={tech.id}>
-                                      {tech.full_name}
-                                    </option>
-                                  ))}
-                                </select>
-                        <button
-                          onClick={() => handleAssign(t.id)}
-                          disabled={loading || !selectedTechnician}
-                          style={{ 
-                            fontSize: "12px", 
-                            padding: "6px 12px", 
-                            backgroundColor: loading || !selectedTechnician ? "#e5e7eb" : "#dbeafe", 
-                            color: loading || !selectedTechnician ? "#9ca3af" : "#1e40af", 
-                            border: `1px solid ${loading || !selectedTechnician ? "#d1d5db" : "#93c5fd"}`,
-                            borderRadius: "20px", 
-                            cursor: loading || !selectedTechnician ? "not-allowed" : "pointer",
-                            fontWeight: "500",
-                            transition: "all 0.2s ease",
-                            opacity: loading || !selectedTechnician ? 0.6 : 1
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!loading && selectedTechnician) {
-                              e.currentTarget.style.backgroundColor = "#bfdbfe";
-                              e.currentTarget.style.borderColor = "#60a5fa";
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!loading && selectedTechnician) {
-                              e.currentTarget.style.backgroundColor = "#dbeafe";
-                              e.currentTarget.style.borderColor = "#93c5fd";
-                            }
-                          }}
-                        >
-                          Confirmer
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSelectedTicket(null);
-                            setSelectedTechnician("");
-                          }}
-                          style={{ 
-                            fontSize: "12px", 
-                            padding: "6px 12px", 
-                            backgroundColor: "#e5e7eb", 
-                            color: "#374151", 
-                            border: "1px solid #d1d5db",
-                            borderRadius: "20px", 
-                            cursor: "pointer",
-                            fontWeight: "500",
-                            transition: "all 0.2s ease"
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = "#d1d5db";
-                            e.currentTarget.style.borderColor = "#9ca3af";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = "#e5e7eb";
-                            e.currentTarget.style.borderColor = "#d1d5db";
-                          }}
-                        >
-                          Annuler
-                        </button>
-                              </div>
-                            ) : (
-                              <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                                <button
-                                  onClick={() => setSelectedTicket(t.id)}
-                                  disabled={loading}
+                            <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                              <button
+                                onClick={() => handleAssignClick(t.id)}
+                                disabled={loading}
                                   style={{ 
                                     fontSize: "12px", 
                                     padding: "6px 12px", 
-                                    backgroundColor: "#dbeafe", 
-                                    color: "#1e40af", 
-                                    border: "1px solid #93c5fd",
-                                    borderRadius: "20px", 
+                            backgroundColor: "#007bff", 
+                            color: "white", 
+                            border: "none",
+                            borderRadius: "4px",
                                     cursor: loading ? "not-allowed" : "pointer",
                                     fontWeight: "500",
                                     transition: "all 0.2s ease",
@@ -2892,203 +2555,109 @@ function DSIDashboard({ token }: DSIDashboardProps) {
                                 >
                                   Assigner
                                 </button>
-                                <button
-                                  onClick={() => handleEscalate(t.id)}
-                                  disabled={loading}
-                                  style={{ 
-                                    fontSize: "12px", 
-                                    padding: "6px 12px", 
-                                    backgroundColor: "#fed7aa", 
-                                    color: "#9a3412", 
-                                    border: "1px solid #fdba74",
-                                    borderRadius: "20px", 
-                                    cursor: loading ? "not-allowed" : "pointer",
-                                    fontWeight: "500",
-                                    transition: "all 0.2s ease",
-                                    opacity: loading ? 0.6 : 1
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    if (!loading) {
-                                      e.currentTarget.style.backgroundColor = "#fcd34d";
-                                      e.currentTarget.style.borderColor = "#f59e0b";
-                                    }
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    if (!loading) {
-                                      e.currentTarget.style.backgroundColor = "#fed7aa";
-                                      e.currentTarget.style.borderColor = "#fdba74";
-                                    }
-                                  }}
-                                >
-                                  Escalader
-                                </button>
+                                {canEscalate() && (
+                                  <button
+                                    onClick={() => handleEscalate(t.id)}
+                                    disabled={loading}
+                                    style={{ 
+                                      fontSize: "12px", 
+                                      padding: "6px 12px", 
+                            backgroundColor: "#ff9800", 
+                            color: "white", 
+                            border: "none",
+                            borderRadius: "4px",
+                                      cursor: loading ? "not-allowed" : "pointer",
+                                      fontWeight: "500",
+                                      transition: "all 0.2s ease",
+                                      opacity: loading ? 0.6 : 1
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      if (!loading) {
+                                        e.currentTarget.style.backgroundColor = "#fcd34d";
+                                        e.currentTarget.style.borderColor = "#f59e0b";
+                                      }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      if (!loading) {
+                                        e.currentTarget.style.backgroundColor = "#fed7aa";
+                                        e.currentTarget.style.borderColor = "#fdba74";
+                                      }
+                                    }}
+                                  >
+                                    Escalader
+                                  </button>
+                        )}
+                      </div>
+                  ) : t.status === "assigne_technicien" || t.status === "en_cours" ? (
+                            <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                              <button
+                                onClick={() => handleReassignClick(t.id)}
+                                disabled={loading}
+                                style={{ 
+                                  fontSize: "12px", 
+                                  padding: "6px 12px", 
+                            backgroundColor: "#17a2b8", 
+                            color: "white", 
+                            border: "none",
+                            borderRadius: "4px",
+                                  cursor: loading ? "not-allowed" : "pointer",
+                                  fontWeight: "500",
+                                  transition: "all 0.2s ease",
+                                  opacity: loading ? 0.6 : 1
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (!loading) {
+                                    e.currentTarget.style.backgroundColor = "#138496";
+                                    e.currentTarget.style.borderColor = "#117a8b";
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (!loading) {
+                                    e.currentTarget.style.backgroundColor = "#17a2b8";
+                                    e.currentTarget.style.borderColor = "#17a2b8";
+                                  }
+                                }}
+                              >
+                                Réassigner
+                              </button>
+                                {canEscalate() && (
+                                  <button
+                                    onClick={() => handleEscalate(t.id)}
+                                    disabled={loading}
+                                    style={{ 
+                                      fontSize: "12px", 
+                                      padding: "6px 12px", 
+                            backgroundColor: "#ff9800", 
+                            color: "white", 
+                            border: "none",
+                            borderRadius: "4px",
+                                      cursor: loading ? "not-allowed" : "pointer",
+                                      fontWeight: "500",
+                                      transition: "all 0.2s ease",
+                                      opacity: loading ? 0.6 : 1
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      if (!loading) {
+                                        e.currentTarget.style.backgroundColor = "#fcd34d";
+                                        e.currentTarget.style.borderColor = "#f59e0b";
+                                      }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      if (!loading) {
+                                        e.currentTarget.style.backgroundColor = "#fed7aa";
+                                        e.currentTarget.style.borderColor = "#fdba74";
+                                      }
+                                    }}
+                                  >
+                                    Escalader
+                                  </button>
+                                )}
                               </div>
-                            )
-                          ) : t.status === "assigne_technicien" || t.status === "en_cours" ? (
-                            selectedTicket === t.id ? (
-                              <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
-                                <select
-                                  value={selectedTechnician}
-                                  onChange={(e) => setSelectedTechnician(e.target.value)}
-                                  style={{ padding: "4px 8px", fontSize: "12px", minWidth: "150px" }}
-                                >
-                                  <option value="">Sélectionner un technicien</option>
-                                  {getFilteredTechnicians(t.type).map((tech) => (
-                                    <option key={tech.id} value={tech.id}>
-                                      {tech.full_name}
-                                    </option>
-                                  ))}
-                                </select>
-                                <button
-                                  onClick={() => handleReassign(t.id)}
-                                  disabled={loading}
-                                  style={{ 
-                                    fontSize: "12px", 
-                                    padding: "6px 12px", 
-                                    backgroundColor: "#dbeafe", 
-                                    color: "#1e40af", 
-                                    border: "1px solid #93c5fd",
-                                    borderRadius: "20px", 
-                                    cursor: loading ? "not-allowed" : "pointer",
-                                    fontWeight: "500",
-                                    transition: "all 0.2s ease",
-                                    opacity: loading ? 0.6 : 1
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    if (!loading) {
-                                      e.currentTarget.style.backgroundColor = "#bfdbfe";
-                                      e.currentTarget.style.borderColor = "#60a5fa";
-                                    }
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    if (!loading) {
-                                      e.currentTarget.style.backgroundColor = "#dbeafe";
-                                      e.currentTarget.style.borderColor = "#93c5fd";
-                                    }
-                                  }}
-                                >
-                                  Confirmer
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setSelectedTicket(null);
-                                    setSelectedTechnician("");
-                                  }}
-                                  style={{ 
-                                    fontSize: "12px", 
-                                    padding: "6px 12px", 
-                                    backgroundColor: "#e5e7eb", 
-                                    color: "#374151", 
-                                    border: "1px solid #d1d5db",
-                                    borderRadius: "20px", 
-                                    cursor: "pointer",
-                                    fontWeight: "500",
-                                    transition: "all 0.2s ease"
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = "#d1d5db";
-                                    e.currentTarget.style.borderColor = "#9ca3af";
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = "#e5e7eb";
-                                    e.currentTarget.style.borderColor = "#d1d5db";
-                                  }}
-                                >
-                                  Annuler
-                                </button>
-                              </div>
-                            ) : (
-                              <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
-                                <button
-                                  onClick={() => setSelectedTicket(t.id)}
-                                  disabled={loading}
-                                  style={{ 
-                                    fontSize: "12px", 
-                                    padding: "6px 12px", 
-                                    backgroundColor: "#dbeafe", 
-                                    color: "#1e40af", 
-                                    border: "1px solid #93c5fd",
-                                    borderRadius: "20px", 
-                                    cursor: loading ? "not-allowed" : "pointer",
-                                    fontWeight: "500",
-                                    transition: "all 0.2s ease",
-                                    opacity: loading ? 0.6 : 1
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    if (!loading) {
-                                      e.currentTarget.style.backgroundColor = "#bfdbfe";
-                                      e.currentTarget.style.borderColor = "#60a5fa";
-                                    }
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    if (!loading) {
-                                      e.currentTarget.style.backgroundColor = "#dbeafe";
-                                      e.currentTarget.style.borderColor = "#93c5fd";
-                                    }
-                                  }}
-                                >
-                                  Réassigner
-                                </button>
-                                <button
-                                  onClick={() => handleEscalate(t.id)}
-                                  disabled={loading}
-                                  style={{ 
-                                    fontSize: "12px", 
-                                    padding: "6px 12px", 
-                                    backgroundColor: "#fed7aa", 
-                                    color: "#9a3412", 
-                                    border: "1px solid #fdba74",
-                                    borderRadius: "20px", 
-                                    cursor: loading ? "not-allowed" : "pointer",
-                                    fontWeight: "500",
-                                    transition: "all 0.2s ease",
-                                    opacity: loading ? 0.6 : 1
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    if (!loading) {
-                                      e.currentTarget.style.backgroundColor = "#fcd34d";
-                                      e.currentTarget.style.borderColor = "#f59e0b";
-                                    }
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    if (!loading) {
-                                      e.currentTarget.style.backgroundColor = "#fed7aa";
-                                      e.currentTarget.style.borderColor = "#fdba74";
-                                    }
-                                  }}
-                                >
-                                  Escalader
-                                </button>
-                              </div>
-                            )
                           ) : t.status === "resolu" ? (
                             <button
                               onClick={() => handleClose(t.id)}
                               disabled={loading}
-                              style={{ 
-                                fontSize: "12px", 
-                                padding: "6px 12px", 
-                                backgroundColor: "#d1fae5", 
-                                color: "#065f46", 
-                                border: "1px solid #6ee7b7",
-                                borderRadius: "20px", 
-                                cursor: loading ? "not-allowed" : "pointer",
-                                fontWeight: "500",
-                                transition: "all 0.2s ease",
-                                opacity: loading ? 0.6 : 1
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!loading) {
-                                  e.currentTarget.style.backgroundColor = "#a7f3d0";
-                                  e.currentTarget.style.borderColor = "#34d399";
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (!loading) {
-                                  e.currentTarget.style.backgroundColor = "#d1fae5";
-                                  e.currentTarget.style.borderColor = "#6ee7b7";
-                                }
-                              }}
+                              style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
                             >
                               Clôturer
                             </button>
@@ -3096,33 +2665,10 @@ function DSIDashboard({ token }: DSIDashboardProps) {
                             <button
                               onClick={() => handleReopenClick(t.id)}
                               disabled={loading}
-                              style={{ 
-                                fontSize: "12px", 
-                                padding: "6px 12px", 
-                                backgroundColor: "#dbeafe", 
-                                color: "#1e40af", 
-                                border: "1px solid #93c5fd",
-                                borderRadius: "20px", 
-                                cursor: loading ? "not-allowed" : "pointer",
-                                fontWeight: "500",
-                                transition: "all 0.2s ease",
-                                opacity: loading ? 0.6 : 1
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!loading) {
-                                  e.currentTarget.style.backgroundColor = "#bfdbfe";
-                                  e.currentTarget.style.borderColor = "#60a5fa";
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                if (!loading) {
-                                  e.currentTarget.style.backgroundColor = "#dbeafe";
-                                  e.currentTarget.style.borderColor = "#93c5fd";
-                                }
-                              }}
-                              >
-                                Réouvrir
-                              </button>
+                              style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
+                            >
+                              Réouvrir
+                            </button>
                           ) : (
                             <span style={{ color: "#999", fontSize: "12px" }}>
                               {t.status === "cloture" ? "Clôturé" : "N/A"}
@@ -8598,6 +8144,286 @@ function DSIDashboard({ token }: DSIDashboardProps) {
       )}
 
       {/* Modal de réouverture avec motif de rejet */}
+      {/* Modal de réassignation */}
+      {showReassignModal && reassignTicketId && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: "white",
+            padding: "24px",
+            borderRadius: "8px",
+            maxWidth: "600px",
+            width: "90%",
+            maxHeight: "90vh",
+            overflowY: "auto"
+          }}>
+            <h3 style={{ marginBottom: "16px", color: "#17a2b8" }}>Réassigner le ticket</h3>
+            
+            {/* Informations du ticket */}
+            {(() => {
+              const ticket = allTickets.find(t => t.id === reassignTicketId);
+              return ticket ? (
+                <div style={{ marginBottom: "20px", padding: "12px", background: "#f8f9fa", borderRadius: "4px" }}>
+                  <div style={{ marginBottom: "8px" }}>
+                    <strong>Ticket #{ticket.number}:</strong> {ticket.title}
+                  </div>
+                  {ticket.technician && (
+                    <div style={{ fontSize: "14px", color: "#666" }}>
+                      Actuellement assigné à: <strong>{ticket.technician.full_name}</strong>
+                    </div>
+                  )}
+                </div>
+              ) : null;
+            })()}
+
+            {/* Sélection du technicien */}
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#333" }}>
+                Sélectionner un technicien <span style={{ color: "#dc3545" }}>*</span>
+              </label>
+              <select
+                value={selectedTechnician}
+                onChange={(e) => setSelectedTechnician(e.target.value)}
+                style={{ 
+                  width: "100%", 
+                  padding: "8px", 
+                  border: "1px solid #ddd", 
+                  borderRadius: "4px",
+                  fontSize: "14px"
+                }}
+              >
+                <option value="">Sélectionner un technicien</option>
+                {(() => {
+                  const ticket = allTickets.find(t => t.id === reassignTicketId);
+                  const filteredTechs = ticket ? getFilteredTechnicians(ticket.type) : technicians;
+                  return filteredTechs.map((tech) => {
+                    const workload = tech.assigned_tickets_count || 0;
+                    const specialization = tech.specialization ? ` (${tech.specialization})` : "";
+                    return (
+                      <option key={tech.id} value={tech.id}>
+                        {tech.full_name}{specialization} - {workload} ticket(s)
+                      </option>
+                    );
+                  });
+                })()}
+              </select>
+            </div>
+
+            {/* Notes optionnelles */}
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#333" }}>
+                Notes/Instructions pour le technicien (optionnel)
+              </label>
+              <textarea
+                value={assignmentNotes}
+                onChange={(e) => setAssignmentNotes(e.target.value)}
+                placeholder="Exemple: Ce ticket nécessite une attention particulière..."
+                rows={3}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                  fontSize: "14px",
+                  resize: "vertical"
+                }}
+              />
+            </div>
+
+            {/* Boutons */}
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => {
+                  setShowReassignModal(false);
+                  setReassignTicketId(null);
+                  setSelectedTechnician("");
+                  setAssignmentNotes("");
+                }}
+                disabled={loading}
+                style={{
+                  padding: "10px 20px",
+                  background: "#6c757d",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500"
+                }}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => reassignTicketId && handleReassign(reassignTicketId)}
+                disabled={loading || !selectedTechnician}
+                style={{
+                  padding: "10px 20px",
+                  background: "#17a2b8",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: loading || !selectedTechnician ? "not-allowed" : "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  opacity: loading || !selectedTechnician ? 0.6 : 1
+                }}
+              >
+                {loading ? "Réassignation..." : "Confirmer la réassignation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal d'assignation */}
+      {showAssignModal && assignTicketId && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: "white",
+            padding: "24px",
+            borderRadius: "8px",
+            maxWidth: "600px",
+            width: "90%",
+            maxHeight: "90vh",
+            overflowY: "auto"
+          }}>
+            <h3 style={{ marginBottom: "16px", color: "#007bff" }}>Assigner le ticket</h3>
+            
+            {/* Informations du ticket */}
+            {(() => {
+              const ticket = allTickets.find(t => t.id === assignTicketId);
+              return ticket ? (
+                <div style={{ marginBottom: "20px", padding: "12px", background: "#f8f9fa", borderRadius: "4px" }}>
+                  <div style={{ marginBottom: "8px" }}>
+                    <strong>Ticket #{ticket.number}:</strong> {ticket.title}
+                  </div>
+                  <div style={{ fontSize: "14px", color: "#666" }}>
+                    Type: <strong>{ticket.type === "materiel" ? "Matériel" : "Applicatif"}</strong>
+                  </div>
+                </div>
+              ) : null;
+            })()}
+
+            {/* Sélection du technicien */}
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#333" }}>
+                Sélectionner un technicien <span style={{ color: "#dc3545" }}>*</span>
+              </label>
+              <select
+                value={selectedTechnician}
+                onChange={(e) => setSelectedTechnician(e.target.value)}
+                style={{ 
+                  width: "100%", 
+                  padding: "8px", 
+                  border: "1px solid #ddd", 
+                  borderRadius: "4px",
+                  fontSize: "14px"
+                }}
+              >
+                <option value="">Sélectionner un technicien</option>
+                {(() => {
+                  const ticket = allTickets.find(t => t.id === assignTicketId);
+                  const filteredTechs = ticket ? getFilteredTechnicians(ticket.type) : technicians;
+                  return filteredTechs.map((tech) => {
+                    const workload = tech.assigned_tickets_count || 0;
+                    const specialization = tech.specialization ? ` (${tech.specialization})` : "";
+                    return (
+                      <option key={tech.id} value={tech.id}>
+                        {tech.full_name}{specialization} - {workload} ticket(s)
+                      </option>
+                    );
+                  });
+                })()}
+              </select>
+            </div>
+
+            {/* Notes optionnelles */}
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#333" }}>
+                Notes/Instructions pour le technicien (optionnel)
+              </label>
+              <textarea
+                value={assignmentNotes}
+                onChange={(e) => setAssignmentNotes(e.target.value)}
+                placeholder="Exemple: Ce ticket nécessite une attention particulière..."
+                rows={3}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                  fontSize: "14px",
+                  resize: "vertical"
+                }}
+              />
+            </div>
+
+            {/* Boutons */}
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+              <button
+                onClick={() => {
+                  setShowAssignModal(false);
+                  setAssignTicketId(null);
+                  setSelectedTechnician("");
+                  setAssignmentNotes("");
+                }}
+                disabled={loading}
+                style={{
+                  padding: "10px 20px",
+                  background: "#6c757d",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500"
+                }}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => assignTicketId && handleAssign(assignTicketId)}
+                disabled={loading || !selectedTechnician}
+                style={{
+                  padding: "10px 20px",
+                  background: "#007bff",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: loading || !selectedTechnician ? "not-allowed" : "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  opacity: loading || !selectedTechnician ? 0.6 : 1
+                }}
+              >
+                {loading ? "Assignation..." : "Confirmer l'assignation"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showReopenModal && reopenTicketId && (
         <div style={{
           position: "fixed",

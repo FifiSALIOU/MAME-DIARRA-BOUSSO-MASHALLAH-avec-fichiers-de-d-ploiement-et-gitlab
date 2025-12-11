@@ -1155,7 +1155,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                           <button
                             onClick={() => handleAssign(t.id)}
                             disabled={loading || !selectedTechnician}
-                            style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                            style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: loading || !selectedTechnician ? "not-allowed" : "pointer", opacity: loading || !selectedTechnician ? 0.6 : 1 }}
                           >
                             Confirmer
                           </button>
@@ -1176,7 +1176,30 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                         <button
                           onClick={() => setSelectedTicket(t.id)}
                           disabled={loading}
-                          style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                          style={{ 
+                            fontSize: "12px", 
+                            padding: "6px 12px", 
+                            backgroundColor: "#dbeafe", 
+                            color: "#1e40af", 
+                            border: "1px solid #93c5fd",
+                            borderRadius: "20px", 
+                            cursor: loading ? "not-allowed" : "pointer",
+                            fontWeight: "500",
+                            transition: "all 0.2s ease",
+                            opacity: loading ? 0.6 : 1
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!loading) {
+                              e.currentTarget.style.backgroundColor = "#bfdbfe";
+                              e.currentTarget.style.borderColor = "#60a5fa";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!loading) {
+                              e.currentTarget.style.backgroundColor = "#dbeafe";
+                              e.currentTarget.style.borderColor = "#93c5fd";
+                            }
+                          }}
                         >
                           Assigner
                         </button>
@@ -1184,7 +1207,30 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                           <button
                             onClick={() => handleEscalate(t.id)}
                             disabled={loading}
-                            style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#ff9800", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                            style={{ 
+                              fontSize: "12px", 
+                              padding: "6px 12px", 
+                              backgroundColor: "#fed7aa", 
+                              color: "#9a3412", 
+                              border: "1px solid #fdba74",
+                              borderRadius: "20px", 
+                              cursor: loading ? "not-allowed" : "pointer",
+                              fontWeight: "500",
+                              transition: "all 0.2s ease",
+                              opacity: loading ? 0.6 : 1
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!loading) {
+                                e.currentTarget.style.backgroundColor = "#fcd34d";
+                                e.currentTarget.style.borderColor = "#f59e0b";
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!loading) {
+                                e.currentTarget.style.backgroundColor = "#fed7aa";
+                                e.currentTarget.style.borderColor = "#fdba74";
+                              }
+                            }}
                           >
                             Escalader
                           </button>
@@ -1214,7 +1260,30 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                         <button
                           onClick={() => handleReassign(t.id)}
                           disabled={loading}
-                          style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#17a2b8", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                          style={{ 
+                            fontSize: "12px", 
+                            padding: "6px 12px", 
+                            backgroundColor: "#dbeafe", 
+                            color: "#1e40af", 
+                            border: "1px solid #93c5fd",
+                            borderRadius: "20px", 
+                            cursor: loading ? "not-allowed" : "pointer",
+                            fontWeight: "500",
+                            transition: "all 0.2s ease",
+                            opacity: loading ? 0.6 : 1
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!loading) {
+                              e.currentTarget.style.backgroundColor = "#bfdbfe";
+                              e.currentTarget.style.borderColor = "#60a5fa";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!loading) {
+                              e.currentTarget.style.backgroundColor = "#dbeafe";
+                              e.currentTarget.style.borderColor = "#93c5fd";
+                            }
+                          }}
                         >
                           Confirmer
                         </button>
@@ -1223,7 +1292,25 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                             setSelectedTicket(null);
                             setSelectedTechnician("");
                           }}
-                          style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#6c757d", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                          style={{ 
+                            fontSize: "12px", 
+                            padding: "6px 12px", 
+                            backgroundColor: "#e5e7eb", 
+                            color: "#374151", 
+                            border: "1px solid #d1d5db",
+                            borderRadius: "20px", 
+                            cursor: "pointer",
+                            fontWeight: "500",
+                            transition: "all 0.2s ease"
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = "#d1d5db";
+                            e.currentTarget.style.borderColor = "#9ca3af";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = "#e5e7eb";
+                            e.currentTarget.style.borderColor = "#d1d5db";
+                          }}
                         >
                           Annuler
                         </button>
@@ -1233,7 +1320,30 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                         <button
                           onClick={() => setSelectedTicket(t.id)}
                           disabled={loading}
-                          style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#17a2b8", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                          style={{ 
+                            fontSize: "12px", 
+                            padding: "6px 12px", 
+                            backgroundColor: "#dbeafe", 
+                            color: "#1e40af", 
+                            border: "1px solid #93c5fd",
+                            borderRadius: "20px", 
+                            cursor: loading ? "not-allowed" : "pointer",
+                            fontWeight: "500",
+                            transition: "all 0.2s ease",
+                            opacity: loading ? 0.6 : 1
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!loading) {
+                              e.currentTarget.style.backgroundColor = "#bfdbfe";
+                              e.currentTarget.style.borderColor = "#60a5fa";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!loading) {
+                              e.currentTarget.style.backgroundColor = "#dbeafe";
+                              e.currentTarget.style.borderColor = "#93c5fd";
+                            }
+                          }}
                         >
                           Réassigner
                         </button>
@@ -1241,7 +1351,30 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                           <button
                             onClick={() => handleEscalate(t.id)}
                             disabled={loading}
-                            style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#ff9800", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                            style={{ 
+                              fontSize: "12px", 
+                              padding: "6px 12px", 
+                              backgroundColor: "#fed7aa", 
+                              color: "#9a3412", 
+                              border: "1px solid #fdba74",
+                              borderRadius: "20px", 
+                              cursor: loading ? "not-allowed" : "pointer",
+                              fontWeight: "500",
+                              transition: "all 0.2s ease",
+                              opacity: loading ? 0.6 : 1
+                            }}
+                            onMouseEnter={(e) => {
+                              if (!loading) {
+                                e.currentTarget.style.backgroundColor = "#fcd34d";
+                                e.currentTarget.style.borderColor = "#f59e0b";
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (!loading) {
+                                e.currentTarget.style.backgroundColor = "#fed7aa";
+                                e.currentTarget.style.borderColor = "#fdba74";
+                              }
+                            }}
                           >
                             Escalader
                           </button>
@@ -1253,7 +1386,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                     <button
                       onClick={() => handleClose(t.id)}
                       disabled={loading}
-                      style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                      style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
                     >
                       Clôturer
                     </button>
@@ -1262,7 +1395,30 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                     <button
                       onClick={() => handleReopenClick(t.id)}
                       disabled={loading}
-                      style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#17a2b8", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                      style={{ 
+                        fontSize: "12px", 
+                        padding: "6px 12px", 
+                        backgroundColor: "#dbeafe", 
+                        color: "#1e40af", 
+                        border: "1px solid #93c5fd",
+                        borderRadius: "20px", 
+                        cursor: loading ? "not-allowed" : "pointer",
+                        fontWeight: "500",
+                        transition: "all 0.2s ease",
+                        opacity: loading ? 0.6 : 1
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!loading) {
+                          e.currentTarget.style.backgroundColor = "#bfdbfe";
+                          e.currentTarget.style.borderColor = "#60a5fa";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!loading) {
+                          e.currentTarget.style.backgroundColor = "#dbeafe";
+                          e.currentTarget.style.borderColor = "#93c5fd";
+                        }
+                      }}
                     >
                       Réouvrir
                     </button>
@@ -1461,7 +1617,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                                   <button
                                     onClick={() => handleAssign(t.id)}
                                     disabled={loading || !selectedTechnician}
-                                    style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                                    style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: loading || !selectedTechnician ? "not-allowed" : "pointer", opacity: loading || !selectedTechnician ? 0.6 : 1 }}
                                   >
                                     Confirmer
                                   </button>
@@ -1482,7 +1638,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                                 <button
                                   onClick={() => setSelectedTicket(t.id)}
                                   disabled={loading}
-                                  style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                                  style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
                                 >
                                   Assigner
                                 </button>
@@ -1490,7 +1646,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                                   <button
                                     onClick={() => handleEscalate(t.id)}
                                     disabled={loading}
-                                    style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#ff9800", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                                    style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#ff9800", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
                                   >
                                     Escalader
                                   </button>
@@ -1519,7 +1675,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                                 <button
                                   onClick={() => handleReassign(t.id)}
                                   disabled={loading}
-                                  style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#17a2b8", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                                  style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
                                 >
                                   Confirmer
                                 </button>
@@ -1538,7 +1694,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                                 <button
                                   onClick={() => setSelectedTicket(t.id)}
                                   disabled={loading}
-                                  style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#17a2b8", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                                  style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
                                 >
                                   Réassigner
                                 </button>
@@ -1546,7 +1702,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                                   <button
                                     onClick={() => handleEscalate(t.id)}
                                     disabled={loading}
-                                    style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#ff9800", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                                    style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#ff9800", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
                                   >
                                     Escalader
                                   </button>
@@ -1557,7 +1713,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                             <button
                               onClick={() => handleClose(t.id)}
                               disabled={loading}
-                              style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                              style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
                             >
                               Clôturer
                             </button>
@@ -1565,7 +1721,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
                             <button
                               onClick={() => handleReopenClick(t.id)}
                               disabled={loading}
-                              style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#17a2b8", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                              style={{ fontSize: "12px", padding: "6px 12px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.6 : 1 }}
                             >
                               Réouvrir
                             </button>

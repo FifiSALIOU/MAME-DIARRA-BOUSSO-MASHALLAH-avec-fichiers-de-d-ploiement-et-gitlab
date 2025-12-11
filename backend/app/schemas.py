@@ -61,6 +61,7 @@ class TicketBase(BaseModel):
     description: str
     type: TicketType
     priority: TicketPriority
+    category: Optional[str] = None  # Catégorie du ticket (ex: Réseau, Logiciel, Matériel, etc.)
 
 
 class TicketCreate(TicketBase):
@@ -94,6 +95,7 @@ class TicketRead(TicketBase):
     assigned_at: Optional[datetime] = None
     resolved_at: Optional[datetime] = None
     closed_at: Optional[datetime] = None
+    # category est hérité de TicketBase
 
     class Config:
         from_attributes = True
