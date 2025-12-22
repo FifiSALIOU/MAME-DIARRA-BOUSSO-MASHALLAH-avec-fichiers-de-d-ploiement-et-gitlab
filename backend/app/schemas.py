@@ -198,6 +198,7 @@ class TicketHistoryRead(BaseModel):
     user_id: UUID
     reason: Optional[str] = None
     changed_at: datetime
+    user: Optional[UserRead] = None
 
     class Config:
         from_attributes = True

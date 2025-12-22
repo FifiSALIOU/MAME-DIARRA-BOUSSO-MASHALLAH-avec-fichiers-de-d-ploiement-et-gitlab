@@ -1543,6 +1543,7 @@ def get_ticket_history(
     
     history = (
         db.query(models.TicketHistory)
+        .options(joinedload(models.TicketHistory.user))
         .filter(models.TicketHistory.ticket_id == ticket_id)
         .order_by(models.TicketHistory.changed_at.desc())
         .all()
