@@ -126,6 +126,7 @@ function DSIDashboard({ token }: DSIDashboardProps) {
   const [viewTicketDetails, setViewTicketDetails] = useState<string | null>(null);
   const [ticketDetails, setTicketDetails] = useState<Ticket | null>(null);
   const [ticketHistory, setTicketHistory] = useState<TicketHistory[]>([]);
+  const [ticketComments, setTicketComments] = useState<any[]>([]);
   const [showReopenModal, setShowReopenModal] = useState<boolean>(false);
   const [showReassignModal, setShowReassignModal] = useState<boolean>(false);
   const [reassignTicketId, setReassignTicketId] = useState<string | null>(null);
@@ -2064,12 +2065,31 @@ function DSIDashboard({ token }: DSIDashboardProps) {
         const data = await res.json();
         setTicketDetails(data);
         await loadTicketHistory(ticketId);
+        await loadTicketComments(ticketId);
         setViewTicketDetails(ticketId);
       } else {
         alert("Erreur lors du chargement des détails du ticket");
       }
     } catch {
       alert("Erreur lors du chargement des détails");
+    }
+  }
+
+  async function loadTicketComments(ticketId: string) {
+    try {
+      const res = await fetch(`http://localhost:8000/tickets/${ticketId}/comments`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTicketComments(Array.isArray(data) ? data : []);
+      } else {
+        setTicketComments([]);
+      }
+    } catch {
+      setTicketComments([]);
     }
   }
 
@@ -5533,10 +5553,31 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     </td>
                     <td style={{ padding: "12px 16px" }}>
                       {t.status === "cloture" ? (
-                        // Pas d'action pour tickets clôturés
-                        <span style={{ color: "#999", fontSize: "12px" }}>
-                          Clôturé
-                        </span>
+                        // Icône œil pour voir les détails des tickets clôturés (même style que technicien)
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            loadTicketDetails(t.id);
+                          }}
+                          style={{
+                            background: "#6b7280",
+                            border: "1px solid white",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            padding: "6px 8px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "32px",
+                            height: "32px"
+                          }}
+                          title="Voir les détails"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                          </svg>
+                        </button>
                       ) : (
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", position: "relative" }}>
                           <button
@@ -6416,117 +6457,6 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
       </div>
       )}
 
-      {viewTicketDetails && ticketDetails && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(0,0,0,0.5)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: "white",
-            padding: "24px",
-            borderRadius: "8px",
-            maxWidth: "700px",
-            width: "90%",
-            maxHeight: "90vh",
-            overflowY: "auto"
-          }}>
-            <h3 style={{ marginBottom: "16px" }}>Détails du ticket #{ticketDetails.number}</h3>
-            <div style={{ marginBottom: "16px" }}>
-              <strong>Titre :</strong>
-              <p style={{ marginTop: "4px", padding: "8px", background: "#f8f9fa", borderRadius: "4px" }}>
-                {ticketDetails.title}
-              </p>
-            </div>
-            <div style={{ marginBottom: "16px" }}>
-              <strong>Description :</strong>
-              <p style={{ marginTop: "4px", padding: "8px", background: "#f8f9fa", borderRadius: "4px", whiteSpace: "pre-wrap" }}>
-                {ticketDetails.description || ""}
-              </p>
-            </div>
-            <div style={{ display: "flex", gap: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
-              <div>
-                <strong>Priorité :</strong>
-                <span style={{
-                  marginLeft: "8px",
-                  padding: "4px 8px",
-                  borderRadius: "4px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                  background: ticketDetails.priority === "critique" ? "#f44336" : ticketDetails.priority === "haute" ? "#fed7aa" : ticketDetails.priority === "moyenne" ? "#ffc107" : "#9e9e9e",
-                  color: ticketDetails.priority === "haute" ? "#92400e" : "white"
-                }}>
-                  {ticketDetails.priority}
-                </span>
-              </div>
-              <div>
-                <strong>Catégorie :</strong>
-                <span style={{ marginLeft: "8px", padding: "4px 8px", background: "#f3e5f5", borderRadius: "4px" }}>
-                  {ticketDetails.category || "Non spécifiée"}
-                </span>
-              </div>
-              {ticketDetails.creator && (
-                <div>
-                  <strong>Créateur :</strong>
-                  <span style={{ marginLeft: "8px" }}>
-                    {ticketDetails.creator.full_name}
-                  </span>
-                </div>
-              )}
-              {ticketDetails.technician && (
-                <div>
-                  <strong>Technicien assigné :</strong>
-                  <span style={{ marginLeft: "8px" }}>
-                    {ticketDetails.technician.full_name}
-                  </span>
-                </div>
-              )}
-            </div>
-            <div style={{ marginTop: "16px" }}>
-              <strong>Historique :</strong>
-              <div style={{ marginTop: "8px" }}>
-                {ticketHistory.length === 0 ? (
-                  <p style={{ color: "#999", fontStyle: "italic" }}>Aucun historique</p>
-                ) : (
-                  ticketHistory.map((h) => (
-                    <div key={h.id} style={{ padding: "8px", marginTop: "4px", background: "#f8f9fa", borderRadius: "4px" }}>
-                      <div style={{ fontSize: "12px", color: "#555" }}>
-                        {new Date(h.changed_at).toLocaleString("fr-FR")}
-                      </div>
-                      <div style={{ marginTop: "4px", fontWeight: 500 }}>
-                        {h.old_status ? `${h.old_status} → ${h.new_status}` : h.new_status}
-                      </div>
-                      {h.user && (
-                        <div style={{ marginTop: "4px", fontSize: "12px", color: "#666" }}>
-                          Par: {h.user.full_name}
-                        </div>
-                      )}
-                      {h.reason && (
-                        <div style={{ marginTop: "4px", color: "#666" }}>Résumé de la résolution: {h.reason}</div>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
-              <button
-                onClick={() => setViewTicketDetails(null)}
-                style={{ padding: "8px 12px", backgroundColor: "#6c757d", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
-              >
-                Fermer
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
             </>
           )}
 
@@ -6699,9 +6629,31 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                         </td>
                         <td style={{ padding: "12px 16px" }}>
                           {t.status === "cloture" ? (
-                            <span style={{ color: "#999", fontSize: "12px" }}>
-                              Clôturé
-                            </span>
+                            // Icône œil pour voir les détails des tickets clôturés (même style que technicien)
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                loadTicketDetails(t.id);
+                              }}
+                              style={{
+                                background: "#6b7280",
+                                border: "1px solid white",
+                                borderRadius: "6px",
+                                cursor: "pointer",
+                                padding: "6px 8px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                width: "32px",
+                                height: "32px"
+                              }}
+                              title="Voir les détails"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                              </svg>
+                            </button>
                           ) : (
                             <div style={{ display: "flex", alignItems: "center", gap: "8px", position: "relative" }}>
                               <button
@@ -14683,6 +14635,174 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                   Sélectionnez un ticket pour voir les détails
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modale pour afficher les détails du ticket - accessible depuis toutes les sections */}
+      {viewTicketDetails && ticketDetails && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 10000
+        }}>
+          <div style={{
+            background: "white",
+            padding: "24px",
+            borderRadius: "8px",
+            maxWidth: "700px",
+            width: "90%",
+            maxHeight: "90vh",
+            overflowY: "auto"
+          }}>
+            <h3 style={{ marginBottom: "16px" }}>Détails du ticket #{ticketDetails.number}</h3>
+            <div style={{ marginBottom: "16px" }}>
+              <strong>Titre :</strong>
+              <p style={{ marginTop: "4px", padding: "8px", background: "#f8f9fa", borderRadius: "4px" }}>
+                {ticketDetails.title}
+              </p>
+            </div>
+            <div style={{ marginBottom: "16px" }}>
+              <strong>Description :</strong>
+              <p style={{ marginTop: "4px", padding: "8px", background: "#f8f9fa", borderRadius: "4px", whiteSpace: "pre-wrap" }}>
+                {ticketDetails.description || ""}
+              </p>
+            </div>
+            <div style={{ display: "flex", gap: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
+              <div>
+                <strong>Priorité :</strong>
+                <span style={{
+                  marginLeft: "8px",
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                  background: ticketDetails.priority === "critique" ? "#f44336" : ticketDetails.priority === "haute" ? "#fed7aa" : ticketDetails.priority === "moyenne" ? "#ffc107" : "#9e9e9e",
+                  color: ticketDetails.priority === "haute" ? "#92400e" : "white"
+                }}>
+                  {ticketDetails.priority}
+                </span>
+              </div>
+              <div>
+                <strong>Type :</strong>
+                <span style={{ marginLeft: "8px", padding: "4px 8px", background: "#e3f2fd", borderRadius: "4px", color: "#1976d2" }}>
+                  {ticketDetails.type === "materiel" ? "Matériel" : ticketDetails.type === "applicatif" ? "Applicatif" : ticketDetails.type || "Non spécifié"}
+                </span>
+              </div>
+              <div>
+                <strong>Catégorie :</strong>
+                <span style={{ marginLeft: "8px", padding: "4px 8px", background: "#f3e5f5", borderRadius: "4px" }}>
+                  {ticketDetails.category || "Non spécifiée"}
+                </span>
+              </div>
+              {ticketDetails.creator && (
+                <div>
+                  <strong>Créateur :</strong>
+                  <span style={{ marginLeft: "8px" }}>
+                    {ticketDetails.creator.full_name}
+                  </span>
+                </div>
+              )}
+              {ticketDetails.technician && (
+                <div>
+                  <strong>Technicien assigné :</strong>
+                  <span style={{ marginLeft: "8px" }}>
+                    {ticketDetails.technician.full_name}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div style={{ marginBottom: "16px" }}>
+              <strong>Dates importantes :</strong>
+              <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px", fontSize: "14px" }}>
+                {ticketDetails.created_at && (
+                  <div>Créé le : {new Date(ticketDetails.created_at).toLocaleString("fr-FR")}</div>
+                )}
+                {ticketDetails.assigned_at && (
+                  <div>Assigné le : {new Date(ticketDetails.assigned_at).toLocaleString("fr-FR")}</div>
+                )}
+                {ticketDetails.resolved_at && (
+                  <div>Résolu le : {new Date(ticketDetails.resolved_at).toLocaleString("fr-FR")}</div>
+                )}
+                {ticketDetails.closed_at && (
+                  <div>Clôturé le : {new Date(ticketDetails.closed_at).toLocaleString("fr-FR")}</div>
+                )}
+              </div>
+            </div>
+            <div style={{ marginTop: "16px" }}>
+              <strong>Commentaires :</strong>
+              <div style={{ marginTop: "8px" }}>
+                {ticketComments.length === 0 ? (
+                  <p style={{ color: "#999", fontStyle: "italic" }}>Aucun commentaire</p>
+                ) : (
+                  ticketComments.map((comment) => (
+                    <div key={comment.id} style={{ padding: "12px", marginTop: "8px", background: "#f8f9fa", borderRadius: "4px", borderLeft: "3px solid #1976d2" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                        <div style={{ fontWeight: 500, fontSize: "14px" }}>
+                          {comment.user?.full_name || "Utilisateur"}
+                        </div>
+                        <div style={{ fontSize: "12px", color: "#666" }}>
+                          {new Date(comment.created_at).toLocaleString("fr-FR")}
+                        </div>
+                      </div>
+                      <div style={{ marginTop: "8px", color: "#333", whiteSpace: "pre-wrap" }}>
+                        {comment.content}
+                      </div>
+                      {comment.type && (
+                        <div style={{ marginTop: "4px", fontSize: "11px", color: "#666" }}>
+                          Type: {comment.type === "technique" ? "Technique" : comment.type === "utilisateur" ? "Utilisateur" : "Système"}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+            <div style={{ marginTop: "16px" }}>
+              <strong>Historique :</strong>
+              <div style={{ marginTop: "8px" }}>
+                {ticketHistory.length === 0 ? (
+                  <p style={{ color: "#999", fontStyle: "italic" }}>Aucun historique</p>
+                ) : (
+                  ticketHistory.map((h) => (
+                    <div key={h.id} style={{ padding: "8px", marginTop: "4px", background: "#f8f9fa", borderRadius: "4px" }}>
+                      <div style={{ fontSize: "12px", color: "#555" }}>
+                        {new Date(h.changed_at).toLocaleString("fr-FR")}
+                      </div>
+                      <div style={{ marginTop: "4px", fontWeight: 500 }}>
+                        {h.old_status ? `${h.old_status} → ${h.new_status}` : h.new_status}
+                      </div>
+                      {h.user && (
+                        <div style={{ marginTop: "4px", fontSize: "12px", color: "#666" }}>
+                          Par: {h.user.full_name}
+                        </div>
+                      )}
+                      {h.reason && (
+                        <div style={{ marginTop: "4px", color: "#666" }}>Résumé de la résolution: {h.reason}</div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "8px", marginTop: "16px" }}>
+              <button
+                onClick={() => {
+                  setViewTicketDetails(null);
+                  setTicketDetails(null);
+                }}
+                style={{ padding: "8px 12px", backgroundColor: "#6c757d", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+              >
+                Fermer
+              </button>
             </div>
           </div>
         </div>
