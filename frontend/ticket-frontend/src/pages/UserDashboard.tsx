@@ -1783,7 +1783,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                     width: "96px",
                     height: "96px",
                     borderRadius: "50%",
-                    background: "#0284c7",
+                    background: "#ea580c",
                     opacity: 0.05,
                     zIndex: 0,
                     transition: "transform 500ms ease"
@@ -1852,7 +1852,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                     width: "96px",
                     height: "96px",
                     borderRadius: "50%",
-                    background: "#16a34a",
+                    background: "#ea580c",
                     opacity: 0.05,
                     zIndex: 0,
                     transition: "transform 500ms ease"
