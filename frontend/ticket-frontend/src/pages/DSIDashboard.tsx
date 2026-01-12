@@ -5085,7 +5085,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
               color: "#111827",
               fontFamily: "system-ui, -apple-system, sans-serif"
             }}>
-              {activeSection === "tickets" ? "Tickets" : "Tableau de bord"}
+              {activeSection === "tickets" ? "Tickets" : activeSection === "technicians" ? "Équipe" : "Tableau de bord"}
             </div>
             <div style={{ 
               fontSize: "13px", 
@@ -5093,7 +5093,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
               color: "#6b7280",
               fontFamily: "system-ui, -apple-system, sans-serif"
             }}>
-              {activeSection === "tickets" ? "Gérez tous vos tickets" : "Vue d'ensemble de votre activité"}
+              {activeSection === "tickets" ? "Gérez tous vos tickets" : activeSection === "technicians" ? "Gestion des membres de l'équipe DSI et des techniciens" : "Vue d'ensemble de votre activité"}
             </div>
           </div>
           
