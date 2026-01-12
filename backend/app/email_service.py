@@ -203,6 +203,8 @@ Cordialement,
             # Secrétaire DSI, Adjoint DSI et Admin : seulement le bouton "Assigner à un technicien"
             if recipient_role == "Admin":
                 role_path = "/dashboard/dsi"
+            elif recipient_role == "Adjoint DSI":
+                role_path = "/dashboard/adjoint"
             else:
                 role_path = "/dashboard/secretary"
             
@@ -574,7 +576,7 @@ Cordialement,
         
         # Lien vers le dashboard avec le ticket et l'action assign
         redirect_params = urlencode({
-            "redirect": "/dashboard/secretary",
+            "redirect": "/dashboard/adjoint",
             "ticket": ticket_id,
             "action": "assign"
         })

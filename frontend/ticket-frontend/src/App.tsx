@@ -56,8 +56,9 @@ function App() {
     
     switch (userRole) {
       case "Secrétaire DSI":
+        return <Navigate to="/dashboard/secretary" replace />;
       case "Adjoint DSI":
-        return <SecretaryDashboard token={token} />;
+        return <Navigate to="/dashboard/adjoint" replace />;
       case "Technicien":
         return <TechnicianDashboard token={token} />;
       case "DSI":
@@ -89,6 +90,10 @@ function App() {
         />
         <Route
           path="/dashboard/secretary"
+          element={token ? <SecretaryDashboard token={token} /> : <Navigate to="/" replace />}
+        />
+        <Route
+          path="/dashboard/adjoint"
           element={token ? <SecretaryDashboard token={token} /> : <Navigate to="/" replace />}
         />
         <Route
