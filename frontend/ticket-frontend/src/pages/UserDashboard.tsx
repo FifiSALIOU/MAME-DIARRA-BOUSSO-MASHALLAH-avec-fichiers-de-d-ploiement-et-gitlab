@@ -1373,7 +1373,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
               color: "#111827",
               fontFamily: "system-ui, -apple-system, sans-serif"
             }}>
-              {activeSection === "tickets" ? "Tickets" : "Tableau de bord"}
+              {activeSection === "notifications" ? "Notifications" : activeSection === "tickets" ? "Tickets" : "Tableau de bord"}
             </div>
             <div style={{ 
               fontSize: "13px", 
@@ -1381,7 +1381,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
               color: "#6b7280",
               fontFamily: "system-ui, -apple-system, sans-serif"
             }}>
-              {activeSection === "tickets" ? "Gérez tous vos tickets" : "Vue d'ensemble de votre activité"}
+              {activeSection === "notifications" ? `${unreadCount} notification${unreadCount > 1 ? "s" : ""} non lue${unreadCount > 1 ? "s" : ""}` : activeSection === "tickets" ? "Gérez tous vos tickets" : "Vue d'ensemble de votre activité"}
             </div>
           </div>
 
@@ -2988,65 +2988,27 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
           padding: "30px",
           gap: "16px"
         }}>
-          {/* Header */}
-          <div style={{ marginBottom: "8px" }}>
-            <h2 style={{ 
-              fontSize: "24px", 
-              fontWeight: "700", 
-              color: "hsl(220, 45%, 10%)",
-              margin: 0,
-              marginBottom: "4px",
-              fontFamily: "'Plus Jakarta Sans', sans-serif"
-            }}>
-              Notifications
-            </h2>
-            <p style={{ 
-              fontSize: "14px", 
-              color: "hsl(220, 15%, 45%)",
-              margin: 0
-            }}>
-              {unreadNotificationsCount} notification{unreadNotificationsCount > 1 ? "s" : ""} non lue{unreadNotificationsCount > 1 ? "s" : ""}
-            </p>
-          </div>
-
-          {/* Barre de recherche et bouton Tout marquer comme lu */}
+          {/* Section avec icône cloche et bouton Tout marquer comme lu */}
           <div style={{ 
             display: "flex", 
-            flexDirection: "column",
-            gap: "12px",
+            justifyContent: "space-between",
+            alignItems: "center",
             marginBottom: "16px"
           }}>
-            {/* Barre de recherche */}
-            <div style={{ 
-              position: "relative", 
-              display: "flex", 
-              alignItems: "center" 
+            {/* Icône cloche avec nombre de notifications */}
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px"
             }}>
-              <Search 
-                size={16} 
-                style={{ 
-                  position: "absolute", 
-                  left: "16px", 
-                  color: "#6b7280",
-                  pointerEvents: "none"
-                }} 
-              />
-              <input
-                type="text"
-                placeholder="Rechercher un ticket..."
-                value={notificationSearch}
-                onChange={(e) => setNotificationSearch(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "8px 40px",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  background: "transparent",
-                  outline: "none",
-                  color: "#1f2937"
-                }}
-              />
+              <Bell size={20} style={{ color: "hsl(25, 95%, 53%)" }} />
+              <span style={{
+                fontSize: "14px",
+                color: "hsl(220, 45%, 10%)",
+                fontWeight: "500"
+              }}>
+                {filteredNotifications.length} notification{filteredNotifications.length > 1 ? "s" : ""}
+              </span>
             </div>
 
             {/* Bouton Tout marquer comme lu */}
@@ -3065,8 +3027,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                   color: "hsl(25, 95%, 53%)",
                   fontSize: "14px",
                   fontWeight: "500",
-                  transition: "all 0.2s",
-                  alignSelf: "flex-start"
+                  transition: "all 0.2s"
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = "rgba(255, 122, 27, 0.1)";
