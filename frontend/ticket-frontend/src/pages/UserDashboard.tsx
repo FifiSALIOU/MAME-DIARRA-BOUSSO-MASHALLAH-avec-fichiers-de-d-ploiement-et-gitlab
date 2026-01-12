@@ -863,6 +863,13 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
   };
   const activeSection = getActiveSection();
   
+  // Charger les tickets avec notifications quand on entre dans la section notifications
+  useEffect(() => {
+    if (location.pathname === "/dashboard/user/notifications" && actualToken && notifications.length > 0) {
+      void loadNotificationsTickets();
+    }
+  }, [location.pathname, actualToken, notifications]);
+  
   const [showCreateModal, setShowCreateModal] = useState(false);
   const ticketsListRef = useRef<HTMLDivElement>(null);
   const [userInfo, setUserInfo] = useState<{ full_name: string; role?: string } | null>(null);
@@ -2969,300 +2976,305 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
         )}
 
       {/* Section Notifications dans le contenu principal */}
-      {activeSection === "notifications" && !showTicketDetailsPage && (() => {
-        const unreadNotificationsCount = notifications.filter(n => !n.read).length;
-        const filteredNotifications = notifications.filter((notif) => {
-          if (!notificationSearch.trim()) return true;
-          const search = notificationSearch.trim().toLowerCase();
-          return (
-            notif.message.toLowerCase().includes(search) ||
-            (notif.ticket_id && formatTicketNumber(parseInt(notif.ticket_id)).toLowerCase().includes(search))
-          );
-        });
-
-        return (
+      {activeSection === "notifications" && !showTicketDetailsPage && (
         <div style={{
           display: "flex",
-          flexDirection: "column",
           width: "100%",
-          padding: "30px",
-          gap: "16px"
+          height: "calc(100vh - 80px)",
+          background: "white",
+          overflow: "hidden"
         }}>
-          {/* Section avec icône cloche et bouton Tout marquer comme lu */}
-          <div style={{ 
-            display: "flex", 
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "16px"
+          {/* Panneau gauche - Liste des tickets avec notifications */}
+          <div style={{
+            width: "400px",
+            borderRight: "1px solid #e0e0e0",
+            display: "flex",
+            flexDirection: "column",
+            background: "#f8f9fa",
+            height: "100%",
+            overflow: "hidden",
+            flexShrink: 0
           }}>
-            {/* Icône cloche avec nombre de notifications */}
             <div style={{
+              padding: "28px 20px 20px 20px",
+              borderBottom: "1px solid #e0e0e0",
               display: "flex",
+              justifyContent: "space-between",
               alignItems: "center",
-              gap: "8px"
+              background: "white",
+              borderRadius: "8px 0 0 0"
             }}>
-              <Bell size={20} style={{ color: "hsl(25, 95%, 53%)" }} />
-              <span style={{
-                fontSize: "14px",
-                color: "hsl(220, 45%, 10%)",
-                fontWeight: "500"
-              }}>
-                {filteredNotifications.length} notification{filteredNotifications.length > 1 ? "s" : ""}
-              </span>
+              <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "600", color: "#333" }}>
+                Tickets avec notifications
+              </h3>
             </div>
-
-            {/* Bouton Tout marquer comme lu */}
-            {unreadNotificationsCount > 0 && (
-              <button
-                onClick={clearAllNotifications}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "8px 16px",
-                  background: "transparent",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  color: "hsl(25, 95%, 53%)",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                  transition: "all 0.2s"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(255, 122, 27, 0.1)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                }}
-              >
-                <Check size={16} />
-                Tout marquer comme lu
-              </button>
-            )}
-          </div>
-
-          {/* Liste des notifications */}
-          <div style={{ 
-            display: "flex", 
-            flexDirection: "column", 
-            gap: "12px"
-          }}>
-            {filteredNotifications.length === 0 ? (
-              <div style={{
-                padding: "64px 20px",
-                background: "hsl(0, 0%, 100%)",
-                border: "2px dashed hsl(220, 20%, 88%)",
-                borderRadius: "12px",
-                textAlign: "center"
-              }}>
-                <Bell size={64} style={{ 
-                  color: "hsla(220, 15%, 45%, 0.3)",
-                  margin: "0 auto 16px",
-                  display: "block"
-                }} />
-                <h3 style={{ 
-                  fontSize: "18px", 
-                  fontWeight: "600", 
-                  color: "hsl(220, 45%, 10%)",
-                  margin: "0 0 8px 0"
+            <div style={{
+              flex: 1,
+              overflowY: "auto",
+              padding: "10px"
+            }}>
+              {notificationsTickets.length === 0 ? (
+                <div style={{
+                  textAlign: "center",
+                  padding: "40px 20px",
+                  color: "#999"
                 }}>
-                  Aucune notification
-                </h3>
-                <p style={{ 
-                  color: "hsl(220, 15%, 45%)",
-                  margin: 0
-                }}>
-                  Vous n'avez aucune notification pour le moment
-                </p>
-              </div>
-            ) : (
-              filteredNotifications.map((notif) => {
-                const notifType = getNotificationType(notif.message);
-                const notifTitle = getNotificationTitle(notif.message);
-                const isUnread = !notif.read;
-
-                // Couleurs selon le type
-                const typeConfig = {
-                  info: {
-                    bg: "hsla(199, 89%, 48%, 0.1)",
-                    color: "hsl(199, 89%, 48%)",
-                    icon: Info
-                  },
-                  success: {
-                    bg: "hsla(142, 76%, 36%, 0.1)",
-                    color: "hsl(142, 76%, 36%)",
-                    icon: CheckCircle2
-                  },
-                  warning: {
-                    bg: "hsla(38, 92%, 50%, 0.1)",
-                    color: "hsl(38, 92%, 50%)",
-                    icon: AlertTriangle
-                  },
-                  error: {
-                    bg: "hsla(0, 84%, 60%, 0.1)",
-                    color: "hsl(0, 84%, 60%)",
-                    icon: XCircle
-                  }
-                };
-
-                const config = typeConfig[notifType];
-                const IconComponent = config.icon;
-
-                return (
-                  <div
-                    key={notif.id}
-                    style={{
-                      position: "relative",
-                      padding: "16px",
-                      background: "hsl(0, 0%, 100%)",
-                      border: isUnread 
-                        ? "1px solid hsla(25, 95%, 53%, 0.3)" 
-                        : "1px solid hsl(220, 20%, 88%)",
-                      borderRadius: "12px",
-                      boxShadow: isUnread 
-                        ? "0 0 20px hsla(25, 95%, 53%, 0.3)" 
-                        : "none",
-                      transition: "all 0.2s"
-                    }}
-                  >
-                    {/* Indicateur non lu */}
-                    {isUnread && (
-                      <div style={{
-                        position: "absolute",
-                        top: "16px",
-                        right: "16px",
-                        width: "10px",
-                        height: "10px",
-                        borderRadius: "50%",
-                        background: "hsl(25, 95%, 53%)"
-                      }} />
-                    )}
-
-                    <div style={{ 
-                      display: "flex", 
-                      gap: "16px",
-                      alignItems: "flex-start"
-                    }}>
-                      {/* Icône de type */}
-                      <div style={{
-                        width: "40px",
-                        height: "40px",
+                  Aucun ticket avec notification
+                </div>
+              ) : (
+                notificationsTickets.map((ticket) => {
+                  const ticketNotifications = notifications.filter(n => n.ticket_id === ticket.id);
+                  const unreadCount = ticketNotifications.filter(n => !n.read).length;
+                  const isSelected = selectedNotificationTicket === ticket.id;
+                  
+                  return (
+                    <div
+                      key={ticket.id}
+                      onClick={async () => {
+                        setSelectedNotificationTicket(ticket.id);
+                        try {
+                          const res = await fetch(`http://localhost:8000/tickets/${ticket.id}`, {
+                            headers: {
+                              Authorization: `Bearer ${actualToken}`,
+                            },
+                          });
+                          if (res.ok) {
+                            const data = await res.json();
+                            setSelectedNotificationTicketDetails(data);
+                            await loadTicketHistory(ticket.id);
+                          }
+                        } catch (err) {
+                          console.error("Erreur chargement détails:", err);
+                        }
+                      }}
+                      style={{
+                        padding: "12px",
+                        marginBottom: "8px",
                         borderRadius: "8px",
-                        background: config.bg,
+                        background: isSelected ? "#e3f2fd" : "white",
+                        border: isSelected ? "2px solid #2196f3" : "1px solid #e0e0e0",
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                      }}
+                    >
+                      <div style={{
                         display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        gap: "10px"
                       }}>
-                        <IconComponent size={20} style={{ color: config.color }} />
-                      </div>
-
-                      {/* Contenu */}
-                      <div style={{ flex: 1 }}>
-                        <h3 style={{
-                          fontSize: "16px",
-                          fontWeight: "600",
-                          color: "hsl(220, 45%, 10%)",
-                          margin: "0 0 4px 0"
-                        }}>
-                          {notifTitle}
-                        </h3>
-                        <p style={{
-                          fontSize: "14px",
-                          color: "hsl(220, 15%, 45%)",
-                          margin: "0 0 12px 0"
-                        }}>
-                          {notif.message}
-                        </p>
-                        <div style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "12px",
-                          flexWrap: "wrap"
-                        }}>
-                          {/* Date */}
-                          <span style={{
-                            fontSize: "12px",
-                            color: "hsl(220, 15%, 45%)",
-                            whiteSpace: "nowrap"
+                        <div style={{ flex: 1 }}>
+                          <p style={{
+                            margin: 0,
+                            fontSize: "14px",
+                            fontWeight: isSelected ? "600" : "500",
+                            color: "#333",
+                            lineHeight: "1.5"
                           }}>
-                            {formatRelativeTime(notif.created_at)}
-                          </span>
-
-                          {/* Bouton ticket si disponible */}
-                          {notif.ticket_id && (
-                            <button
-                              onClick={async () => {
-                                const ticketId = notif.ticket_id;
-                                if (ticketId) {
-                                  await loadTicketDetails(ticketId);
-                                }
-                              }}
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                padding: "6px 12px",
-                                background: "transparent",
-                                border: "1px solid hsl(220, 20%, 88%)",
-                                borderRadius: "6px",
-                                cursor: "pointer",
-                                fontSize: "12px",
-                                color: "hsl(220, 45%, 10%)",
-                                transition: "all 0.2s"
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background = "hsl(220, 20%, 96%)";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background = "transparent";
-                              }}
-                            >
-                              <Ticket size={12} />
-                              {notif.ticket_id ? formatTicketNumber(parseInt(notif.ticket_id)) : "N/A"}
-                            </button>
-                          )}
-
-                          {/* Bouton Marquer comme lu */}
-                          {isUnread && (
-                            <button
-                              onClick={() => markNotificationAsRead(notif.id)}
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                padding: "6px 12px",
-                                background: "transparent",
-                                border: "none",
-                                borderRadius: "6px",
-                                cursor: "pointer",
-                                fontSize: "12px",
-                                color: "hsl(25, 95%, 53%)",
-                                transition: "all 0.2s"
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background = "rgba(255, 122, 27, 0.1)";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background = "transparent";
-                              }}
-                            >
-                              <Check size={12} />
-                              Marquer comme lu
-                            </button>
-                          )}
+                            {formatTicketNumber(ticket.number)}
+                          </p>
+                          <p style={{
+                            margin: "4px 0 0 0",
+                            fontSize: "13px",
+                            color: "#666",
+                            lineHeight: "1.4",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical"
+                          }}>
+                            {ticket.title}
+                          </p>
+                          <p style={{
+                            margin: "4px 0 0 0",
+                            fontSize: "11px",
+                            color: "#999"
+                          }}>
+                            {ticketNotifications.length} notification{ticketNotifications.length > 1 ? "s" : ""}
+                          </p>
                         </div>
+                        {unreadCount > 0 && (
+                          <div style={{
+                            minWidth: "20px",
+                            height: "20px",
+                            borderRadius: "10px",
+                            background: "#f44336",
+                            color: "white",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "11px",
+                            fontWeight: "600",
+                            padding: "0 6px"
+                          }}>
+                            {unreadCount}
+                          </div>
+                        )}
                       </div>
                     </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Panneau droit - Détails du ticket sélectionné */}
+          <div style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            background: "white"
+          }}>
+            {selectedNotificationTicketDetails ? (
+              <>
+                <div style={{
+                  padding: "28px 20px 20px 20px",
+                  borderBottom: "1px solid #e0e0e0",
+                  background: "white",
+                  borderRadius: "0 8px 0 0"
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <h3 style={{ margin: 0, fontSize: "18px", fontWeight: "600", color: "#333" }}>Détails du ticket #{selectedNotificationTicketDetails.number}</h3>
+                    {selectedNotificationTicketDetails.status === "rejete" && (
+                      <span style={{
+                        padding: "6px 10px",
+                        borderRadius: "16px",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        background: "#fee2e2",
+                        color: "#991b1b",
+                        border: "1px solid #fecaca"
+                      }}>
+                        Rejeté
+                      </span>
+                    )}
                   </div>
-                );
-              })
+                </div>
+                
+                <div style={{
+                  flex: 1,
+                  overflowY: "auto",
+                  padding: "20px"
+                }}>
+                  <div style={{ marginBottom: "16px" }}>
+                    <strong>Titre :</strong>
+                    <p style={{ marginTop: "4px", padding: "8px", background: "#f8f9fa", borderRadius: "4px" }}>
+                      {selectedNotificationTicketDetails.title}
+                    </p>
+                  </div>
+
+                  {selectedNotificationTicketDetails.description && (
+                    <div style={{ marginBottom: "16px" }}>
+                      <strong>Description :</strong>
+                      <p style={{ marginTop: "4px", padding: "8px", background: "#f8f9fa", borderRadius: "4px", whiteSpace: "pre-wrap" }}>
+                        {selectedNotificationTicketDetails.description}
+                      </p>
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", gap: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
+                    {selectedNotificationTicketDetails.type && (
+                      <div>
+                        <strong>Type :</strong>
+                        <span style={{ marginLeft: "8px", padding: "4px 8px", background: "#e3f2fd", borderRadius: "4px" }}>
+                          {selectedNotificationTicketDetails.type === "materiel" ? "Matériel" : "Applicatif"}
+                        </span>
+                      </div>
+                    )}
+                    <div>
+                      <strong>Priorité :</strong>
+                      <span style={{
+                        marginLeft: "8px",
+                        padding: "4px 8px",
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                        fontWeight: "500",
+                        background: selectedNotificationTicketDetails.priority === "critique" ? "#f44336" : selectedNotificationTicketDetails.priority === "haute" ? "rgba(245, 158, 11, 0.1)" : selectedNotificationTicketDetails.priority === "moyenne" ? "rgba(13, 173, 219, 0.1)" : selectedNotificationTicketDetails.priority === "faible" ? "#E5E7EB" : "#9e9e9e",
+                        color: selectedNotificationTicketDetails.priority === "critique" ? "#E53E3E" : selectedNotificationTicketDetails.priority === "haute" ? "#F59E0B" : selectedNotificationTicketDetails.priority === "moyenne" ? "#0DADDB" : selectedNotificationTicketDetails.priority === "faible" ? "#6B7280" : "white"
+                      }}>
+                        {selectedNotificationTicketDetails.priority}
+                      </span>
+                    </div>
+                    <div>
+                      <strong>Statut :</strong>
+                      <span style={{ marginLeft: "8px", padding: "4px 8px", background: "#f3e5f5", borderRadius: "4px" }}>
+                        {selectedNotificationTicketDetails.status}
+                      </span>
+                    </div>
+                    {selectedNotificationTicketDetails.category && (
+                      <div>
+                        <strong>Catégorie :</strong>
+                        <span style={{ marginLeft: "8px", padding: "4px 8px", background: "#f3e5f5", borderRadius: "4px" }}>
+                          {selectedNotificationTicketDetails.category}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: "flex", gap: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
+                    {selectedNotificationTicketDetails.creator && (
+                      <div>
+                        <strong>Créateur :</strong>
+                        <p style={{ marginTop: "4px" }}>
+                          {selectedNotificationTicketDetails.creator.full_name}
+                        </p>
+                      </div>
+                    )}
+                    {selectedNotificationTicketDetails.technician && (
+                      <div>
+                        <strong>Technicien assigné :</strong>
+                        <p style={{ marginTop: "4px" }}>
+                          {selectedNotificationTicketDetails.technician.full_name}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ marginTop: "24px", marginBottom: "16px" }}>
+                    <strong>Historique :</strong>
+                    <div style={{ marginTop: "8px" }}>
+                      {ticketHistory.length === 0 ? (
+                        <p style={{ color: "#999", fontStyle: "italic" }}>Aucun historique</p>
+                      ) : (
+                        ticketHistory.map((h) => (
+                          <div key={h.id} style={{ padding: "8px", marginTop: "4px", background: "#f8f9fa", borderRadius: "4px" }}>
+                            <div style={{ fontSize: "12px", color: "#555" }}>
+                              {new Date(h.changed_at).toLocaleString("fr-FR")}
+                            </div>
+                            <div style={{ marginTop: "4px", fontWeight: 500 }}>
+                              {h.old_status ? `${h.old_status} → ${h.new_status}` : h.new_status}
+                            </div>
+                            {h.user && (
+                              <div style={{ marginTop: "4px", fontSize: "12px", color: "#666" }}>
+                                Par: {h.user.full_name}
+                              </div>
+                            )}
+                            {h.reason && (
+                              <div style={{ marginTop: "4px", color: "#666" }}>{h.reason}</div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div style={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#999"
+              }}>
+                Sélectionnez un ticket pour voir les détails
+              </div>
             )}
           </div>
         </div>
-        );
-      })()}
+      )}
 
       {showEditModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
