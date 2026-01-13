@@ -3458,7 +3458,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                           color: "#991b1b",
                           border: "1px solid #fecaca"
                         }}>
-                          Rejeté
+                          Relancé
                         </span>
                       )}
                     </div>
@@ -4195,7 +4195,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                                t.status === "assigne_technicien" ? "Assigné au technicien" :
                                t.status === "en_cours" ? "En cours" :
                                t.status === "resolu" ? "Résolu" :
-                               t.status === "rejete" ? "Rejeté" :
+                               t.status === "rejete" ? "Relancé" :
                                t.status === "cloture" ? "Clôturé" : t.status}
                             </span>
 
@@ -5374,7 +5374,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                              t.status === "en_cours" ? "En cours" :
                              t.status === "resolu" ? "Résolu" :
                              t.status === "cloture" ? "Clôturé" :
-                             t.status === "rejete" ? "Rejeté" : t.status}
+                             t.status === "rejete" ? "Relancé" : t.status}
                           </span>
                         </td>
                         <td style={{ padding: "12px 16px" }}>
