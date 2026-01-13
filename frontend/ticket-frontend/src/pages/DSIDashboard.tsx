@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
-import { Users, Clock3, TrendingUp, Award, UserCheck, Star, LayoutDashboard, ChevronLeft, ChevronRight, Bell, BarChart3, Search, Ticket, Wrench, CheckCircle2, AlertTriangle, Clock, Briefcase } from "lucide-react";
+import { Users, Clock3, TrendingUp, Award, UserCheck, Star, LayoutDashboard, ChevronLeft, ChevronRight, Bell, BarChart3, Search, Ticket, Wrench, CheckCircle2, AlertTriangle, Clock, Briefcase, UserPlus, CornerUpRight } from "lucide-react";
 import React from "react";
 import helpdeskLogo from "../assets/helpdesk-logo.png";
 import jsPDF from "jspdf";
@@ -5549,7 +5549,10 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                         cursor: loading ? "not-allowed" : "pointer",
                         fontSize: "14px",
                         fontWeight: "500",
-                        opacity: loading ? 0.6 : 1
+                        opacity: loading ? 0.6 : 1,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
                       }}
                       onMouseEnter={(e) => {
                         if (!loading) e.currentTarget.style.backgroundColor = "#e5e7eb";
@@ -5558,6 +5561,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                         if (!loading) e.currentTarget.style.backgroundColor = "#f3f4f6";
                       }}
                     >
+                      <UserPlus size={16} />
                       Assigner
                     </button>
                   )}
@@ -5578,7 +5582,10 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                         cursor: loading ? "not-allowed" : "pointer",
                         fontSize: "14px",
                         fontWeight: "500",
-                        opacity: loading ? 0.6 : 1
+                        opacity: loading ? 0.6 : 1,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
                       }}
                       onMouseEnter={(e) => {
                         if (!loading) e.currentTarget.style.backgroundColor = "#e5e7eb";
@@ -5587,6 +5594,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                         if (!loading) e.currentTarget.style.backgroundColor = "#f3f4f6";
                       }}
                     >
+                      <CornerUpRight size={16} />
                       Déléguer à un adjoint
                     </button>
                   )}
