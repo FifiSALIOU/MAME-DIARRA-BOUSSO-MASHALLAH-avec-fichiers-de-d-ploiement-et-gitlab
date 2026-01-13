@@ -8002,71 +8002,70 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                   </div>
 
                   {/* Performance des techniciens */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                  <div style={{ 
+                    background: "white", 
+                    borderRadius: "8px", 
+                    border: "1px solid rgba(229, 231, 235, 0.5)", 
+                    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", 
+                    display: "flex", 
+                    flexDirection: "column",
+                    padding: "24px"
+                  }}>
+                    {/* CardHeader */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "24px" }}>
+                      <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#333", margin: 0 }}>
+                        Performance des techniciens
+                      </h3>
+                    </div>
+                    
                     {/* Graphique en barres verticales */}
-                    <div style={{ 
-                      background: "white", 
-                      borderRadius: "8px", 
-                      border: "1px solid rgba(229, 231, 235, 0.5)", 
-                      boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", 
-                      display: "flex", 
-                      flexDirection: "column" 
-                    }}>
-                      {/* CardHeader */}
-                      <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "6px" }}>
-                        <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#333", margin: 0 }}>
-                          Performance des techniciens
-                        </h3>
-                      </div>
-                      {/* CardContent */}
-                      <div style={{ padding: "24px", paddingTop: "0", flex: 1 }}>
-                        {(() => {
-                          const techData = prepareTechnicianPerformanceData();
-                          return techData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height={200}>
-                              <BarChart 
-                                data={techData} 
-                                margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
-                              >
-                                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                                <XAxis 
-                                  dataKey="technicien" 
-                                  stroke="#6B7280" 
-                                  style={{ fontSize: "12px" }}
-                                />
-                                <YAxis 
-                                  domain={[0, 60]}
-                                  ticks={[0, 15, 30, 45, 60]}
-                                  stroke="#6B7280" 
-                                  style={{ fontSize: "12px" }}
-                                />
-                                <Tooltip
-                                  contentStyle={{
-                                    backgroundColor: "white",
-                                    border: "1px solid #e5e7eb",
-                                    borderRadius: "8px",
-                                    boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
-                                  }}
-                                  formatter={(value: any, name: any, props: any) => {
-                                    return [`Résolus : ${value}`, props.payload.technicien];
-                                  }}
-                                />
-                                <Bar 
-                                  dataKey="performance" 
-                                  fill="#FF9500"
-                                  stroke="#FF9500"
-                                  radius={[4, 4, 0, 0]}
-                                  barSize={40}
-                                />
-                              </BarChart>
-                            </ResponsiveContainer>
-                          ) : (
-                            <div style={{ padding: "40px", textAlign: "center", color: "#9ca3af" }}>
-                              Aucune donnée à afficher
-                            </div>
-                          );
-                        })()}
-                      </div>
+                    <div style={{ marginBottom: "24px" }}>
+                      {(() => {
+                        const techData = prepareTechnicianPerformanceData();
+                        return techData.length > 0 ? (
+                          <ResponsiveContainer width="100%" height={200}>
+                            <BarChart 
+                              data={techData} 
+                              margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                              <XAxis 
+                                dataKey="technicien" 
+                                stroke="#6B7280" 
+                                style={{ fontSize: "12px" }}
+                              />
+                              <YAxis 
+                                domain={[0, 60]}
+                                ticks={[0, 15, 30, 45, 60]}
+                                stroke="#6B7280" 
+                                style={{ fontSize: "12px" }}
+                              />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "white",
+                                  border: "1px solid #e5e7eb",
+                                  borderRadius: "8px",
+                                  boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+                                }}
+                                formatter={(value: any, name: any, props: any) => {
+                                  return [`Résolus : ${value}`, props.payload.technicien];
+                                }}
+                              />
+                              <Bar 
+                                dataKey="performance" 
+                                fill="#FF9500"
+                                stroke="#FF9500"
+                                radius={[4, 4, 0, 0]}
+                                barSize={40}
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <div style={{ padding: "40px", textAlign: "center", color: "#9ca3af" }}>
+                            Aucune donnée à afficher
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Liste détaillée des techniciens */}
