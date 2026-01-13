@@ -3788,7 +3788,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           <>
           {activeSection === "dashboard" && (
           <>
-              <div style={{ marginBottom: "24px" }}>
+              <div style={{ marginTop: "40px", marginBottom: "24px" }}>
                 <div style={{ fontSize: "24px", fontWeight: "600", color: "#333", marginBottom: "4px" }}>
                   Espace Adjoint DSI 📋
                 </div>
