@@ -34,6 +34,9 @@ interface Ticket {
   priority: string;
   status: string;
   assigned_at: string | null;
+  resolved_at?: string | null;
+  closed_at?: string | null;
+  created_at?: string | null;
   type: string;
   category?: string | null;
   creator?: {
@@ -740,6 +743,31 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
   const rejectedCount = rejectedTickets.length;
   const ticketsToResolveCount = assignedCount + inProgressCount;
 
+  // Calculer le temps moyen de résolution (en heures)
+  const calculateAverageResolutionTime = () => {
+    const resolvedTicketsWithTime = resolvedTickets.filter((t) => {
+      const startTime = t.assigned_at || t.created_at;
+      const endTime = t.closed_at || t.resolved_at;
+      return startTime && endTime;
+    });
+
+    if (resolvedTicketsWithTime.length === 0) {
+      return 0;
+    }
+
+    const totalHours = resolvedTicketsWithTime.reduce((sum, t) => {
+      const startTime = new Date(t.assigned_at || t.created_at || "");
+      const endTime = new Date(t.closed_at || t.resolved_at || "");
+      const diffMs = endTime.getTime() - startTime.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+      return sum + diffHours;
+    }, 0);
+
+    return Math.round((totalHours / resolvedTicketsWithTime.length) * 10) / 10; // Arrondir à 1 décimale
+  };
+
+  const averageResolutionTime = calculateAverageResolutionTime();
+
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'Inter', system-ui, sans-serif", background: "#f5f5f5", overflowX: "visible" }}>
       {/* Sidebar */}
@@ -1326,7 +1354,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(3, 1fr)",
+                    gridTemplateColumns: "repeat(4, 1fr)",
                     gap: "16px",
                     alignItems: "stretch",
                     margin: "0 0 24px",
@@ -1533,6 +1561,74 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                       }}
                     >
                       Aujourd'hui
+                    </span>
+                  </div>
+
+                  {/* KPI Temps moyen de résolution */}
+                  <div
+                    style={{
+                      position: "relative",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      justifyContent: "space-between",
+                      padding: "14px",
+                      borderRadius: "12px",
+                      background: "white",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                      minHeight: "100px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        width: "100%",
+                        marginBottom: "8px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "32px",
+                          height: "32px",
+                          borderRadius: "8px",
+                          background: "#e0edff",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Clock3 size={16} color="#2563eb" />
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: "28px",
+                        fontWeight: "bold",
+                        color: "#111827",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      {resolvedCount > 0 ? `${averageResolutionTime}h` : "0h"}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "500",
+                        color: "#374151",
+                      }}
+                    >
+                      Temps moyen de résolution
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        color: "#6b7280",
+                        marginTop: "2px",
+                      }}
+                    >
+                      Par ticket résolu
                     </span>
                   </div>
                 </div>
