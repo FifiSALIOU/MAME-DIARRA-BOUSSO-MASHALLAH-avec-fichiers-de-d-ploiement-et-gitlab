@@ -5473,18 +5473,12 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
 
           {currentActiveSection === "tickets" && (
             <>
-              <h2 style={{ marginBottom: "24px", fontSize: "28px", fontWeight: "600", color: "#333" }}>Tous les tickets</h2>
-              
               {/* Filtres */}
               <div style={{ 
                 display: "flex", 
                 gap: "16px", 
                 marginBottom: "24px", 
-                flexWrap: "wrap",
-                background: "white",
-                padding: "16px",
-                borderRadius: "8px",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                flexWrap: "wrap"
               }}>
                 <div style={{ flex: 1, minWidth: "200px" }}>
                   <label style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: "500", color: "#666" }}>Filtrer par statut</label>
