@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
-import { Clock3, Users, CheckCircle2, ChevronRight, ChevronLeft, ChevronDown, LayoutDashboard, Bell, Search, Clock, Monitor, Wrench, Forward, AlertTriangle, BarChart3 } from "lucide-react";
+import { Clock3, Users, CheckCircle2, ChevronRight, ChevronLeft, ChevronDown, LayoutDashboard, Bell, Search, Clock, Monitor, Wrench, Forward, AlertTriangle, BarChart3, TrendingUp } from "lucide-react";
 import helpdeskLogo from "../assets/helpdesk-logo.png";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -16,7 +16,10 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  LabelList
 } from "recharts";
 
 interface SecretaryDashboardProps {
@@ -57,6 +60,10 @@ interface Technician {
   specialization?: string | null;
   assigned_tickets_count?: number;
   in_progress_tickets_count?: number;
+  resolved_tickets_count?: number;
+  closed_tickets_count?: number;
+  avg_resolution_time_days?: number;
+  success_rate?: number;
 }
 
 interface Notification {
@@ -90,6 +97,54 @@ interface UserRead {
     name: string;
   } | null;
 }
+
+// Composant Label personnalisé pour les donut charts avec labels externes et lignes de connexion
+const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name, fill, value }: any) => {
+  // Ne pas afficher le label si la valeur est 0 ou le pourcentage est 0%
+  if (value === 0 || percent === 0 || Math.round(percent * 100) === 0) {
+    return null;
+  }
+  
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  
+  // Position externe pour le label (outerRadius + 25px pour plus d'espace)
+  const labelRadius = outerRadius + 25;
+  const labelX = cx + labelRadius * Math.cos(-midAngle * RADIAN);
+  const labelY = cy + labelRadius * Math.sin(-midAngle * RADIAN);
+  
+  // Point de connexion sur le bord externe
+  const connectX = cx + outerRadius * Math.cos(-midAngle * RADIAN);
+  const connectY = cy + outerRadius * Math.sin(-midAngle * RADIAN);
+  
+  return (
+    <g>
+      {/* Ligne de connexion */}
+      <line
+        x1={connectX}
+        y1={connectY}
+        x2={labelX}
+        y2={labelY}
+        stroke={fill}
+        strokeWidth={1.5}
+      />
+      {/* Label externe */}
+      <text
+        x={labelX}
+        y={labelY}
+        fill={fill}
+        textAnchor={labelX > cx ? "start" : "end"}
+        dominantBaseline="central"
+        fontSize="12px"
+        fontWeight="500"
+      >
+        {name} ({Math.round(percent * 100)}%)
+      </text>
+    </g>
+  );
+};
 
 function SecretaryDashboard({ token }: SecretaryDashboardProps) {
   const [searchParams] = useSearchParams();
@@ -620,6 +675,208 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
         problème: item.title,
         occurrences: item.count
       }));
+  };
+
+  // Fonction pour préparer les données du graphique "Tickets cette semaine"
+  const prepareWeeklyTicketsData = () => {
+    const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    const dayOfWeek = today.getDay();
+    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Lundi = 1, Dimanche = 0
+    startOfWeek.setDate(today.getDate() + diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    return days.map((day, index) => {
+      const currentDay = new Date(startOfWeek);
+      currentDay.setDate(startOfWeek.getDate() + index);
+      const nextDay = new Date(currentDay);
+      nextDay.setDate(currentDay.getDate() + 1);
+
+      // Tickets créés ce jour
+      const createdTickets = allTickets.filter(t => {
+        if (!t.created_at) return false;
+        const ticketDate = new Date(t.created_at);
+        return ticketDate >= currentDay && ticketDate < nextDay;
+      });
+
+      // Tickets résolus ce jour
+      const resolvedTickets = allTickets.filter(t => {
+        if (!t.resolved_at) return false;
+        const ticketDate = new Date(t.resolved_at);
+        return ticketDate >= currentDay && ticketDate < nextDay;
+      });
+
+      return {
+        jour: day,
+        Créés: createdTickets.length,
+        Résolus: resolvedTickets.length
+      };
+    });
+  };
+
+  // Fonction pour préparer les données du graphique "Évolution mensuelle par type"
+  const prepareMonthlyEvolutionData = () => {
+    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+
+    return months.map((month, index) => {
+      const monthIndex = index; // Janvier = 0, Février = 1, etc.
+      const startOfMonth = new Date(currentYear, monthIndex, 1);
+      const endOfMonth = new Date(currentYear, monthIndex + 1, 0, 23, 59, 59, 999);
+
+      // Tickets Matériel ce mois
+      const materielTickets = allTickets.filter(t => {
+        if (!t.created_at) return false;
+        const ticketDate = new Date(t.created_at);
+        return ticketDate >= startOfMonth && ticketDate <= endOfMonth && 
+               (t.type === "materiel" || t.type?.toLowerCase() === "materiel" || 
+                t.category?.toLowerCase().includes("materiel"));
+      });
+
+      // Tickets Applicatif ce mois
+      const applicatifTickets = allTickets.filter(t => {
+        if (!t.created_at) return false;
+        const ticketDate = new Date(t.created_at);
+        return ticketDate >= startOfMonth && ticketDate <= endOfMonth && 
+               (t.type === "applicatif" || t.type?.toLowerCase() === "applicatif" || 
+                t.category?.toLowerCase().includes("applicatif"));
+      });
+
+      return {
+        mois: month,
+        Matériel: materielTickets.length,
+        Applicatif: applicatifTickets.length
+      };
+    });
+  };
+
+  // Fonction pour préparer les données du graphique "Répartition par priorité"
+  const preparePriorityData = () => {
+    const critique = allTickets.filter(t => t.priority === "critique").length;
+    const haute = allTickets.filter(t => t.priority === "haute").length;
+    const moyenne = allTickets.filter(t => t.priority === "moyenne").length;
+    const basse = allTickets.filter(t => t.priority === "basse" || t.priority === "faible").length;
+    const total = allTickets.length;
+    
+    return [
+      { name: "Critique", value: critique, percentage: total > 0 ? Math.round((critique / total) * 100) : 0 },
+      { name: "Haute", value: haute, percentage: total > 0 ? Math.round((haute / total) * 100) : 0 },
+      { name: "Moyenne", value: moyenne, percentage: total > 0 ? Math.round((moyenne / total) * 100) : 0 },
+      { name: "Basse", value: basse, percentage: total > 0 ? Math.round((basse / total) * 100) : 0 }
+    ];
+  };
+
+  // Fonction pour préparer les données du graphique "Répartition par statut"
+  const prepareStatusData = () => {
+    // Tickets délégués par le DSI (pour l'Adjoint DSI)
+    const delegue = allTickets.filter(t => delegatedTicketsByDSI.has(t.id)).length;
+    
+    // Tickets en cours (excluant les délégués)
+    const enCours = allTickets.filter(t => 
+      (t.status === "en_cours" || t.status === "assigne_technicien") && 
+      !delegatedTicketsByDSI.has(t.id)
+    ).length;
+    
+    // Tickets ouverts (excluant les délégués)
+    const ouvert = allTickets.filter(t => 
+      (t.status === "ouvert" || t.status === "en_attente_analyse") && 
+      !delegatedTicketsByDSI.has(t.id)
+    ).length;
+    
+    // Tickets relancés (excluant les délégués)
+    const relance = allTickets.filter(t => 
+      t.status === "rejete" && 
+      !delegatedTicketsByDSI.has(t.id)
+    ).length;
+    
+    // Tickets résolus (excluant les délégués)
+    const resolu = allTickets.filter(t => 
+      t.status === "resolu" && 
+      !delegatedTicketsByDSI.has(t.id)
+    ).length;
+    
+    const total = allTickets.length;
+    
+    return [
+      { name: "En cours", value: enCours, percentage: total > 0 ? Math.round((enCours / total) * 100) : 0 },
+      { name: "En attente d'assignation", value: ouvert, percentage: total > 0 ? Math.round((ouvert / total) * 100) : 0 },
+      { name: "Relancé", value: relance, percentage: total > 0 ? Math.round((relance / total) * 100) : 0 },
+      { name: "Résolu", value: resolu, percentage: total > 0 ? Math.round((resolu / total) * 100) : 0 },
+      { name: "Délégué", value: delegue, percentage: total > 0 ? Math.round((delegue / total) * 100) : 0 }
+    ];
+  };
+
+  // Fonction pour préparer les données "Analyse par agence" (Total, Résolus, En attente)
+  const prepareAgencyAnalysisData = () => {
+    const agencies = Array.from(new Set(allTickets.map((t) => t.creator?.agency || t.user_agency).filter(Boolean)));
+    
+    // Si aucune agence, utiliser les 5 agences par défaut avec des données vides
+    const defaultAgencies = ["Siège Abidjan", "Agence Cocody", "Agence Plateau", "Agence Marcory", "Agence Yopougon"];
+    const allAgencies = agencies.length > 0 ? agencies : defaultAgencies;
+    
+    return allAgencies.map(agency => {
+      const agencyTickets = allTickets.filter((t) => (t.creator?.agency || t.user_agency) === agency);
+      const total = agencyTickets.length;
+      const resolved = agencyTickets.filter((t) => t.status === "resolu" || t.status === "cloture").length;
+      const pending = agencyTickets.filter((t) => t.status === "en_attente_analyse" || t.status === "assigne_technicien" || t.status === "en_cours").length;
+      
+      return {
+        agence: agency,
+        Total: total,
+        Résolus: resolved,
+        "En attente": pending
+      };
+    }).sort((a, b) => b.Total - a.Total).slice(0, 5); // Top 5 agences
+  };
+
+  // Fonction pour préparer les données "Performance des techniciens"
+  const prepareTechnicianPerformanceData = () => {
+    return technicians.map((tech) => {
+      // Utiliser les données du backend qui sont plus fiables
+      const resolvedCount = (tech.resolved_tickets_count || 0) + (tech.closed_tickets_count || 0);
+      
+      // Calculer le temps moyen de résolution en heures
+      let avgTimeHours = 0;
+      if (tech.avg_resolution_time_days) {
+        avgTimeHours = tech.avg_resolution_time_days * 24;
+      } else {
+        // Fallback: calculer depuis les tickets si disponible
+        const assignedTickets = allTickets.filter((t) => t.technician_id === tech.id);
+        const resolvedTickets = assignedTickets.filter((t) => t.status === "resolu" || t.status === "cloture");
+        if (resolvedTickets.length > 0) {
+          const times: number[] = [];
+          resolvedTickets.forEach(ticket => {
+            if (ticket.created_at && ticket.resolved_at) {
+              const created = new Date(ticket.created_at).getTime();
+              const resolved = new Date(ticket.resolved_at).getTime();
+              const diffHours = (resolved - created) / (1000 * 60 * 60);
+              if (diffHours > 0) {
+                times.push(diffHours);
+              }
+            }
+          });
+          if (times.length > 0) {
+            avgTimeHours = times.reduce((a, b) => a + b, 0) / times.length;
+          }
+        }
+      }
+      
+      // Calculer le pourcentage de performance (taux de réussite)
+      const assignedTickets = allTickets.filter((t) => t.technician_id === tech.id);
+      const performance = tech.success_rate || (resolvedCount > 0 && assignedTickets.length > 0 
+        ? Math.round((resolvedCount / assignedTickets.length) * 100) 
+        : 0);
+      
+      return {
+        technicien: tech.full_name,
+        performance: resolvedCount, // Nombre de tickets résolus pour la hauteur des barres
+        avgTimeHours: avgTimeHours,
+        performancePercent: performance,
+        resolvedCount: resolvedCount
+      };
+    }).sort((a, b) => b.performance - a.performance); // Tous les techniciens triés par performance
   };
 
   const getRecurringTicketsHistory = () => {
@@ -6632,6 +6889,519 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
 
           {currentActiveSection === "reports" && roleName === "Adjoint DSI" && (
             <>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginTop: "32px" }}>
+                  {/* Graphique 1: Tickets cette semaine */}
+                  <div style={{ 
+                    background: "white", 
+                    borderRadius: "8px", 
+                    border: "1px solid rgba(229, 231, 235, 0.5)", 
+                    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", 
+                    display: "flex", 
+                    flexDirection: "column" 
+                  }}>
+                    {/* CardHeader */}
+                    <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#333", margin: 0 }}>
+                        Tickets cette semaine
+                      </h3>
+                    </div>
+                    {/* CardContent */}
+                    <div style={{ padding: "24px", paddingTop: "0", flex: 1 }}>
+                      <ResponsiveContainer width="100%" height={320}>
+                        <BarChart
+                          data={prepareWeeklyTicketsData()}
+                          margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+                          barCategoryGap="20%"
+                        >
+                          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                          <XAxis 
+                            dataKey="jour" 
+                            stroke="#E5E7EB"
+                            tick={{ fill: "#6B7280", fontSize: 12 }}
+                            style={{ fontSize: "12px" }}
+                          />
+                          <YAxis 
+                            stroke="#E5E7EB"
+                            tick={{ fill: "#6B7280", fontSize: 12 }}
+                            style={{ fontSize: "12px" }}
+                            domain={[0, 16]}
+                            ticks={[0, 4, 8, 12, 16]}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: "white", 
+                              border: "1px solid #e5e7eb", 
+                              borderRadius: "8px",
+                              boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+                            }}
+                          />
+                          <Legend wrapperStyle={{ paddingTop: "20px" }} iconType="rect" />
+                          <Bar 
+                            dataKey="Créés" 
+                            fill="#FF9500"
+                            radius={[4, 4, 0, 0]}
+                            barSize={30}
+                          />
+                          <Bar 
+                            dataKey="Résolus" 
+                            fill="#22C55E"
+                            radius={[4, 4, 0, 0]}
+                            barSize={30}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Graphique 2: Évolution mensuelle par type */}
+                  <div style={{ 
+                    background: "white", 
+                    borderRadius: "8px", 
+                    border: "1px solid rgba(229, 231, 235, 0.5)", 
+                    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", 
+                    display: "flex", 
+                    flexDirection: "column" 
+                  }}>
+                    {/* CardHeader */}
+                    <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#333", margin: 0 }}>
+                        Évolution mensuelle par type
+                      </h3>
+                    </div>
+                    {/* CardContent */}
+                    <div style={{ padding: "24px", paddingTop: "0", flex: 1 }}>
+                      <ResponsiveContainer width="100%" height={320}>
+                        <AreaChart
+                          data={prepareMonthlyEvolutionData()}
+                          margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+                        >
+                          <defs>
+                            <linearGradient id="colorMateriel" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#FF9500" stopOpacity={0.4}/>
+                              <stop offset="95%" stopColor="#FF9500" stopOpacity={0.05}/>
+                            </linearGradient>
+                            <linearGradient id="colorApplicatif" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#475569" stopOpacity={0.4}/>
+                              <stop offset="95%" stopColor="#475569" stopOpacity={0.05}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                          <XAxis 
+                            dataKey="mois" 
+                            stroke="#E5E7EB"
+                            tick={{ fill: "#6B7280", fontSize: 12 }}
+                            style={{ fontSize: "12px" }}
+                            angle={-45}
+                            textAnchor="end"
+                          />
+                          <YAxis 
+                            stroke="#E5E7EB"
+                            tick={{ fill: "#6B7280", fontSize: 12 }}
+                            style={{ fontSize: "12px" }}
+                            domain={[0, 80]}
+                            ticks={[0, 20, 40, 60, 80]}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: "white", 
+                              border: "1px solid #e5e7eb", 
+                              borderRadius: "8px",
+                              boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+                            }}
+                          />
+                          <Legend wrapperStyle={{ paddingTop: "20px" }} iconType="line" />
+                          <Area 
+                            type="monotone" 
+                            dataKey="Matériel" 
+                            stroke="#FF9500" 
+                            strokeWidth={2}
+                            fillOpacity={1}
+                            fill="url(#colorMateriel)" 
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="Applicatif" 
+                            stroke="#475569" 
+                            strokeWidth={2}
+                            fillOpacity={1}
+                            fill="url(#colorApplicatif)" 
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Deuxième ligne de graphiques - Donut charts */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginTop: "24px" }}>
+                  {/* Graphique 3: Répartition par priorité */}
+                  <div style={{ background: "white", padding: "24px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column" }}>
+                    <h3 style={{ marginBottom: "16px", fontSize: "16px", fontWeight: "600", color: "#333" }}>
+                      Répartition par priorité
+                    </h3>
+                    <ResponsiveContainer width="100%" height={280}>
+                      <PieChart>
+                        <Pie
+                          data={preparePriorityData()}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={55}
+                          outerRadius={90}
+                          paddingAngle={3}
+                          dataKey="value"
+                          stroke="#ffffff"
+                          strokeWidth={2}
+                          label={CustomLabel}
+                          labelLine={false}
+                        >
+                          {preparePriorityData().map((entry, index) => {
+                            const colors = {
+                              "Critique": "#dc2626",
+                              "Haute": "#FF9500",
+                              "Moyenne": "#EAB308",
+                              "Basse": "#22C55E"
+                            };
+                            return (
+                              <Cell key={`cell-${index}`} fill={colors[entry.name as keyof typeof colors]} />
+                            );
+                          })}
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: "white", 
+                            border: "1px solid #e5e7eb", 
+                            borderRadius: "8px",
+                            boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+                          }}
+                          formatter={(value: number, name: string, props: any) => {
+                            return [`${value} (${props.payload.percentage}%)`, name];
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Graphique 4: Répartition par statut */}
+                  <div style={{ background: "white", padding: "24px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column" }}>
+                    <h3 style={{ marginBottom: "16px", fontSize: "16px", fontWeight: "600", color: "#333" }}>
+                      Répartition par statut
+                    </h3>
+                    <ResponsiveContainer width="100%" height={280}>
+                      <PieChart>
+                        <Pie
+                          data={prepareStatusData()}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={55}
+                          outerRadius={90}
+                          paddingAngle={3}
+                          dataKey="value"
+                          stroke="#ffffff"
+                          strokeWidth={2}
+                          label={CustomLabel}
+                          labelLine={false}
+                        >
+                          {prepareStatusData().map((entry, index) => {
+                            const colors = {
+                              "En cours": "#FF9500",
+                              "En attente d'assignation": "#3B82F6",
+                              "Relancé": "#EF4444",
+                              "Résolu": "#22C55E",
+                              "Délégué": "#8B5CF6"
+                            };
+                            return (
+                              <Cell key={`cell-${index}`} fill={colors[entry.name as keyof typeof colors]} />
+                            );
+                          })}
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: "white", 
+                            border: "1px solid #e5e7eb", 
+                            borderRadius: "8px",
+                            boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+                          }}
+                          formatter={(value: number, name: string, props: any) => {
+                            return [`${value} (${props.payload.percentage}%)`, name];
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Troisième ligne de graphiques - Analyse par agence + Performance des techniciens */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "24px", marginTop: "24px" }}>
+                  {/* Analyse par agence */}
+                  <div style={{ 
+                    background: "white", 
+                    borderRadius: "8px", 
+                    border: "1px solid rgba(229, 231, 235, 0.5)", 
+                    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", 
+                    display: "flex", 
+                    flexDirection: "column" 
+                  }}>
+                    {/* CardHeader */}
+                    <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#333", margin: 0 }}>
+                        Analyse par agence
+                      </h3>
+                    </div>
+                    {/* CardContent */}
+                    <div style={{ padding: "24px", paddingTop: "0", flex: 1 }}>
+                      {(() => {
+                        const agencyData = prepareAgencyAnalysisData();
+                        return agencyData.length > 0 ? (
+                          <ResponsiveContainer width="100%" height={280}>
+                            <BarChart 
+                              data={agencyData} 
+                              layout="vertical"
+                              margin={{ top: 10, right: 30, left: 20, bottom: 10 }}
+                              barCategoryGap="20%"
+                            >
+                              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                              <XAxis 
+                                type="number" 
+                                domain={[0, 60]}
+                                ticks={[0, 15, 30, 45, 60]}
+                                stroke="#6B7280" 
+                                style={{ fontSize: "12px" }}
+                              />
+                              <YAxis 
+                                dataKey="agence" 
+                                type="category" 
+                                stroke="#374151" 
+                                style={{ fontSize: "12px" }} 
+                                width={90}
+                              />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "white",
+                                  border: "1px solid #e5e7eb",
+                                  borderRadius: "8px",
+                                  boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+                                }}
+                              />
+                              <Legend 
+                                wrapperStyle={{ marginTop: "20px" }}
+                                iconType="rect"
+                              />
+                              <Bar 
+                                dataKey="Total" 
+                                fill="#1A202C"
+                                radius={[0, 4, 4, 0]}
+                                barSize={20}
+                              />
+                              <Bar 
+                                dataKey="Résolus" 
+                                fill="#22C55E"
+                                radius={[0, 4, 4, 0]}
+                                barSize={20}
+                              />
+                              <Bar 
+                                dataKey="En attente" 
+                                fill="#FF9500"
+                                radius={[0, 4, 4, 0]}
+                                barSize={20}
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <div style={{ padding: "40px", textAlign: "center", color: "#9ca3af" }}>
+                            Aucune donnée à afficher
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Performance des techniciens */}
+                  <div style={{ 
+                    background: "white", 
+                    borderRadius: "8px", 
+                    border: "1px solid rgba(229, 231, 235, 0.5)", 
+                    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", 
+                    display: "flex", 
+                    flexDirection: "column",
+                    padding: "24px"
+                  }}>
+                    {/* CardHeader */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "24px" }}>
+                      <h3 style={{ fontSize: "16px", fontWeight: "600", color: "#333", margin: 0 }}>
+                        Performance des techniciens
+                      </h3>
+                    </div>
+                    
+                    {/* Graphique en barres verticales */}
+                    <div style={{ marginBottom: "24px" }}>
+                      {(() => {
+                        const techData = prepareTechnicianPerformanceData();
+                        return techData.length > 0 ? (
+                          <ResponsiveContainer width="100%" height={200}>
+                            <BarChart 
+                              data={techData} 
+                              margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                              <XAxis 
+                                dataKey="technicien" 
+                                stroke="#6B7280" 
+                                style={{ fontSize: "12px" }}
+                              />
+                              <YAxis 
+                                domain={[0, 60]}
+                                ticks={[0, 15, 30, 45, 60]}
+                                stroke="#6B7280" 
+                                style={{ fontSize: "12px" }}
+                              />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "white",
+                                  border: "1px solid #e5e7eb",
+                                  borderRadius: "8px",
+                                  boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+                                }}
+                                content={({ active, payload, label }: any) => {
+                                  if (active && payload && payload.length) {
+                                    return (
+                                      <div style={{
+                                        backgroundColor: "white",
+                                        border: "1px solid #e5e7eb",
+                                        borderRadius: "8px",
+                                        padding: "8px 12px",
+                                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+                                      }}>
+                                        <div style={{ color: "#111827", marginBottom: "4px" }}>
+                                          {label}
+                                        </div>
+                                        <div style={{ color: "#FF9500" }}>
+                                          Résolus : {payload[0].value}
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                }}
+                              />
+                              <Bar 
+                                dataKey="performance" 
+                                fill="#FF9500"
+                                stroke="#FF9500"
+                                radius={[4, 4, 0, 0]}
+                                barSize={40}
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <div style={{ padding: "40px", textAlign: "center", color: "#9ca3af" }}>
+                            Aucune donnée à afficher
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Liste détaillée des techniciens */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      {(() => {
+                        const techData = prepareTechnicianPerformanceData();
+                        return techData.map((tech, index) => {
+                          // Identifier Seydou Wane et Backary DRAME pour appliquer des styles spécifiques
+                          const isSeydouWane = tech.technicien.toLowerCase().includes("seydou") && tech.technicien.toLowerCase().includes("wane");
+                          const isBackaryDrame = tech.technicien.toLowerCase().includes("backary") && tech.technicien.toLowerCase().includes("drame");
+                          const isSpecialTechnician = isSeydouWane || isBackaryDrame;
+                          
+                          return (
+                          <div 
+                            key={tech.technicien}
+                            style={{ 
+                              background: isSpecialTechnician ? "#F5F5F5" : "#FFFFFF", 
+                              borderRadius: "12px", 
+                              border: "1px solid #F2F2F2", 
+                              padding: isSpecialTechnician ? "10px 14px" : "16px 20px", 
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "20px",
+                              minHeight: isSpecialTechnician ? "44px" : "56px",
+                              fontFamily: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+                            }}
+                          >
+                            {/* Badge de rang */}
+                            <div 
+                              style={{
+                                width: "32px",
+                                height: "32px",
+                                borderRadius: "50%",
+                                backgroundColor: index === 0 
+                                  ? "#F5EDD4" // Rang 1 : Couleur exacte demandée
+                                  : "#E5E5E5", // Autres rangs : Gris clair
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "14px",
+                                fontWeight: 500,
+                                color: index === 0 
+                                  ? "#C4A941" // Rang 1 : Couleur exacte demandée
+                                  : "#262626", // Autres rangs : texte foncé
+                                flexShrink: 0,
+                                boxShadow: "none",
+                                border: "none"
+                              }}
+                            >
+                              {index + 1}
+                            </div>
+
+                            {/* Nom du technicien */}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: isSpecialTechnician ? "12px" : "14px", fontWeight: 600, color: "#262626" }}>
+                                {tech.technicien}
+                              </div>
+                            </div>
+
+                            {/* Temps moyen avec icône */}
+                            <div 
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                fontSize: isSpecialTechnician ? "12px" : "14px",
+                                fontWeight: 400,
+                                color: isSpecialTechnician ? "#000000" : "#808080",
+                                flexShrink: 0
+                              }}
+                            >
+                              <Clock className="h-3 w-3" style={{ width: isSpecialTechnician ? "10px" : "12px", height: isSpecialTechnician ? "10px" : "12px", color: isSpecialTechnician ? "#000000" : "#808080" }} />
+                              <span>{tech.avgTimeHours > 0 ? `${tech.avgTimeHours.toFixed(1)}h moy.` : "N/A"}</span>
+                            </div>
+
+                            {/* Badge de performance */}
+                            <div 
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                backgroundColor: "#D4F5E0",
+                                color: "#1B8A3E",
+                                padding: "6px 12px",
+                                borderRadius: "14px",
+                                fontSize: "13px",
+                                fontWeight: 500,
+                                minWidth: "60px",
+                                height: "28px",
+                                justifyContent: "center",
+                                flexShrink: 0
+                              }}
+                            >
+                              <TrendingUp className="h-4 w-4" style={{ width: "16px", height: "16px", color: "#1B8A3E" }} />
+                              <span>{tech.performancePercent}%</span>
+                            </div>
+                          </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                  </div>
+                </div>
             </>
           )}
 
