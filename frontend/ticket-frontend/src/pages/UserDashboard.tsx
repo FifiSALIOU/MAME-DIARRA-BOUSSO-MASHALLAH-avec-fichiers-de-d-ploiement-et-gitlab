@@ -3251,7 +3251,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                     </div>
                     <div>
                       <strong>Statut :</strong>
-                      <span style={{ marginLeft: "8px", padding: "4px 8px", background: "#f3e5f5", borderRadius: "4px" }}>
+                      <span style={{ marginLeft: "8px", padding: "4px 8px", borderRadius: "4px" }}>
                         {selectedNotificationTicketDetails.status}
                       </span>
                     </div>
@@ -4364,7 +4364,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                         </div>
                         <div>
                           <strong>Statut :</strong>
-                          <span style={{ marginLeft: "8px", padding: "4px 8px", background: "#f3e5f5", borderRadius: "4px" }}>
+                          <span style={{ marginLeft: "8px", padding: "4px 8px", borderRadius: "4px" }}>
                             {selectedNotificationTicketDetails.status}
                           </span>
                         </div>
