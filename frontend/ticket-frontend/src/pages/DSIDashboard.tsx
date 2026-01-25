@@ -222,6 +222,15 @@ function DSIDashboard({ token }: DSIDashboardProps) {
       // Délégation (autres cas)
       Icon = Users;
     } else if (
+      // Détecter rejet de résolution (resolu → rejete avec Validation utilisateur: Rejeté)
+      entry.old_status &&
+      (oldStatus.includes("resolu") || oldStatus.includes("résolu")) &&
+      (status.includes("rejete") || status.includes("rejeté")) &&
+      reason.includes("validation utilisateur: rejeté")
+    ) {
+      // Ticket relancé (rejet de résolution)
+      Icon = RefreshCcw;
+    } else if (
       status.includes("resolu") ||
       status.includes("résolu") ||
       status.includes("valide") ||
@@ -291,6 +300,13 @@ function DSIDashboard({ token }: DSIDashboardProps) {
     if ((oldStatus.includes("assigne_technicien") || oldStatus.includes("assigne technicien") || oldStatus.includes("assigné technicien")) &&
         (newStatus.includes("en_cours") || newStatus.includes("en cours"))) {
       return "Ticket en cours de traitement";
+    }
+    
+    // Cas spécifique: rejet de résolution par l'utilisateur (resolu → rejete avec "Validation utilisateur: Rejeté")
+    if ((oldStatus.includes("resolu") || oldStatus.includes("résolu")) &&
+        (newStatus.includes("rejete") || newStatus.includes("rejeté")) &&
+        (reason.includes("validation utilisateur: rejeté") || reason.includes("validation utilisateur: rejeté"))) {
+      return "Ticket relancé";
     }
     
     // Cas spécifique: technicien résout le ticket (en_cours → resolu)
@@ -5767,8 +5783,15 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                                   if (isAssignmentBySecretary) {
                                     return null;
                                   }
-                                  // Enlever le doublon "Résumé de la résolution:" si présent
+                                  // Si c'est une validation rejetée, extraire seulement "Motif: ..."
                                   let displayReason = h.reason || "";
+                                  if (reason.includes("validation utilisateur: rejeté") && displayReason.includes("Motif:")) {
+                                    const motifMatch = displayReason.match(/Motif:\s*(.+)/i);
+                                    if (motifMatch && motifMatch[1]) {
+                                      displayReason = `Motif: ${motifMatch[1].trim()}`;
+                                    }
+                                  }
+                                  // Enlever le doublon "Résumé de la résolution:" si présent
                                   if (displayReason.startsWith("Résumé de la résolution: Résumé de la résolution:")) {
                                     displayReason = displayReason.replace("Résumé de la résolution: Résumé de la résolution:", "Résumé de la résolution:");
                                   }
