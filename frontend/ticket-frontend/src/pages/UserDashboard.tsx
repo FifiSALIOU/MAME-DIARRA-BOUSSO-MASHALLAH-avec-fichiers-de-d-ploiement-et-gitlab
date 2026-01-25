@@ -3757,7 +3757,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                         <div
                           style={{
                             padding: "8px 12px",
-                            marginBottom: "12px",
+                            marginBottom: "24px",
                             background: "#F9FAFB",
                             borderRadius: "8px",
                             border: "1px solid #E5E7EB",
@@ -4726,7 +4726,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                                   <div
                                     style={{
                                       padding: "8px 12px",
-                                      marginBottom: "12px",
+                                      marginBottom: "24px",
                                       background: "#F9FAFB",
                                       borderRadius: "8px",
                                       border: "1px solid #E5E7EB",
