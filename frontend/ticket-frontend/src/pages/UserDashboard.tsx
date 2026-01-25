@@ -108,11 +108,20 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
     if (!entry.old_status || entry.new_status === "creation") {
       // Création du ticket
       Icon = FileText;
+    } else if (
+      // Détecter délégation à l'Adjoint DSI (en_attente_analyse → en_attente_analyse avec reason contenant "délégation")
+      entry.old_status &&
+      (oldStatus.includes("en_attente_analyse") || oldStatus.includes("en attente analyse")) &&
+      (status.includes("en_attente_analyse") || status.includes("en attente analyse")) &&
+      (reason.includes("délégation") || reason.includes("délégu") || reason.includes("delegat"))
+    ) {
+      // Délégation à l'Adjoint DSI
+      Icon = Users;
     } else if (status.includes("assigne") || status.includes("assigné") || status.includes("assign")) {
       // Assignation
       Icon = UserCheck;
     } else if (status.includes("deleg") || status.includes("délégu")) {
-      // Délégation
+      // Délégation (autres cas)
       Icon = Users;
     } else if (
       // Détecter rejet de résolution (resolu → rejete avec Validation utilisateur: Rejeté)
@@ -250,6 +259,12 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
           (newStatus.includes("rejete") || newStatus.includes("rejeté")) &&
           reason.includes("validation utilisateur: rejeté")) {
         return "Ticket relancé";
+      }
+      
+      // Détecter reprise du ticket après relance : rejete → en_cours
+      if ((oldStatus.includes("rejete") || oldStatus.includes("rejeté")) &&
+          (newStatus.includes("en_cours") || newStatus.includes("en cours"))) {
+        return "Ticket repris en charge par le technicien";
       }
     }
 
