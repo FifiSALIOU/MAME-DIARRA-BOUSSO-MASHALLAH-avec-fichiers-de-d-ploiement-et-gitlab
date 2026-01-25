@@ -263,7 +263,29 @@ function DSIDashboard({ token }: DSIDashboardProps) {
       changed_at: ticket.created_at,
       user: ticket.creator ? { full_name: ticket.creator.full_name } : null,
     };
-    const rest = history.filter((h) => h.old_status != null);
+    // Filtrer les entrées d'historique pour exclure les modifications par l'utilisateur
+    const rest = history.filter((h) => {
+      // Garder toutes les entrées qui ont un old_status
+      if (h.old_status == null) return false;
+      
+      // Exclure les modifications par l'utilisateur
+      const reason = (h.reason || "").toLowerCase();
+      const isUserModification = reason.includes("ticket modifié par l'utilisateur") || 
+                                  reason.includes("modifié par l'utilisateur") ||
+                                  reason.includes("modification par l'utilisateur");
+      
+      // Vérifier si l'utilisateur qui a fait l'action est le créateur du ticket
+      const isCreatorAction = ticket.creator && 
+                              h.user && 
+                              h.user.full_name === ticket.creator.full_name;
+      
+      // Exclure si c'est une modification par l'utilisateur créateur
+      if (isUserModification && isCreatorAction) {
+        return false;
+      }
+      
+      return true;
+    });
     const combined = [creation, ...rest];
     combined.sort((a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime());
     return combined;
