@@ -320,7 +320,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
   };
 
   // Fonction helper pour déterminer le titre principal d'une entrée d'historique
-  const getHistoryTitle = (entry: TicketHistory, ticket?: Ticket | null): string => {
+  const getHistoryTitle = (entry: TicketHistory, ticket?: Ticket | null, allHistory?: TicketHistory[]): string => {
     if (!entry.old_status) {
       return "Création du ticket";
     }
@@ -333,6 +333,53 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
     if ((oldStatus.includes("en_attente_analyse") || oldStatus.includes("en attente analyse")) &&
         (newStatus.includes("en_attente_analyse") || newStatus.includes("en attente analyse")) &&
         (reason.includes("délégation") || reason.includes("délégu") || reason.includes("delegat"))) {
+      // Vérifier si l'utilisateur connecté est l'Adjoint DSI auquel le ticket a été délégué
+      const ticketAny = ticket as any;
+      if (ticketAny && ticketAny.secretary_id && userInfo && userInfo.id) {
+        if (String(ticketAny.secretary_id) === String(userInfo.id)) {
+          // Si le ticket a été délégué à l'utilisateur connecté (Adjoint DSI), utiliser son nom
+          return `Ticket Délégué à ${userInfo.full_name}`;
+        }
+      }
+      
+      // Essayer d'obtenir le nom de l'Adjoint depuis le ticket (secretary_id)
+      if (ticketAny && ticketAny.secretary_id) {
+        // Si le ticket a un secretary avec full_name, l'utiliser
+        if (ticketAny.secretary && ticketAny.secretary.full_name) {
+          return `Ticket Délégué à ${ticketAny.secretary.full_name}`;
+        }
+      }
+      
+      // Chercher dans l'historique suivant pour trouver qui a fait l'assignation
+      // (l'Adjoint DSI qui a reçu la délégation fait généralement l'assignation ensuite)
+      if (allHistory && allHistory.length > 0) {
+        const currentIndex = allHistory.findIndex(h => h.id === entry.id);
+        if (currentIndex !== -1) {
+          // Chercher dans les entrées suivantes pour trouver une assignation
+          for (let i = currentIndex + 1; i < allHistory.length; i++) {
+            const nextEntry = allHistory[i];
+            const nextStatus = (nextEntry.new_status || "").toLowerCase();
+            // Si c'est une assignation (assigne_technicien) et que l'utilisateur existe
+            if ((nextStatus.includes("assigne") || nextStatus.includes("assigné")) && nextEntry.user && nextEntry.user.full_name) {
+              // Vérifier si le reason mentionne "Secrétaire" ou "Adjoint" pour confirmer que c'est l'Adjoint DSI
+              const nextReason = (nextEntry.reason || "").toLowerCase();
+              if (nextReason.includes("secrétaire") || nextReason.includes("adjoint") || nextReason.includes("secretaire")) {
+                return `Ticket Délégué à ${nextEntry.user.full_name}`;
+              }
+            }
+          }
+        }
+      }
+      
+      // Essayer d'extraire le nom de l'Adjoint depuis le reason
+      // Format possible: "Délégation au Adjoint DSI" ou "Délégation au [Nom]"
+      const reasonUpper = entry.reason || "";
+      const match = reasonUpper.match(/(?:au|à)\s+(?:Adjoint\s+DSI\s+)?([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/);
+      if (match && match[1] && match[1] !== "Adjoint" && match[1] !== "DSI") {
+        return `Ticket Délégué à ${match[1]}`;
+      }
+      
+      // Si pas de nom trouvé, utiliser "Adjoint DSI" par défaut
       return "Ticket Délégué à Adjoint DSI";
     }
     
@@ -4076,7 +4123,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                                   }}
                                 >
                                   <div style={{ fontSize: "14px", fontWeight: 600, color: "#111827" }}>
-                                    {getHistoryTitle(h, ticketForHistory)}
+                                    {getHistoryTitle(h, ticketForHistory, ticketHistory)}
                                   </div>
                                   <div style={{ fontSize: "12px", color: "#6B7280", marginTop: "4px" }}>
                                     {formatHistoryDate(h.changed_at)}
@@ -4298,7 +4345,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                               }}
                             >
                               <div style={{ fontSize: "14px", fontWeight: 600, color: "#111827" }}>
-                                {getHistoryTitle(h, ticketDetails)}
+                                {getHistoryTitle(h, ticketDetails, ticketHistory)}
                               </div>
                               <div style={{ fontSize: "12px", color: "#6B7280", marginTop: "4px" }}>
                                 {formatHistoryDate(h.changed_at)}
@@ -7084,7 +7131,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                           }}
                         >
                           <div style={{ fontSize: "14px", fontWeight: 600, color: "#111827" }}>
-                            {getHistoryTitle(h, ticketDetails)}
+                            {getHistoryTitle(h, ticketDetails, ticketHistory)}
                           </div>
                           <div style={{ fontSize: "12px", color: "#6B7280", marginTop: "4px" }}>
                             {formatHistoryDate(h.changed_at)}
@@ -10418,7 +10465,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                                   }}
                                 >
                                   <div style={{ fontSize: "14px", fontWeight: 600, color: "#111827" }}>
-                                    {getHistoryTitle(h, ticketForHistory)}
+                                    {getHistoryTitle(h, ticketForHistory, selectedNotificationTicketHistory as TicketHistory[])}
                                   </div>
                                   <div style={{ fontSize: "12px", color: "#6B7280", marginTop: "4px" }}>
                                     {formatHistoryDate(h.changed_at)}
