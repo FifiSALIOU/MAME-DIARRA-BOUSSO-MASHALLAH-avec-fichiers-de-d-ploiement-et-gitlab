@@ -1946,8 +1946,8 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
               <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid #e5e7eb" }}>
                 <strong>Actions :</strong>
                 <div style={{ marginTop: "12px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                  {/* Bouton Modifier */}
-                  {(() => {
+                  {/* Bouton Modifier - Ne pas afficher si le ticket est résolu */}
+                  {ticketDetails.status !== "resolu" && (() => {
                     const isAssigned = ticketDetails.technician !== null && ticketDetails.technician !== undefined;
                     const blockedStatuses = ["assigne_technicien", "en_cours", "cloture", "resolu", "rejete"];
                     const isBlocked = blockedStatuses.includes(ticketDetails.status) || isAssigned;
@@ -1989,8 +1989,8 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                     );
                   })()}
 
-                  {/* Bouton Supprimer */}
-                  {(() => {
+                  {/* Bouton Supprimer - Ne pas afficher si le ticket est résolu */}
+                  {ticketDetails.status !== "resolu" && (() => {
                     const isAssigned = ticketDetails.technician !== null && ticketDetails.technician !== undefined;
                     const blockedStatuses = ["assigne_technicien", "en_cours", "cloture", "resolu", "rejete"];
                     const isBlocked = blockedStatuses.includes(ticketDetails.status) || isAssigned;
