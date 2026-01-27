@@ -6001,13 +6001,13 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           <>
           {activeSection === "dashboard" && (
             <>
-      {/* En-tête tableau de bord DSI */}
+      {/* En-tête tableau de bord DSI / Admin */}
       <div style={{ marginTop: "32px", marginBottom: "20px" }}>
         <div style={{ fontSize: "22px", fontWeight: 700, color: "#111827", marginBottom: "4px" }}>
-          Tableau de bord DSI 🎯
+          {userRole === "Admin" ? "Administration 🛠️" : "Tableau de bord DSI 🎯"}
         </div>
         <div style={{ fontSize: "15px", color: "#4b5563" }}>
-          Vue d'ensemble des tickets et de l'équipe
+          {userRole === "Admin" ? "Vue globale du système" : "Vue d'ensemble des tickets et de l'équipe"}
         </div>
       </div>
 
