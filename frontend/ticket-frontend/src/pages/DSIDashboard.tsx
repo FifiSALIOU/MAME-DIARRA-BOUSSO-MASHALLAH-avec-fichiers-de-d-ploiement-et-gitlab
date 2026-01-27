@@ -1003,6 +1003,123 @@ function DSIDashboard({ token }: DSIDashboardProps) {
     }
   };
 
+  const randomPassword = (length: number = 12) => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    let s = "";
+    for (let i = 0; i < length; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return s;
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token) return;
+
+    const roleMap: { [key: string]: string } = {
+      "Utilisateur": "Utilisateur",
+      "Technicien (Matériel)": "Technicien",
+      "Technicien (Applicatif)": "Technicien",
+      "Secrétaire DSI": "Secrétaire DSI",
+      "Adjoint DSI": "Adjoint DSI",
+      "DSI": "DSI",
+      "Administrateur": "Admin"
+    };
+
+    let password = newUser.password;
+    if (newUser.generateRandomPassword) {
+      password = randomPassword(12);
+    } else {
+      if (newUser.password !== newUser.confirmPassword) {
+        alert("Les mots de passe ne correspondent pas.");
+        return;
+      }
+      if (!newUser.password || newUser.password.length < 6) {
+        alert("Le mot de passe doit contenir au moins 6 caractères.");
+        return;
+      }
+    }
+
+    const username = newUser.email.trim() || "user";
+    const roleName = roleMap[newUser.role] || newUser.role;
+    if (!roleName) {
+      alert("Veuillez sélectionner un rôle.");
+      return;
+    }
+
+    try {
+      const rolesRes = await fetch("http://localhost:8000/auth/roles", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!rolesRes.ok) {
+        alert("Impossible de charger les rôles.");
+        return;
+      }
+      const roles = await rolesRes.json();
+      const role = roles.find((r: any) => r.name === roleName);
+      if (!role) {
+        alert(`Rôle "${newUser.role}" introuvable.`);
+        return;
+      }
+
+      const body = {
+        full_name: newUser.full_name.trim(),
+        email: newUser.email.trim(),
+        agency: newUser.agency || null,
+        phone: newUser.phone?.trim() || null,
+        username,
+        password,
+        role_id: role.id,
+        specialization: newUser.role === "Technicien (Matériel)" ? "materiel" : newUser.role === "Technicien (Applicatif)" ? "applicatif" : null
+      };
+
+      const res = await fetch("http://localhost:8000/users/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (res.ok) {
+        const usersRes = await fetch("http://localhost:8000/users/", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (usersRes.ok) {
+          const usersData = await usersRes.json();
+          setAllUsers(usersData || []);
+        }
+        setShowAddUserModal(false);
+        setNewUser({
+          full_name: "",
+          email: "",
+          phone: "",
+          agency: "",
+          role: "",
+          actif: true,
+          password: "",
+          confirmPassword: "",
+          generateRandomPassword: true,
+          sendEmail: true
+        });
+        if (newUser.generateRandomPassword) {
+          alert(`Utilisateur créé avec succès.\n\nMot de passe généré : ${password}\n\nCopiez ce mot de passe et communiquez-le à l'utilisateur.`);
+        } else {
+          alert("Utilisateur créé avec succès !");
+        }
+      } else {
+        const err = await res.json();
+        let msg = "Impossible de créer l'utilisateur.";
+        if (typeof err.detail === "string") msg = err.detail;
+        else if (Array.isArray(err.detail) && err.detail[0]?.msg) msg = err.detail[0].msg;
+        else if (err.detail?.msg) msg = err.detail.msg;
+        alert(`Erreur : ${msg}`);
+      }
+    } catch (err) {
+      console.error("Erreur lors de la création:", err);
+      alert("Erreur lors de la création de l'utilisateur.");
+    }
+  };
+
   // Fonctions pour la section Apparence
   const handleSaveAppearance = () => {
     // Sauvegarder dans localStorage
@@ -15099,12 +15216,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                </button>
              </div>
 
-             <form onSubmit={(e) => {
-               e.preventDefault();
-               // TODO: Implémenter la création de l'utilisateur
-               alert("Création de l'utilisateur (à implémenter)");
-               setShowAddUserModal(false);
-             }}>
+             <form onSubmit={handleCreateUser}>
                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                  <div>
                    <label style={{ display: "block", marginBottom: "6px", fontSize: "14px", fontWeight: "500", color: "#374151" }}>
