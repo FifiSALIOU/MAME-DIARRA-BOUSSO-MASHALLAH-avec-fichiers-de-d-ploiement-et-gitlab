@@ -13,6 +13,7 @@ class RoleBase(BaseModel):
 
 class RoleRead(RoleBase):
     id: int
+    permissions: Optional[List[str]] = None
 
     class Config:
         from_attributes = True
