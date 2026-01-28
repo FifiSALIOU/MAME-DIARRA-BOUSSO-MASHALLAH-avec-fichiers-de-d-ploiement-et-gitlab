@@ -11517,9 +11517,9 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                       </div>
 
                       {/* Actif Switch */}
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
                         {/* Label: text-sm font-medium text-foreground */}
-                        <label style={{ fontSize: "14px", fontWeight: "500", color: "#1E3A5F" }}>
+                        <label style={{ fontSize: "14px", fontWeight: "500", color: "#1E3A5F", margin: 0 }}>
                           Actif
                         </label>
                         <div
@@ -11527,10 +11527,11 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                             width: "44px",
                             height: "24px",
                             borderRadius: "12px",
-                            background: editingType ? (ticketTypes.find(t => t.id === editingType)?.is_active ? "#2F9E44" : "#ccc") : "#2F9E44",
+                            background: editingType ? (ticketTypes.find(t => t.id === editingType)?.is_active ? "#2563eb" : "#1E3A5F") : "#2563eb",
                             position: "relative",
                             cursor: "not-allowed",
-                            transition: "all 0.2s"
+                            transition: "all 0.2s",
+                            flexShrink: 0
                           }}
                         >
                           <div
@@ -11542,7 +11543,8 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                               position: "absolute",
                               top: "2px",
                               right: editingType ? (ticketTypes.find(t => t.id === editingType)?.is_active ? "2px" : "22px") : "2px",
-                              transition: "all 0.2s"
+                              transition: "all 0.2s",
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
                             }}
                           />
                         </div>
