@@ -11375,7 +11375,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    background: "rgba(0,0,0,0.5)",
+                    background: "rgba(0,0,0,0.6)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
