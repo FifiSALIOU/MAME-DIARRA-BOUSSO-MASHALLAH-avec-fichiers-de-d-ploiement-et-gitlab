@@ -11527,7 +11527,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                             width: "44px",
                             height: "24px",
                             borderRadius: "12px",
-                            background: editingType ? (ticketTypes.find(t => t.id === editingType)?.is_active ? "#2563eb" : "#1E3A5F") : "#2563eb",
+                            background: editingType ? (ticketTypes.find(t => t.id === editingType)?.is_active ? "#22c55e" : "#1E3A5F") : "#22c55e",
                             position: "relative",
                             cursor: "not-allowed",
                             transition: "all 0.2s",
