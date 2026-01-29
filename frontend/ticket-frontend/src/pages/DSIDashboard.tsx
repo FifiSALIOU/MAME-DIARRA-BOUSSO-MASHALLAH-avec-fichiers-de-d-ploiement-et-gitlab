@@ -6077,7 +6077,10 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
               fontSize: "13px", 
               fontWeight: "400",
               color: "#6b7280",
-              fontFamily: "system-ui, -apple-system, sans-serif"
+              fontFamily: "system-ui, -apple-system, sans-serif",
+              paddingLeft: 0,
+              marginLeft: 0,
+              textAlign: "left"
             }}>
               {activeSection === "roles" ? "Créez, modifiez et gérez les rôles et permissions" : activeSection === "users" ? "Créez, modifiez et gérez les comptes utilisateurs" : activeSection === "groupes" ? "Gestion des groupes" : activeSection === "tickets" ? "Gérez tous vos tickets" : activeSection === "technicians" ? "Gestion des membres de l'équipe DSI et des techniciens" : activeSection === "reports" ? "Vue d'ensemble des tickets et de l'activité du support" : "Vue d'ensemble de votre activité"}
             </div>
@@ -16509,7 +16512,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                   flexShrink: 0
                 }}>
                   <div style={{
-                    padding: "28px 20px 20px 20px",
+                    padding: "28px 20px 20px 0",
                     borderBottom: "1px solid #e0e0e0",
                     display: "flex",
                     justifyContent: "space-between",
@@ -18098,7 +18101,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
               flexShrink: 0
             }}>
               <div style={{
-                padding: "28px 20px 20px 20px",
+                padding: "28px 20px 20px 0",
                 borderBottom: "1px solid #e0e0e0",
                 display: "flex",
                 justifyContent: "space-between",
