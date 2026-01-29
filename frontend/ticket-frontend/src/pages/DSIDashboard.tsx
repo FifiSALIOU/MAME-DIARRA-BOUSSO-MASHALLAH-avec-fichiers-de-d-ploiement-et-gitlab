@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
-import { Users, Clock3, TrendingUp, Award, UserCheck, Star, LayoutDashboard, ChevronLeft, ChevronRight, Bell, BarChart3, Search, Ticket, Wrench, CheckCircle2, AlertTriangle, Clock, Briefcase, UserPlus, CornerUpRight, Box, FileText, RefreshCcw, Plus, Pencil, Trash2, ChevronDown, UserX, UserCog, Shield, Check, Layers, Monitor, X, FolderTree, Tag } from "lucide-react";
+import { Users, Clock3, TrendingUp, Award, UserCheck, Star, LayoutDashboard, ChevronLeft, ChevronRight, Bell, BarChart3, Search, Ticket, Wrench, CheckCircle2, AlertTriangle, Clock, Briefcase, UserPlus, CornerUpRight, Box, FileText, RefreshCcw, Plus, Pencil, Trash2, ChevronDown, UserX, UserCog, Shield, Check, Layers, Monitor, X, FolderTree, Tag, Settings } from "lucide-react";
 import React from "react";
 import helpdeskLogo from "../assets/helpdesk-logo.png";
 import jsPDF from "jspdf";
@@ -5729,10 +5729,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
               }}
             >
               <div style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 1.5 L13.2 5.5 L17.2 4.5 L15.2 8.2 L19 9.5 L16.5 12 L19 14.5 L15.2 15.8 L17.2 19.5 L13.2 18.5 L12 22.5 L10.8 18.5 L6.8 19.5 L8.8 15.8 L5 14.5 L7.5 12 L5 9.5 L8.8 8.2 L6.8 4.5 L10.8 5.5 Z"/>
-                  <circle cx="12" cy="12" r="3" fill="none"/>
-                </svg>
+                <Settings size={20} color="white" />
               </div>
               <div style={{ flex: 1 }}>Paramètres</div>
               <div style={{ width: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}>
