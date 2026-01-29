@@ -11340,20 +11340,20 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     border: "none",
                     borderRadius: "8px",
                     cursor: "pointer",
-                    fontSize: "16px",
+                    fontSize: "14px",
                     fontWeight: 500,
                     fontFamily: "system-ui, -apple-system, sans-serif",
                     boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
                   }}
                 >
-                  <Plus size={20} />
+                  <Plus size={18} />
                   Nouvelle catégorie
                 </button>
               </div>
 
               {/* Liste accordéon par type */}
               {loadingCategories ? (
-                <div style={{ textAlign: "center", padding: "40px", color: "hsl(220, 15%, 45%)" }}>Chargement des catégories...</div>
+                <div style={{ textAlign: "center", padding: "40px", color: "hsl(220, 15%, 45%)", fontSize: "14px" }}>Chargement des catégories...</div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   {categoriesTypes.map((typeItem) => {
@@ -11385,23 +11385,23 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                         >
                           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                             {isMateriel ? (
-                              <Wrench size={20} color="hsl(25, 95%, 53%)" />
+                              <Wrench size={18} color="hsl(25, 95%, 53%)" />
                             ) : (
-                              <Monitor size={20} color="hsl(25, 95%, 53%)" />
+                              <Monitor size={18} color="hsl(25, 95%, 53%)" />
                             )}
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1 }}>
-                            <span style={{ fontSize: "16px", fontWeight: 500, color: "#111827", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+                            <span style={{ fontSize: "14px", fontWeight: 500, color: "#111827", fontFamily: "system-ui, -apple-system, sans-serif" }}>
                               {typeItem.label}
                             </span>
                             <span
                               style={{
-                                minWidth: "24px",
-                                height: "24px",
+                                minWidth: "22px",
+                                height: "22px",
                                 borderRadius: "9999px",
                                 backgroundColor: "hsl(25, 95%, 53%)",
                                 color: "white",
-                                fontSize: "14px",
+                                fontSize: "12px",
                                 fontWeight: 500,
                                 display: "inline-flex",
                                 alignItems: "center",
@@ -11421,14 +11421,14 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                               transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)"
                             }}
                           >
-                            <ChevronDown size={20} color="hsl(220, 15%, 45%)" />
+                            <ChevronDown size={18} color="hsl(220, 15%, 45%)" />
                           </div>
                         </div>
                         {isExpanded && (
                           <div style={{ borderTop: "1px solid hsl(220, 20%, 90%)", padding: "16px 20px", background: "white" }}>
                             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                               {subCategories.length === 0 ? (
-                                <div style={{ color: "hsl(220, 15%, 45%)", fontSize: "14px" }}>Aucune catégorie</div>
+                                <div style={{ color: "hsl(220, 15%, 45%)", fontSize: "13px" }}>Aucune catégorie</div>
                               ) : (
                                 subCategories.map((cat) => (
                                   <div
@@ -11442,19 +11442,19 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                                   >
                                     {/* Header de catégorie */}
                                     <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-                                      <Tag size={20} color="hsl(220, 15%, 45%)" />
+                                      <Tag size={18} color="hsl(220, 15%, 45%)" />
                                       <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1 }}>
-                                        <span style={{ fontSize: "16px", fontWeight: 500, color: "hsl(var(--foreground, #111827))", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+                                        <span style={{ fontSize: "14px", fontWeight: 500, color: "hsl(var(--foreground, #111827))", fontFamily: "system-ui, -apple-system, sans-serif" }}>
                                           {cat.name}
                                         </span>
                                         {cat.is_active && (
                                           <span
                                             style={{
-                                              padding: "4px 10px",
+                                              padding: "3px 8px",
                                               borderRadius: "9999px",
                                               border: "1px solid hsl(220, 20%, 80%)",
                                               color: "hsl(220, 15%, 45%)",
-                                              fontSize: "13px",
+                                              fontSize: "12px",
                                               fontWeight: 500
                                             }}
                                           >
@@ -11468,14 +11468,14 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                                           style={{ padding: "4px", background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                                           title="Modifier"
                                         >
-                                          <Pencil size={20} color="hsl(220, 15%, 45%)" />
+                                          <Pencil size={18} color="hsl(220, 15%, 45%)" />
                                         </button>
                                         <button
                                           type="button"
                                           style={{ padding: "4px", background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                                           title="Supprimer"
                                         >
-                                          <Trash2 size={20} color="rgb(239, 68, 68)" />
+                                          <Trash2 size={18} color="rgb(239, 68, 68)" />
                                         </button>
                                       </div>
                                     </div>
@@ -11493,7 +11493,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     );
                   })}
                   {categoriesTypes.length === 0 && !loadingCategories && (
-                    <div style={{ textAlign: "center", padding: "40px", color: "hsl(220, 15%, 45%)" }}>Aucun type de ticket. Ajoutez des types dans la section Types.</div>
+                    <div style={{ textAlign: "center", padding: "40px", color: "hsl(220, 15%, 45%)", fontSize: "14px" }}>Aucun type de ticket. Ajoutez des types dans la section Types.</div>
                   )}
                 </div>
               )}
