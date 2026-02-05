@@ -8878,42 +8878,6 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     </div>
                   </div>
 
-                  {/* Mois */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        fontSize: "12px",
-                        color: "#6b7280",
-                      }}
-                    >
-                      <Calendar size={12} />
-                      <span>Mois</span>
-                    </span>
-                    <select
-                      value={advancedMonthFilter}
-                      onChange={(e) => setAdvancedMonthFilter(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "6px 10px",
-                        borderRadius: "8px",
-                        border: "1px solid #e5e7eb",
-                        backgroundColor: "#f9fafb",
-                        fontSize: "14px",
-                        height: "36px",
-                      }}
-                    >
-                      <option value="all">Tous les mois</option>
-                      {advancedMonths.map((key) => (
-                        <option key={key} value={key}>
-                          {formatMonthLabel(key)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
                   {/* Agence */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                     <span
