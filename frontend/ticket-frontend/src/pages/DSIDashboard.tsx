@@ -9028,9 +9028,11 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                       }}
                     >
                       <option value="all">Tous</option>
-                      <option value="7">Depuis 7 jours</option>
-                      <option value="30">Depuis 30 jours</option>
-                      <option value="90">Depuis 90 jours</option>
+                      <option value="3">3+ jours</option>
+                      <option value="5">5+ jours</option>
+                      <option value="7">7+ jours (1 semaine)</option>
+                      <option value="14">14+ jours (2 semaines)</option>
+                      <option value="30">30+ jours (1 mois)</option>
                     </select>
                   </div>
 
