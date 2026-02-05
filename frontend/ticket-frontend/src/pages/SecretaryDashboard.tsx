@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
-import { Clock3, Users, CheckCircle2, ChevronRight, ChevronLeft, ChevronDown, LayoutDashboard, Bell, Search, Clock, Monitor, Wrench, Forward, AlertTriangle, BarChart3, TrendingUp, Box, UserPlus, FileText, UserCheck, RefreshCcw } from "lucide-react";
+import { Clock3, Users, CheckCircle2, ChevronRight, ChevronLeft, ChevronDown, LayoutDashboard, Bell, Search, Clock, Monitor, Wrench, Forward, AlertTriangle, BarChart3, TrendingUp, Box, UserPlus, FileText, UserCheck, RefreshCcw, Filter, Calendar, Layers, Building2, User, FileSpreadsheet } from "lucide-react";
 import helpdeskLogo from "../assets/helpdesk-logo.png";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -187,6 +187,14 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
   const [agencyFilter, setAgencyFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [delegationFilter, setDelegationFilter] = useState<string>("all");
+  // Filtres avancés section Tickets (Adjoint DSI uniquement)
+  const [advancedAgencyFilter, setAdvancedAgencyFilter] = useState<string>("all");
+  const [advancedCategoryFilter, setAdvancedCategoryFilter] = useState<string>("all");
+  const [advancedTypeFilter, setAdvancedTypeFilter] = useState<string>("all");
+  const [advancedNonResolvedFilter, setAdvancedNonResolvedFilter] = useState<string>("all");
+  const [advancedUserFilter, setAdvancedUserFilter] = useState<string>("all");
+  const [advancedCreatorFilter, setAdvancedCreatorFilter] = useState<string>("");
+  const [categoriesList, setCategoriesList] = useState<Array<{ id: number; name: string; description?: string | null; type_code: string; is_active: boolean }>>([]);
   const [selectedReport, setSelectedReport] = useState<string>("");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -842,6 +850,19 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
     
     return () => clearTimeout(timeoutId);
   }, [ticketSearchQuery, token]);
+
+  // Charger les catégories pour l'Adjoint DSI (filtre Catégorie en section Tickets)
+  useEffect(() => {
+    if (roleName !== "Adjoint DSI") return;
+    if (location.pathname !== "/dashboard/adjoint/tickets") return;
+    if (!token) return;
+    (async () => {
+      try {
+        const res = await fetch("http://localhost:8000/ticket-config/categories", { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) setCategoriesList((await res.json()) || []);
+      } catch (e) { console.error("Erreur chargement catégories (Adjoint DSI):", e); }
+    })();
+  }, [roleName, location.pathname, token]);
 
   // Gérer les paramètres URL pour ouvrir automatiquement les modals
   useEffect(() => {
@@ -3197,6 +3218,31 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
   const allAgencies = Array.from(new Set(
     allTickets.map((t) => t.creator?.agency || t.user_agency).filter(Boolean)
   ));
+
+  // Données pour filtres avancés (Adjoint DSI)
+  const advancedCategories = Array.from(new Set(categoriesList.filter((c) => c.is_active).map((c) => c.name)));
+  const advancedTypes = Array.from(new Set(allTickets.map((t) => t.type).filter(Boolean)));
+  const advancedUsers = Array.from(new Set([...allTickets.map((t) => t.creator?.full_name).filter(Boolean), ...allTickets.map((t) => t.technician?.full_name).filter(Boolean)]));
+
+  // Appliquer les filtres avancés (Adjoint DSI uniquement, sans toucher aux 4 filtres existants)
+  if (roleName === "Adjoint DSI") {
+    if (advancedAgencyFilter !== "all") filteredTickets = filteredTickets.filter((t) => (t.creator?.agency || t.user_agency) === advancedAgencyFilter);
+    if (advancedCategoryFilter !== "all") filteredTickets = filteredTickets.filter((t) => t.category === advancedCategoryFilter);
+    if (advancedTypeFilter !== "all") filteredTickets = filteredTickets.filter((t) => t.type === advancedTypeFilter);
+    if (advancedNonResolvedFilter !== "all") {
+      const days = parseInt(advancedNonResolvedFilter, 10);
+      if (!Number.isNaN(days) && days > 0) {
+        const now = Date.now();
+        filteredTickets = filteredTickets.filter((t) => {
+          if (t.resolved_at) return false;
+          if (!t.created_at) return true;
+          return (now - new Date(t.created_at).getTime()) / (1000 * 60 * 60 * 24) >= days;
+        });
+      }
+    }
+    if (advancedUserFilter !== "all") filteredTickets = filteredTickets.filter((t) => (t.technician?.full_name || "") === advancedUserFilter || (t.creator?.full_name || "") === advancedUserFilter);
+    if (advancedCreatorFilter.trim()) filteredTickets = filteredTickets.filter((t) => (t.creator?.full_name || "").toLowerCase().includes(advancedCreatorFilter.trim().toLowerCase()));
+  }
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'Inter', system-ui, sans-serif", background: "#f5f5f5", overflowX: "visible" }}>
@@ -5945,6 +5991,75 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
 
           {currentActiveSection === "tickets" && (
             <>
+              {/* Filtres avancés (Adjoint DSI uniquement, au-dessus des 4 filtres existants) */}
+              {roleName === "Adjoint DSI" && (
+                <div style={{ border: "1px solid rgba(148, 163, 184, 0.5)", borderRadius: "12px", padding: "16px", marginTop: "8px", marginBottom: "24px", backgroundColor: "#ffffff", boxShadow: "0 1px 2px rgba(15, 23, 42, 0.02)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", gap: "12px", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <Filter size={16} color="#f97316" />
+                      <span style={{ fontSize: "14px", fontWeight: 500, color: "#0f172a" }}>Filtres avancés</span>
+                    </div>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button type="button" onClick={() => { try { const wb = XLSX.utils.book_new(); const rows = filteredTickets.map((t) => ({ Numéro: `TKT-${t.number.toString().padStart(3, "0")}`, Titre: t.title, Description: t.description || "", Statut: t.status, Priorité: t.priority || "", Catégorie: t.category || "", Type: t.type || "", Agence: t.creator?.agency || t.user_agency || "", Créé_par: t.creator?.full_name || "", Technicien: t.technician?.full_name || "", Créé_le: t.created_at ? new Date(t.created_at).toLocaleString("fr-FR") : "", Résolu_le: t.resolved_at ? new Date(t.resolved_at).toLocaleString("fr-FR") : "" })); const ws = XLSX.utils.json_to_sheet(rows); XLSX.utils.book_append_sheet(wb, ws, "Tickets"); XLSX.writeFile(wb, `Tickets_Adjoint_DSI_${new Date().toISOString().split("T")[0]}.xlsx`); } catch (e) { console.error(e); alert("Erreur export Excel"); } }} style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 10px", borderRadius: "9999px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "13px", fontWeight: 500, color: "#0f172a", cursor: "pointer" }}>
+                        <FileSpreadsheet size={16} /><span>Excel</span>
+                      </button>
+                      <button type="button" onClick={() => { try { const doc = new jsPDF(); doc.setFontSize(14); doc.text("Liste des tickets (Adjoint DSI)", 14, 20); doc.setFontSize(10); doc.text(`Généré le: ${new Date().toLocaleString("fr-FR")}`, 14, 28); autoTable(doc, { startY: 34, head: [["N°", "Titre", "Priorité", "Statut", "Catégorie", "Type", "Agence", "Créé par", "Technicien"]], body: filteredTickets.map((t) => [`TKT-${t.number.toString().padStart(3, "0")}`, t.title, t.priority || "", t.status, t.category || "", t.type || "", t.creator?.agency || t.user_agency || "", t.creator?.full_name || "", t.technician?.full_name || ""]), styles: { fontSize: 8 }, headStyles: { fillColor: [15, 23, 42] } }); doc.save(`Tickets_Adjoint_DSI_${new Date().toISOString().split("T")[0]}.pdf`); } catch (e) { console.error(e); alert("Erreur export PDF"); } }} style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 10px", borderRadius: "9999px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "13px", fontWeight: 500, color: "#0f172a", cursor: "pointer" }}>
+                        <FileText size={16} /><span>PDF</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "12px 16px" }}>
+                    <div style={{ gridColumn: "span 2", display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280" }}><Calendar size={12} /><span>Période</span></span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 10px", borderRadius: "8px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "14px", color: "#6b7280", height: "36px" }}><Calendar size={16} color="#6b7280" /><span>Sélectionner une période</span></div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280" }}><Building2 size={12} /><span>Agence</span></span>
+                      <select value={advancedAgencyFilter} onChange={(e) => setAdvancedAgencyFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", borderRadius: "8px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "14px", height: "36px" }}>
+                        <option value="all">Toutes les agences</option>
+                        {allAgencies.map((a) => <option key={a} value={a || ""}>{a}</option>)}
+                      </select>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280" }}><AlertTriangle size={12} /><span>Catégorie</span></span>
+                      <select value={advancedCategoryFilter} onChange={(e) => setAdvancedCategoryFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", borderRadius: "8px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "14px", height: "36px" }}>
+                        <option value="all">Toutes</option>
+                        {advancedCategories.map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280" }}><Layers size={12} /><span>Type</span></span>
+                      <select value={advancedTypeFilter} onChange={(e) => setAdvancedTypeFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", borderRadius: "8px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "14px", height: "36px" }}>
+                        <option value="all">Tous</option>
+                        {advancedTypes.map((ty) => <option key={ty} value={ty}>{ty}</option>)}
+                      </select>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280" }}><Clock size={12} /><span>Non résolu depuis</span></span>
+                      <select value={advancedNonResolvedFilter} onChange={(e) => setAdvancedNonResolvedFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", borderRadius: "8px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "14px", height: "36px" }}>
+                        <option value="all">Tous</option>
+                        <option value="3">3+ jours</option>
+                        <option value="5">5+ jours</option>
+                        <option value="7">7+ jours (1 semaine)</option>
+                        <option value="14">14+ jours (2 semaines)</option>
+                        <option value="30">30+ jours (1 mois)</option>
+                      </select>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280" }}><User size={12} /><span>Utilisateur</span></span>
+                      <select value={advancedUserFilter} onChange={(e) => setAdvancedUserFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", borderRadius: "8px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "14px", height: "36px" }}>
+                        <option value="all">Tous</option>
+                        {advancedUsers.map((u) => <option key={u} value={u}>{u}</option>)}
+                      </select>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <span style={{ fontSize: "12px", color: "#6b7280" }}>Créé par (nom)</span>
+                      <input type="text" placeholder="Rechercher..." value={advancedCreatorFilter} onChange={(e) => setAdvancedCreatorFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", borderRadius: "8px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "14px", height: "36px", color: "#111827" }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Filtres */}
               <div style={{ 
                 display: "flex", 
