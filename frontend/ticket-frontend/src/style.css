@@ -62,14 +62,33 @@
   justify-content: center;
 }
 
-/* Chevrons < > : gris #808080, opacity 50% par défaut, 100% au hover */
+/* Chevrons < > : gris #808080, opacity 50% par défaut */
 .rdp-root .rdp-chevron {
   fill: #808080;
   opacity: 0.5;
 }
+/* Hover : fond orange pêche, chevron orange-brun, pas de bleu */
+.rdp-root .rdp-button_previous:hover,
+.rdp-root .rdp-button_next:hover {
+  background-color: #ffedd5 !important;
+  border-radius: 6px;
+  outline: none;
+}
 .rdp-root .rdp-button_previous:hover .rdp-chevron,
 .rdp-root .rdp-button_next:hover .rdp-chevron {
   opacity: 1;
+  fill: #c2410c;
+}
+.rdp-root .rdp-button_previous:focus,
+.rdp-root .rdp-button_next:focus,
+.rdp-root .rdp-button_previous:focus-visible,
+.rdp-root .rdp-button_next:focus-visible {
+  outline: none;
+  background-color: transparent;
+}
+.rdp-root .rdp-button_previous:focus-visible:hover,
+.rdp-root .rdp-button_next:focus-visible:hover {
+  background-color: #ffedd5 !important;
 }
 
 .rdp-table {
