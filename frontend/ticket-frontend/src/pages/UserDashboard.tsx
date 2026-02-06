@@ -2404,7 +2404,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                 <span style={{ fontSize: "28px", fontWeight: "bold", color: "#1f2937", marginBottom: "4px" }}>
                   {statusCounts.resolu}
                 </span>
-                <span style={{ fontSize: "13px", fontWeight: "500", color: "#4b5563" }}>Tickets Résolus</span>
+                <span style={{ fontSize: "13px", fontWeight: "500", color: "#4b5563" }}>En attente de validation</span>
               </div>
 
               {/* (Cartes supplémentaires supprimées) */}
