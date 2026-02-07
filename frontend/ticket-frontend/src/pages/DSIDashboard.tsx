@@ -7168,7 +7168,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
             <Clock3 size={20} color="#0284c7" />
           </div>
           <div style={{ fontSize: "13px", fontWeight: 500, color: "#374151", marginBottom: "12px" }}>
-            Volume total
+            Volume<br />total
           </div>
           <div
             style={{
