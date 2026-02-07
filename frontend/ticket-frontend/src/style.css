@@ -257,9 +257,8 @@ p[style*="color: red"] {
   color: #ea580c !important;
 }
 
-/* Listes déroulantes personnalisées DSI : option au survol / sélectionnée = orange */
-.dsi-orange-select-option:hover,
-.dsi-orange-select-option.dsi-orange-select-option-selected {
+/* Listes déroulantes personnalisées DSI : option au survol uniquement = orange */
+.dsi-orange-select-option:hover {
   background-color: #fff7ed !important;
   color: #ea580c !important;
 }

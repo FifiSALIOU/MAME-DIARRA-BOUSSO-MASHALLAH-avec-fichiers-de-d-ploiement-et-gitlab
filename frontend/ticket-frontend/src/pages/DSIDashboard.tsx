@@ -242,8 +242,8 @@ function DSIOrangeSelect({
                 padding: "8px 10px",
                 cursor: "pointer",
                 fontSize: "14px",
-                backgroundColor: value === opt.value ? "#fff7ed" : "transparent",
-                color: value === opt.value ? "#ea580c" : "#111827",
+                backgroundColor: "transparent",
+                color: "#111827",
               }}
             >
               {opt.label}
