@@ -267,6 +267,8 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
   const [selectedTechnician, setSelectedTechnician] = useState<string>("");
   const [assignmentNotes, setAssignmentNotes] = useState<string>("");
+  const [assignmentPriority, setAssignmentPriority] = useState<string>("moyenne");
+  const [activePrioritiesForAssign, setActivePrioritiesForAssign] = useState<Array<{ id: number; code: string; label: string; color_hex?: string | null; display_order: number }>>([]);
   const [reopenTicketId, setReopenTicketId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState<string>("");
   const [loadingRejectionReason, setLoadingRejectionReason] = useState<boolean>(false);
@@ -799,6 +801,19 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
           setTechnicians(techData);
         }
 
+        // Charger les priorités actives pour le formulaire d'assignation (Adjoint DSI)
+        try {
+          const prioritiesRes = await fetch("http://localhost:8000/ticket-config/priorities", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (prioritiesRes.ok) {
+            const prioritiesData = await prioritiesRes.json();
+            setActivePrioritiesForAssign(prioritiesData);
+          }
+        } catch (err) {
+          console.error("Erreur chargement priorités:", err);
+        }
+
         // Charger les informations de l'utilisateur connecté (pour connaître le rôle)
         const meRes = await fetch("http://localhost:8000/auth/me", {
           headers: {
@@ -1005,6 +1020,16 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
       }
     }
   }, [searchParams, allTickets]);
+
+  // Initialiser la priorité d'assignation à l'ouverture du modal (Adjoint DSI)
+  useEffect(() => {
+    if (showAssignModal && assignModalTicketId && allTickets.length > 0) {
+      const ticket = allTickets.find((t) => t.id === assignModalTicketId);
+      const activeCodes = activePrioritiesForAssign.map((p) => p.code);
+      const defaultPriority = activePrioritiesForAssign.length > 0 ? activePrioritiesForAssign[0].code : "moyenne";
+      setAssignmentPriority(ticket?.priority && activeCodes.includes(ticket.priority) ? ticket.priority : defaultPriority);
+    }
+  }, [showAssignModal, assignModalTicketId, allTickets]);
 
   // Charger les rapports récents quand userInfo est disponible
   useEffect(() => {
@@ -2852,6 +2877,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           technician_id: selectedTechnician,
           reason: "Assignation par Secrétaire/Adjoint DSI",
           notes: assignmentNotes || undefined,
+          priority: assignmentPriority,
         }),
       });
 
@@ -2872,6 +2898,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         setSelectedTicket(null);
         setSelectedTechnician("");
         setAssignmentNotes("");
+        setAssignmentPriority(activePrioritiesForAssign.length > 0 ? activePrioritiesForAssign[0].code : "moyenne");
         setShowAssignModal(false);
         setAssignModalTicketId(null);
         alert("Ticket assigné avec succès");
@@ -10241,6 +10268,53 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                   })}
                 </select>
               </div>
+              {/* Définir la priorité (comme pour le DSI) */}
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#333" }}>
+                  Définir la priorité
+                </label>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span
+                    style={{
+                      width: "12px",
+                      height: "12px",
+                      borderRadius: "50%",
+                      flexShrink: 0,
+                      background:
+                        activePrioritiesForAssign.find((p) => p.code === assignmentPriority)?.color_hex ??
+                        (assignmentPriority === "critique" ? "#E53E3E" :
+                         assignmentPriority === "haute" ? "#F59E0B" :
+                         assignmentPriority === "moyenne" ? "#0DADDB" : "#6B7280")
+                    }}
+                  />
+                  <select
+                    value={assignmentPriority}
+                    onChange={(e) => setAssignmentPriority(e.target.value)}
+                    style={{
+                      flex: 1,
+                      padding: "8px",
+                      border: "1px solid #ddd",
+                      borderRadius: "4px",
+                      fontSize: "14px"
+                    }}
+                  >
+                    {activePrioritiesForAssign.length > 0 ? (
+                      activePrioritiesForAssign
+                        .sort((a, b) => a.display_order - b.display_order)
+                        .map((p) => (
+                          <option key={p.id} value={p.code}>{p.label}</option>
+                        ))
+                    ) : (
+                      <>
+                        <option value="faible">Faible</option>
+                        <option value="moyenne">Moyenne</option>
+                        <option value="haute">Haute</option>
+                        <option value="critique">Critique</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+              </div>
               <div style={{ marginBottom: "16px" }}>
                 <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#333" }}>
                   Notes/Instructions pour le technicien (optionnel)
@@ -10260,6 +10334,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     setAssignModalTicketId(null);
                     setSelectedTechnician("");
                     setAssignmentNotes("");
+                    setAssignmentPriority(activePrioritiesForAssign.length > 0 ? activePrioritiesForAssign[0].code : "moyenne");
                   }}
                   disabled={loading}
                   style={{ padding: "10px 20px", background: "white", color: "black", border: "1px solid #ddd", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", fontSize: "14px", fontWeight: "500" }}
