@@ -147,7 +147,103 @@ const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name
       </text>
     </g>
   );
-};
+}
+
+/** Liste déroulante des filtres (survol orange sur les options) */
+function OrangeSelect({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("click", h);
+    return () => document.removeEventListener("click", h);
+  }, []);
+  const selected = options.find((o) => o.value === value) || options[0];
+  return (
+    <div ref={ref} style={{ position: "relative", width: "100%" }}>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setOpen((o) => !o)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((o) => !o);
+          }
+        }}
+        className="dsi-orange-select-trigger"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "8px",
+          padding: "6px 10px",
+          borderRadius: "8px",
+          border: "1px solid #e5e7eb",
+          backgroundColor: "#f9fafb",
+          fontSize: "14px",
+          height: "36px",
+          cursor: "pointer",
+          color: "#111827",
+        }}
+      >
+        <span>{selected?.label ?? value}</span>
+        <ChevronDown size={16} color="#6b7280" />
+      </div>
+      {open && (
+        <div
+          className="dsi-orange-select-dropdown"
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            marginTop: "4px",
+            backgroundColor: "#fff",
+            border: "1px solid #e5e7eb",
+            borderRadius: "8px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            zIndex: 1000,
+            maxHeight: "240px",
+            overflowY: "auto",
+          }}
+        >
+          {options.map((opt) => (
+            <div
+              key={opt.value}
+              role="option"
+              aria-selected={value === opt.value}
+              className={`dsi-orange-select-option ${value === opt.value ? "dsi-orange-select-option-selected" : ""}`}
+              onClick={() => {
+                onChange(opt.value);
+                setOpen(false);
+              }}
+              style={{
+                padding: "8px 10px",
+                cursor: "pointer",
+                fontSize: "14px",
+                backgroundColor: "transparent",
+                color: "#111827",
+              }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function SecretaryDashboard({ token }: SecretaryDashboardProps) {
   const [searchParams] = useSearchParams();
@@ -6096,71 +6192,35 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                       <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280" }}><Building2 size={12} /><span>Agence</span></span>
-                      <select value={advancedAgencyFilter} onChange={(e) => setAdvancedAgencyFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", borderRadius: "8px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "14px", height: "36px" }}>
-                        <option value="all">Toutes les agences</option>
-                        {allAgencies.map((a) => <option key={a} value={a || ""}>{a}</option>)}
-                      </select>
+                      <OrangeSelect value={advancedAgencyFilter} onChange={setAdvancedAgencyFilter} options={[{ value: "all", label: "Toutes les agences" }, ...allAgencies.map((a) => ({ value: a || "", label: a || "" }))]} />
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                       <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280" }}><AlertTriangle size={12} /><span>Catégorie</span></span>
-                      <select value={advancedCategoryFilter} onChange={(e) => setAdvancedCategoryFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", borderRadius: "8px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "14px", height: "36px" }}>
-                        <option value="all">Toutes</option>
-                        {advancedCategories.map((c) => <option key={c} value={c}>{c}</option>)}
-                      </select>
+                      <OrangeSelect value={advancedCategoryFilter} onChange={setAdvancedCategoryFilter} options={[{ value: "all", label: "Toutes" }, ...advancedCategories.map((c) => ({ value: c, label: c }))]} />
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                       <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280" }}><Layers size={12} /><span>Type</span></span>
-                      <select value={advancedTypeFilter} onChange={(e) => setAdvancedTypeFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", borderRadius: "8px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "14px", height: "36px" }}>
-                        <option value="all">Tous</option>
-                        {advancedTypes.map((ty) => <option key={ty} value={ty}>{ty}</option>)}
-                      </select>
+                      <OrangeSelect value={advancedTypeFilter} onChange={setAdvancedTypeFilter} options={[{ value: "all", label: "Tous" }, ...advancedTypes.map((ty) => ({ value: ty, label: ty }))]} />
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                       <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280" }}><CheckCircle size={12} /><span>Statut</span></span>
-                      <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", borderRadius: "8px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "14px", height: "36px" }}>
-                        <option value="all">Tous</option>
-                        <option value="en_attente_analyse">En attente d'assignation</option>
-                        <option value="en_traitement">En traitement</option>
-                        <option value="resolu">Résolus</option>
-                        <option value="cloture">Clôturés</option>
-                        <option value="rejete">Relancés</option>
-                      </select>
+                      <OrangeSelect value={statusFilter} onChange={setStatusFilter} options={[{ value: "all", label: "Tous" }, { value: "en_attente_analyse", label: "En attente d'assignation" }, { value: "en_traitement", label: "En traitement" }, { value: "resolu", label: "Résolus" }, { value: "cloture", label: "Clôturés" }, { value: "rejete", label: "Relancés" }]} />
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                       <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280" }}><Flag size={12} /><span>Priorité</span></span>
-                      <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", borderRadius: "8px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "14px", height: "36px" }}>
-                        <option value="all">Toutes</option>
-                        <option value="critique">Critique</option>
-                        <option value="haute">Haute</option>
-                        <option value="moyenne">Moyenne</option>
-                        <option value="faible">Faible</option>
-                      </select>
+                      <OrangeSelect value={priorityFilter} onChange={setPriorityFilter} options={[{ value: "all", label: "Toutes" }, { value: "critique", label: "Critique" }, { value: "haute", label: "Haute" }, { value: "moyenne", label: "Moyenne" }, { value: "faible", label: "Faible" }]} />
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                       <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280" }}><Share2 size={12} /><span>Délégation</span></span>
-                      <select value={delegationFilter} onChange={(e) => setDelegationFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", borderRadius: "8px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "14px", height: "36px" }}>
-                        <option value="all">Tous</option>
-                        <option value="delegated">Tickets délégués par DSI</option>
-                        <option value="not_delegated">Tickets non délégués</option>
-                      </select>
+                      <OrangeSelect value={delegationFilter} onChange={setDelegationFilter} options={[{ value: "all", label: "Tous" }, { value: "delegated", label: "Tickets délégués par DSI" }, { value: "not_delegated", label: "Tickets non délégués" }]} />
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                       <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280" }}><Clock size={12} /><span>Non résolu depuis</span></span>
-                      <select value={advancedNonResolvedFilter} onChange={(e) => setAdvancedNonResolvedFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", borderRadius: "8px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "14px", height: "36px" }}>
-                        <option value="all">Tous</option>
-                        <option value="3">3+ jours</option>
-                        <option value="5">5+ jours</option>
-                        <option value="7">7+ jours (1 semaine)</option>
-                        <option value="14">14+ jours (2 semaines)</option>
-                        <option value="30">30+ jours (1 mois)</option>
-                      </select>
+                      <OrangeSelect value={advancedNonResolvedFilter} onChange={setAdvancedNonResolvedFilter} options={[{ value: "all", label: "Tous" }, { value: "3", label: "3+ jours" }, { value: "5", label: "5+ jours" }, { value: "7", label: "7+ jours (1 semaine)" }, { value: "14", label: "14+ jours (2 semaines)" }, { value: "30", label: "30+ jours (1 mois)" }]} />
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                       <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px", color: "#6b7280" }}><User size={12} /><span>Utilisateur</span></span>
-                      <select value={advancedUserFilter} onChange={(e) => setAdvancedUserFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", borderRadius: "8px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", fontSize: "14px", height: "36px" }}>
-                        <option value="all">Tous</option>
-                        {advancedUsers.map((u) => <option key={u} value={u}>{u}</option>)}
-                      </select>
+                      <OrangeSelect value={advancedUserFilter} onChange={setAdvancedUserFilter} options={[{ value: "all", label: "Tous" }, ...advancedUsers.map((u) => ({ value: u, label: u }))]} />
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                       <span style={{ fontSize: "12px", color: "#6b7280" }}>Créé par (nom)</span>
