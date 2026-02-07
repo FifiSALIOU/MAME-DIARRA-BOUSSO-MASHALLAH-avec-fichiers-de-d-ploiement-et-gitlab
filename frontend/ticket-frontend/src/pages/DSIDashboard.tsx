@@ -549,7 +549,7 @@ function DSIDashboard({ token }: DSIDashboardProps) {
   const activeSection = getActiveSection();
   
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [agencyFilter, setAgencyFilter] = useState<string>("all");
+  const [agencyFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [delegationFilter, setDelegationFilter] = useState<string>("all");
   // États pour les filtres avancés de la section Tickets (DSI)
@@ -19099,7 +19099,21 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         if (!ticket) return null;
         
         return (
-          <div
+          <>
+            <div
+              onClick={() => { setOpenActionsMenuFor(null); setActionsMenuPosition(null); }}
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 9998,
+                background: "transparent",
+                cursor: "default"
+              }}
+            />
+            <div
             data-menu-id={ticket.id}
             style={{
               position: "fixed",
@@ -19363,6 +19377,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
               </button>
             )}
           </div>
+          </>
         );
       })()}
 
@@ -19372,7 +19387,21 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         if (!ticket) return null;
         
         return (
-          <div
+          <>
+            <div
+              onClick={() => { setOpenActionsMenuFor(null); setActionsMenuPosition(null); }}
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 9998,
+                background: "transparent",
+                cursor: "default"
+              }}
+            />
+            <div
             data-menu-id={ticket.id}
             style={{
               position: "fixed",
@@ -19636,6 +19665,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
               </button>
             )}
           </div>
+          </>
         );
       })()}
     </div>
