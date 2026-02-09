@@ -1573,7 +1573,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                 color: "#111827",
                 fontFamily: "system-ui, -apple-system, sans-serif"
               }}>
-                Tableau de bord
+                {currentActiveSection === "actifs" ? "Gestion des Actifs" : "Tableau de bord"}
               </div>
               <div style={{ 
                 fontSize: "13px", 
@@ -1584,7 +1584,9 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                 marginLeft: 0,
                 textAlign: "left"
               }}>
-                Vue d'ensemble de votre activité
+                {currentActiveSection === "actifs"
+                  ? "Gérez l'inventaire des équipements informatiques"
+                  : "Vue d'ensemble de votre activité"}
               </div>
             </div>
             
