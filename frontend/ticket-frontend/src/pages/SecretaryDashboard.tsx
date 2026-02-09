@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
-import { Clock3, Users, CheckCircle2, CheckCircle, ChevronRight, ChevronLeft, ChevronDown, LayoutDashboard, Bell, Search, Clock, Monitor, Wrench, Forward, AlertTriangle, BarChart3, TrendingUp, Box, UserPlus, FileText, UserCheck, RefreshCcw, Filter, Calendar, Layers, Building2, User, FileSpreadsheet, MessageCircle, Flag, Share2, Package, Trash2, DollarSign, Ticket as TicketIcon, Archive, Banknote } from "lucide-react";
+import { Clock3, Users, CheckCircle2, CheckCircle, ChevronRight, ChevronLeft, ChevronDown, LayoutDashboard, Bell, Search, Clock, Monitor, Wrench, Forward, AlertTriangle, BarChart3, TrendingUp, Box, UserPlus, FileText, UserCheck, RefreshCcw, Filter, Calendar, Layers, Building2, User, FileSpreadsheet, MessageCircle, Flag, Share2, Package, Trash2, DollarSign, Ticket as TicketIcon, Archive, Banknote, Download, Plus } from "lucide-react";
 import helpdeskLogo from "../assets/helpdesk-logo.png";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -3882,7 +3882,6 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           
           {/* Right side - Icons */}
           <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          
           {/* Barre de recherche */}
           <div style={{ 
             display: "flex", 
@@ -6169,6 +6168,56 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
 
           {currentActiveSection === "actifs" && (
             <div style={{ marginTop: "40px", marginBottom: "24px" }}>
+              {/* Boutons Exporter / Nouvel actif - au-dessus des 8 KPIs, au coin droit */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginBottom: "24px",
+                  gap: "12px",
+                }}
+              >
+                <button
+                  type="button"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 14px",
+                    backgroundColor: "#ffffff",
+                    color: "#111827",
+                    border: "1px solid #9ca3af",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    fontFamily: "system-ui, -apple-system, sans-serif",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                  }}
+                >
+                  <Download size={18} />
+                  Exporter
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "8px 14px",
+                    backgroundColor: "#1e3a5f",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "14px",
+                    fontFamily: "system-ui, -apple-system, sans-serif",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                  }}
+                >
+                  <Plus size={18} />
+                  Nouvel actif
+                </button>
+              </div>
               <div
                 style={{
                   display: "grid",
