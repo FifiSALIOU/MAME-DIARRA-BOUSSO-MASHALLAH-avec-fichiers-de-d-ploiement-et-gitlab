@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
-import { Users, User, Clock3, TrendingUp, UserCheck, Star, LayoutDashboard, ChevronLeft, ChevronRight, Bell, BarChart3, Search, Ticket, Wrench, CheckCircle, CheckCircle2, AlertTriangle, Clock, Briefcase, Box, FileText, RefreshCcw, Plus, Pencil, Trash2, ChevronDown, UserX, UserCog, Shield, Check, Layers, Monitor, X, FolderTree, Tag, Settings, Mail, Building2, Filter, Calendar, FileSpreadsheet, MessageCircle, Flag, Share2, Package, DollarSign } from "lucide-react";
+import { Users, User, Clock3, TrendingUp, UserCheck, Star, LayoutDashboard, ChevronLeft, ChevronRight, Bell, BarChart3, Search, Ticket, Wrench, CheckCircle, CheckCircle2, AlertTriangle, Clock, Briefcase, Box, FileText, RefreshCcw, Plus, Pencil, Trash2, ChevronDown, UserX, UserCog, Shield, Check, Layers, Monitor, X, FolderTree, Tag, Settings, Mail, Building2, Filter, Calendar, FileSpreadsheet, MessageCircle, Flag, Share2, Package, DollarSign, Archive } from "lucide-react";
 import React from "react";
 import helpdeskLogo from "../assets/helpdesk-logo.png";
 import jsPDF from "jspdf";
@@ -9017,7 +9017,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     justifyContent: "center",
                   }}
                 >
-                  <Trash2 size={18} color="#4b5563" />
+                  <Archive size={18} color="#4b5563" />
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                   <div style={{ fontSize: "22px", fontWeight: 700, color: "#111827" }}>0</div>
