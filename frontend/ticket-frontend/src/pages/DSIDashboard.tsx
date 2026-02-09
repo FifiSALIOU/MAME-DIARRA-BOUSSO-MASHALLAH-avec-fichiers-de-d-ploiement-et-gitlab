@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
-import { Users, User, Clock3, TrendingUp, UserCheck, Star, LayoutDashboard, ChevronLeft, ChevronRight, Bell, BarChart3, Search, Ticket, Wrench, CheckCircle, CheckCircle2, AlertTriangle, Clock, Briefcase, Box, FileText, RefreshCcw, Plus, Pencil, Trash2, ChevronDown, UserX, UserCog, Shield, Check, Layers, Monitor, X, FolderTree, Tag, Settings, Mail, Building2, Filter, Calendar, FileSpreadsheet, MessageCircle, Flag, Share2 } from "lucide-react";
+import { Users, User, Clock3, TrendingUp, UserCheck, Star, LayoutDashboard, ChevronLeft, ChevronRight, Bell, BarChart3, Search, Ticket, Wrench, CheckCircle, CheckCircle2, AlertTriangle, Clock, Briefcase, Box, FileText, RefreshCcw, Plus, Pencil, Trash2, ChevronDown, UserX, UserCog, Shield, Check, Layers, Monitor, X, FolderTree, Tag, Settings, Mail, Building2, Filter, Calendar, FileSpreadsheet, MessageCircle, Flag, Share2, Package, DollarSign } from "lucide-react";
 import React from "react";
 import helpdeskLogo from "../assets/helpdesk-logo.png";
 import jsPDF from "jspdf";
@@ -8822,6 +8822,275 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
             </>
           )}
           </>
+        )}
+
+        {activeSection === "actifs" && (
+          <div style={{ marginTop: "40px", marginBottom: "24px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                gap: "12px",
+              }}
+            >
+              {/* Total Actifs */}
+              <div
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "12px",
+                  padding: "16px 18px",
+                  boxShadow: "0 4px 12px rgba(15,23,42,0.06)",
+                  border: "1px solid rgba(229,231,235,0.8)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "9999px",
+                      background: "hsl(220, 15%, 93%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Monitor size={18} color="#4b5563" />
+                  </div>
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: 700, color: "#111827" }}>0</div>
+                <div style={{ fontSize: "13px", color: "#6b7280", fontWeight: 500 }}>Total Actifs</div>
+              </div>
+
+              {/* En service */}
+              <div
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "12px",
+                  padding: "16px 18px",
+                  boxShadow: "0 4px 12px rgba(15,23,42,0.06)",
+                  border: "1px solid rgba(229,231,235,0.8)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "9999px",
+                      background: "hsl(145, 60%, 90%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <CheckCircle size={18} color="#16a34a" />
+                  </div>
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: 700, color: "#111827" }}>0</div>
+                <div style={{ fontSize: "13px", color: "#6b7280", fontWeight: 500 }}>En service</div>
+              </div>
+
+              {/* En maintenance */}
+              <div
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "12px",
+                  padding: "16px 18px",
+                  boxShadow: "0 4px 12px rgba(15,23,42,0.06)",
+                  border: "1px solid rgba(229,231,235,0.8)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "9999px",
+                      background: "hsl(45, 80%, 90%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Wrench size={18} color="#f97316" />
+                  </div>
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: 700, color: "#111827" }}>0</div>
+                <div style={{ fontSize: "13px", color: "#6b7280", fontWeight: 500 }}>En maintenance</div>
+              </div>
+
+              {/* En panne */}
+              <div
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "12px",
+                  padding: "16px 18px",
+                  boxShadow: "0 4px 12px rgba(15,23,42,0.06)",
+                  border: "1px solid rgba(229,231,235,0.8)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "9999px",
+                      background: "hsl(0, 80%, 93%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <AlertTriangle size={18} color="#ef4444" />
+                  </div>
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: 700, color: "#111827" }}>0</div>
+                <div style={{ fontSize: "13px", color: "#6b7280", fontWeight: 500 }}>En panne</div>
+              </div>
+
+              {/* En stock */}
+              <div
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "12px",
+                  padding: "16px 18px",
+                  boxShadow: "0 4px 12px rgba(15,23,42,0.06)",
+                  border: "1px solid rgba(229,231,235,0.8)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "9999px",
+                      background: "hsl(230, 60%, 93%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Package size={18} color="#2563eb" />
+                  </div>
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: 700, color: "#111827" }}>0</div>
+                <div style={{ fontSize: "13px", color: "#6b7280", fontWeight: 500 }}>En stock</div>
+              </div>
+
+              {/* Réformés */}
+              <div
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "12px",
+                  padding: "16px 18px",
+                  boxShadow: "0 4px 12px rgba(15,23,42,0.06)",
+                  border: "1px solid rgba(229,231,235,0.8)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "9999px",
+                      background: "hsl(220, 15%, 93%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Trash2 size={18} color="#4b5563" />
+                  </div>
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: 700, color: "#111827" }}>0</div>
+                <div style={{ fontSize: "13px", color: "#6b7280", fontWeight: 500 }}>Réformés</div>
+              </div>
+
+              {/* Valeur totale */}
+              <div
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "12px",
+                  padding: "16px 18px",
+                  boxShadow: "0 4px 12px rgba(15,23,42,0.06)",
+                  border: "1px solid rgba(229,231,235,0.8)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "9999px",
+                      background: "hsl(145, 60%, 90%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <DollarSign size={18} color="#16a34a" />
+                  </div>
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: 700, color: "#111827" }}>0 FCFA</div>
+                <div style={{ fontSize: "13px", color: "#6b7280", fontWeight: 500 }}>Valeur totale</div>
+              </div>
+
+              {/* Garanties expirant */}
+              <div
+                style={{
+                  background: "#ffffff",
+                  borderRadius: "12px",
+                  padding: "16px 18px",
+                  boxShadow: "0 4px 12px rgba(15,23,42,0.06)",
+                  border: "1px solid rgba(229,231,235,0.8)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "4px",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "9999px",
+                      background: "hsl(25, 80%, 92%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Clock size={18} color="#f97316" />
+                  </div>
+                </div>
+                <div style={{ fontSize: "24px", fontWeight: 700, color: "#111827" }}>0</div>
+                <div style={{ fontSize: "13px", color: "#6b7280", fontWeight: 500 }}>Garanties expirant</div>
+                <div style={{ fontSize: "11px", color: "#9ca3af" }}>dans 30 jours</div>
+              </div>
+            </div>
+          </div>
         )}
 
           {activeSection === "tickets" && !showTicketDetailsPage && (
