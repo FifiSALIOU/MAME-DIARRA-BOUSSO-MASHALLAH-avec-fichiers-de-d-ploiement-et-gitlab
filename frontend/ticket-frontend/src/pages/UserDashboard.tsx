@@ -221,6 +221,19 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
       return "Commentaire ajouté";
     }
 
+    // Réouverture et réassignation (rejete → assigne_technicien) : afficher "Réassigner à [nom]"
+    if (entry.old_status && entry.new_status) {
+      const oldStatus = (entry.old_status || "").toLowerCase();
+      const newStatus = (entry.new_status || "").toLowerCase();
+      if ((oldStatus.includes("rejete") || oldStatus.includes("rejeté")) &&
+          (newStatus.includes("assigne_technicien") || newStatus.includes("assigne technicien") || newStatus.includes("assigné technicien"))) {
+        if (ticket?.technician?.full_name) {
+          return `Réassigner à ${ticket.technician.full_name}`;
+        }
+        return "Réassigner à un technicien";
+      }
+    }
+
     if (status.includes("assigne") || status.includes("assigné") || status.includes("assign")) {
       // Pour l'assignation, utiliser le technicien assigné du ticket, pas la personne qui a fait l'assignation
       if (ticket?.technician?.full_name) {
@@ -276,6 +289,15 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
       if ((oldStatus.includes("rejete") || oldStatus.includes("rejeté")) &&
           (newStatus.includes("en_cours") || newStatus.includes("en cours"))) {
         return "Ticket repris en charge par le technicien";
+      }
+      
+      // Détecter réouverture et réassignation : rejete → assigne_technicien
+      if ((oldStatus.includes("rejete") || oldStatus.includes("rejeté")) &&
+          (newStatus.includes("assigne_technicien") || newStatus.includes("assigne technicien") || newStatus.includes("assigné technicien"))) {
+        if (ticket?.technician?.full_name) {
+          return `Réassigner à ${ticket.technician.full_name}`;
+        }
+        return "Réassigner à un technicien";
       }
     }
 

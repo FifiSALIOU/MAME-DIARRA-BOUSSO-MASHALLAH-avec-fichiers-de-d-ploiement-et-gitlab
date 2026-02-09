@@ -366,6 +366,15 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
       return "Ticket repris en charge par le technicien";
     }
     
+    // Cas spécifique: réouverture et réassignation (rejete → assigne_technicien)
+    if ((oldStatus.includes("rejete") || oldStatus.includes("rejeté")) &&
+        (newStatus.includes("assigne_technicien") || newStatus.includes("assigne technicien") || newStatus.includes("assigné technicien"))) {
+      if (ticket && ticket.technician && ticket.technician.full_name) {
+        return `Réassigner à ${ticket.technician.full_name}`;
+      }
+      return "Réassigner à un technicien";
+    }
+    
     // Cas spécifique: technicien résout le ticket (en_cours → resolu)
     if ((oldStatus.includes("en_cours") || oldStatus.includes("en cours")) &&
         (newStatus.includes("resolu") || newStatus.includes("résolu"))) {
