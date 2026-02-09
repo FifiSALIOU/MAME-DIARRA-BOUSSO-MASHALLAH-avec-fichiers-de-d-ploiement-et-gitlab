@@ -4733,7 +4733,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           <>
               <div style={{ marginTop: "40px", marginBottom: "24px" }}>
                 <div style={{ fontSize: "24px", fontWeight: "600", color: "#333", marginBottom: "4px" }}>
-                  Espace Adjoint DSI 📋
+                  {roleName === "Secrétaire DSI" ? "Espace Secrétaire DSI" : "Espace Adjoint DSI"} 📋
                 </div>
                 <div style={{ fontSize: "14px", color: "#4b5563" }}>
                   Gestion des tickets délégués
