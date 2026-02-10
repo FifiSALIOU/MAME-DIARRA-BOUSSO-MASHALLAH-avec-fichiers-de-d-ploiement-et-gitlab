@@ -10058,7 +10058,8 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                             padding: "2px 8px",
                             fontSize: "11px",
                             color: "#4b5563",
-                            backgroundColor: "#f9fafb",
+                            // Fond blanc pour le badge de type, comme sur l'exemple
+                            backgroundColor: "#ffffff",
                           }}
                         >
                           {assetTypeLabels[asset.type] ||
