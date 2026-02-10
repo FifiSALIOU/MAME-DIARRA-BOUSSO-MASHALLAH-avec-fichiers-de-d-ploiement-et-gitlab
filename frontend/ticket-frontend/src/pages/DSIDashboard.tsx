@@ -9723,7 +9723,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                   onChange={setAssetStatusFilter}
                   options={[
                     { value: "all", label: "Tous les statuts" },
-                    { value: "en_service", label: "En service" },
+                    { value: "in_service", label: "En service" },
                     { value: "en_maintenance", label: "En maintenance" },
                     { value: "en_panne", label: "En panne" },
                     { value: "reformes", label: "Réformés" },
@@ -19155,7 +19155,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                             color: "#111827",
                           }}
                         >
-                          Prix d&apos;achat (€)
+                          Prix d&apos;achat (FCFA)
                         </label>
                         <input
                           type="number"
