@@ -6232,7 +6232,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           </div>
           <div style={{ fontSize: "16px", fontFamily: "'Inter', system-ui, sans-serif", fontWeight: "500" }}>Tickets</div>
         </div>
-        {userRole === "Admin" && (
+        {(userRole === "Admin" || userRole === "DSI") && (
           <div 
             onClick={() => {
               navigate(`${getRoutePrefix()}/actifs`);
