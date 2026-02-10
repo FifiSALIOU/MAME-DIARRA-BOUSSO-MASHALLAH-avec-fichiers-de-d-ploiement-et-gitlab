@@ -3319,7 +3319,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                       onChange={setAssetStatusFilter}
                       options={[
                         { value: "all", label: "Tous les statuts" },
-                        { value: "en_service", label: "En service" },
+                        { value: "in_service", label: "En service" },
                         { value: "en_maintenance", label: "En maintenance" },
                         { value: "en_panne", label: "En panne" },
                         { value: "reformes", label: "Réformés" },
