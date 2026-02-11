@@ -2236,7 +2236,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
               <div style={{
                 marginTop: "24px",
                 padding: "16px",
-                background: "#f8f9fa",
+                background: "white",
                 borderRadius: "8px",
                 boxShadow: "0 1px 3px rgba(0,0,0,0.08)"
               }}>
@@ -2308,7 +2308,8 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                       border: "1px solid #e5e7eb",
                       borderRadius: "8px",
                       fontSize: "14px",
-                      resize: "vertical"
+                      resize: "vertical",
+                      background: "#f8f9fa"
                     }}
                   />
                   <label style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", cursor: "pointer", fontSize: "13px", color: "#6b7280" }}>
