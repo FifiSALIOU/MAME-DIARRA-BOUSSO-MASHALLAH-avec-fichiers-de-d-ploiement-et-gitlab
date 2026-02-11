@@ -620,13 +620,10 @@ function DSIDashboard({ token }: DSIDashboardProps) {
       return "Ticket repris en charge par le technicien";
     }
     
-    // Cas spécifique: réouverture et réassignation (rejete → assigne_technicien)
+    // Cas spécifique: réouverture et réassignation (rejete → assigne_technicien) : afficher "Réouverture du ticket"
     if ((oldStatus.includes("rejete") || oldStatus.includes("rejeté")) &&
         (newStatus.includes("assigne_technicien") || newStatus.includes("assigne technicien") || newStatus.includes("assigné technicien"))) {
-      if (ticket && ticket.technician && ticket.technician.full_name) {
-        return `Réassigner à ${ticket.technician.full_name}`;
-      }
-      return "Réassigner à un technicien";
+      return "Réouverture du ticket";
     }
     
     // Cas spécifique: technicien résout le ticket (en_cours → resolu)
