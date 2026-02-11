@@ -2763,76 +2763,56 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                   >
                     Filtrer par :
                   </span>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    style={{
-                      padding: "6px 10px",
-                      borderRadius: "6px",
-                      border: "1px solid #d1d5db",
-                      fontSize: "13px",
-                      background: "white",
-                    }}
-                  >
-                    <option value="all">Tous les statuts</option>
-                    <option value="assigne_technicien">Assigné</option>
-                    <option value="en_cours">En cours</option>
-                    <option value="resolu">Résolu</option>
-                    <option value="retraite">Retraités</option>
-                    <option value="rejete">Relancé</option>
-                  </select>
-
-                  <select
-                    value={priorityFilter}
-                    onChange={(e) => setPriorityFilter(e.target.value)}
-                    style={{
-                      padding: "6px 10px",
-                      borderRadius: "6px",
-                      border: "1px solid #d1d5db",
-                      fontSize: "13px",
-                      background: "white",
-                    }}
-                  >
-                    <option value="all">Toutes les priorités</option>
-                    <option value="critique">Critique</option>
-                    <option value="haute">Haute</option>
-                    <option value="moyenne">Moyenne</option>
-                    <option value="faible">Faible</option>
-                  </select>
-
-                  <select
-                    value={dateFilter}
-                    onChange={(e) => setDateFilter(e.target.value)}
-                    style={{
-                      padding: "6px 10px",
-                      borderRadius: "6px",
-                      border: "1px solid #d1d5db",
-                      fontSize: "13px",
-                      background: "white",
-                    }}
-                  >
-                    <option value="all">Toutes les dates</option>
-                    <option value="today">Aujourd'hui</option>
-                    <option value="last7">7 derniers jours</option>
-                    <option value="last30">30 derniers jours</option>
-                  </select>
-
-                  <select
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value)}
-                    style={{
-                      padding: "6px 10px",
-                      borderRadius: "6px",
-                      border: "1px solid " +
-                        "#d1d5db",
-                      fontSize: "13px",
-                      background: "white",
-                    }}
-                  >
-                    <option value="all">Toutes les catégories</option>
-                    <option value="materiel">Matériel</option>
-                    <option value="applicatif">Applicatif</option>
-                  </select>
+                  <div style={{ minWidth: "140px" }}>
+                    <OrangeSelect
+                      value={statusFilter}
+                      onChange={setStatusFilter}
+                      options={[
+                        { value: "all", label: "Tous les statuts" },
+                        { value: "assigne_technicien", label: "Assigné" },
+                        { value: "en_cours", label: "En cours" },
+                        { value: "resolu", label: "Résolu" },
+                        { value: "retraite", label: "Retraités" },
+                        { value: "rejete", label: "Relancé" },
+                      ]}
+                    />
+                  </div>
+                  <div style={{ minWidth: "150px" }}>
+                    <OrangeSelect
+                      value={priorityFilter}
+                      onChange={setPriorityFilter}
+                      options={[
+                        { value: "all", label: "Toutes les priorités" },
+                        { value: "critique", label: "Critique" },
+                        { value: "haute", label: "Haute" },
+                        { value: "moyenne", label: "Moyenne" },
+                        { value: "faible", label: "Faible" },
+                      ]}
+                    />
+                  </div>
+                  <div style={{ minWidth: "150px" }}>
+                    <OrangeSelect
+                      value={dateFilter}
+                      onChange={setDateFilter}
+                      options={[
+                        { value: "all", label: "Toutes les dates" },
+                        { value: "today", label: "Aujourd'hui" },
+                        { value: "last7", label: "7 derniers jours" },
+                        { value: "last30", label: "30 derniers jours" },
+                      ]}
+                    />
+                  </div>
+                  <div style={{ minWidth: "160px" }}>
+                    <OrangeSelect
+                      value={typeFilter}
+                      onChange={setTypeFilter}
+                      options={[
+                        { value: "all", label: "Toutes les catégories" },
+                        { value: "materiel", label: "Matériel" },
+                        { value: "applicatif", label: "Applicatif" },
+                      ]}
+                    />
+                  </div>
                 </div>
                 {/* Tickets Cards */}
                 <div
