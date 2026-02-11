@@ -446,6 +446,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
   const [selectedNotificationTicketDetails, setSelectedNotificationTicketDetails] = useState<Ticket | null>(null);
   const [selectedNotificationTicketHistory, setSelectedNotificationTicketHistory] = useState<any[]>([]);
   const [userInfo, setUserInfo] = useState<UserRead | null>(null);
+  const myComments = ticketComments.filter(c => userInfo?.id != null && String(c.user_id) === String(userInfo.id));
   const [showGenerateReport, setShowGenerateReport] = useState<boolean>(false);
   const [reportType, setReportType] = useState<string>("");
   const [reportPeriodFrom, setReportPeriodFrom] = useState<string>("2024-01-01");
@@ -5189,7 +5190,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                   )}
                 </div>
 
-                {/* Section Commentaires (Secrétaire DSI et Adjoint DSI) */}
+                {/* Section Commentaires (Secrétaire DSI et Adjoint DSI) - affiche uniquement les commentaires de l'utilisateur connecté */}
                 <div
                   ref={commentSectionRef}
                   style={{
@@ -5203,16 +5204,16 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
                     <MessageCircle size={20} color="hsl(25, 95%, 53%)" strokeWidth={2} />
                     <strong style={{ fontSize: "15px", color: "#111827" }}>
-                      Commentaires ({ticketComments.length})
+                      Commentaires ({myComments.length})
                     </strong>
                   </div>
-                  {ticketComments.length === 0 ? (
+                  {myComments.length === 0 ? (
                     <p style={{ color: "#6b7280", fontStyle: "italic", marginBottom: "16px", fontSize: "14px" }}>
                       Aucun commentaire pour ce ticket
                     </p>
                   ) : (
                     <div style={{ marginBottom: "16px" }}>
-                      {ticketComments.map((c) => (
+                      {myComments.map((c) => (
                         <div
                           key={c.id}
                           style={{

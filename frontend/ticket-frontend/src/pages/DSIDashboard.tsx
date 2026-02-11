@@ -46,7 +46,6 @@ import {
   Flag,
   Share2,
   Package,
-  DollarSign,
   Archive,
   Banknote,
   Download,
@@ -304,18 +303,6 @@ const assetTypeLabels: Record<string, string> = {
   mouse: "Souris",
   other: "Autre",
 };
-
-// Fallback local si la base ne renvoie aucun type d'actif
-const defaultAssetTypeOptions: { code: string; label: string }[] = [
-  { code: "desktop", label: "Ordinateur fixe" },
-  { code: "laptop", label: "Ordinateur portable" },
-  { code: "printer", label: "Imprimante" },
-  { code: "monitor", label: "Écran" },
-  { code: "mobile", label: "Mobile" },
-  { code: "tablet", label: "Tablette" },
-  { code: "phone", label: "Téléphone" },
-  { code: "network", label: "Équipement réseau" },
-];
 
 // Composant Label personnalisé pour les donut charts avec labels externes et lignes de connexion
 const CustomLabel = ({ cx, cy, midAngle, outerRadius, percent, name, fill, value }: any) => {
@@ -774,6 +761,7 @@ function DSIDashboard({ token }: DSIDashboardProps) {
   });
 
   const [assetTypes, setAssetTypes] = useState<AssetTypeConfig[]>([]);
+  void assetTypes; // loaded from API for future use (e.g. type dropdowns)
   const [assetDepartments, setAssetDepartments] = useState<DepartmentConfig[]>([]);
 
   // KPIs calculés à partir des actifs chargés
@@ -792,10 +780,6 @@ function DSIDashboard({ token }: DSIDashboardProps) {
     return diffDays >= 0 && diffDays <= 30;
   }).length;
 
-  const assetTypeOptions = (assetTypes && assetTypes.length > 0
-    ? assetTypes.map((t) => ({ code: t.code, label: t.label }))
-    : defaultAssetTypeOptions);
-  
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -901,6 +885,7 @@ function DSIDashboard({ token }: DSIDashboardProps) {
   const [selectedNotificationTicketDetails, setSelectedNotificationTicketDetails] = useState<Ticket | null>(null);
   const [selectedNotificationTicketHistory, setSelectedNotificationTicketHistory] = useState<any[]>([]);
   const [userInfo, setUserInfo] = useState<UserRead | null>(null);
+  const myComments = ticketComments.filter(c => userInfo?.id != null && String(c.user_id) === String(userInfo.id));
   const notificationsSectionRef = useRef<HTMLDivElement>(null);
   const commentSectionRef = useRef<HTMLDivElement>(null);
   const [allUsers, setAllUsers] = useState<any[]>([]);
@@ -7158,7 +7143,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                 )}
               </div>
 
-              {/* Section Commentaires (DSI et Admin uniquement) */}
+              {/* Section Commentaires (DSI et Admin uniquement) - affiche uniquement les commentaires de l'utilisateur connecté */}
               {(userRole === "DSI" || userRole === "Admin") && (
               <div
                 ref={commentSectionRef}
@@ -7172,16 +7157,16 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
                   <MessageCircle size={20} color="hsl(25, 95%, 53%)" strokeWidth={2} />
                   <strong style={{ fontSize: "15px", color: "#111827" }}>
-                    Commentaires ({ticketComments.length})
+                    Commentaires ({myComments.length})
                   </strong>
                 </div>
-                {ticketComments.length === 0 ? (
+                {myComments.length === 0 ? (
                   <p style={{ color: "#6b7280", fontStyle: "italic", marginBottom: "16px", fontSize: "14px" }}>
                     Aucun commentaire pour ce ticket
                   </p>
                 ) : (
                   <div style={{ marginBottom: "16px" }}>
-                    {ticketComments.map((c) => (
+                    {myComments.map((c) => (
                       <div
                         key={c.id}
                         style={{

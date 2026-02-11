@@ -317,6 +317,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
   const [ticketDetails, setTicketDetails] = useState<Ticket | null>(null);
   const [ticketHistory, setTicketHistory] = useState<TicketHistory[]>([]);
   const [ticketComments, setTicketComments] = useState<TicketComment[]>([]);
+  const myComments = ticketComments.filter(c => userInfo?.id != null && String(c.user_id) === String(userInfo.id));
   const [detailCommentText, setDetailCommentText] = useState("");
   const [detailCommentInternal, setDetailCommentInternal] = useState(true);
   const [showTicketDetailsPage, setShowTicketDetailsPage] = useState<boolean>(false);
@@ -2232,7 +2233,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                 )}
               </div>
 
-              {/* Section Commentaires */}
+              {/* Section Commentaires - affiche uniquement les commentaires du technicien connecté */}
               <div style={{
                 marginTop: "24px",
                 padding: "16px",
@@ -2243,16 +2244,16 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
                   <MessageCircle size={20} color="hsl(25, 95%, 53%)" strokeWidth={2} />
                   <strong style={{ fontSize: "15px", color: "#111827" }}>
-                    Commentaires ({ticketComments.length})
+                    Commentaires ({myComments.length})
                   </strong>
                 </div>
-                {ticketComments.length === 0 ? (
+                {myComments.length === 0 ? (
                   <p style={{ color: "#6b7280", fontStyle: "italic", marginBottom: "16px", fontSize: "14px" }}>
                     Aucun commentaire pour ce ticket
                   </p>
                 ) : (
                   <div style={{ marginBottom: "16px" }}>
-                    {ticketComments.map((c) => (
+                    {myComments.map((c) => (
                       <div
                         key={c.id}
                         style={{

@@ -192,6 +192,15 @@ class CommentCreate(BaseModel):
     ticket_id: int
 
 
+class UserCommentInfo(BaseModel):
+    """Info minimale de l'auteur d'un commentaire (pour affichage)"""
+    id: int
+    full_name: str
+
+    class Config:
+        from_attributes = True
+
+
 class CommentRead(BaseModel):
     id: int
     ticket_id: int
@@ -199,6 +208,7 @@ class CommentRead(BaseModel):
     content: str
     type: CommentType
     created_at: datetime
+    user: Optional[UserCommentInfo] = None
 
     class Config:
         from_attributes = True

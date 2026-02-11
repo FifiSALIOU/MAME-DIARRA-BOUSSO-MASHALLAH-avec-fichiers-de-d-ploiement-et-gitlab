@@ -1026,6 +1026,7 @@ def get_ticket_comments(
     
     comments = (
         db.query(models.Comment)
+        .options(joinedload(models.Comment.user))
         .filter(models.Comment.ticket_id == ticket_id)
         .order_by(models.Comment.created_at.asc())
         .all()
