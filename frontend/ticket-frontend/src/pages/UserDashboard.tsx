@@ -43,6 +43,16 @@ interface TicketHistory {
   } | null;
 }
 
+interface TicketComment {
+  id: number;
+  ticket_id: number;
+  user_id: number;
+  content: string;
+  type: string;
+  created_at: string;
+  user?: { full_name: string } | null;
+}
+
 interface Notification {
   id: string;
   type: string;
@@ -557,6 +567,8 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
   const [viewTicketDetails, setViewTicketDetails] = useState<string | null>(null);
   const [ticketDetails, setTicketDetails] = useState<Ticket | null>(null);
   const [ticketHistory, setTicketHistory] = useState<TicketHistory[]>([]);
+  const [ticketComments, setTicketComments] = useState<TicketComment[]>([]);
+  const [detailCommentText, setDetailCommentText] = useState("");
   const [showTicketDetailsPage, setShowTicketDetailsPage] = useState<boolean>(false);
   const [resumedFlags, setResumedFlags] = useState<Record<string, boolean>>({});
   const [confirmDeleteTicket, setConfirmDeleteTicket] = useState<Ticket | null>(null);
@@ -958,7 +970,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
       if (res.ok) {
         const data = await res.json();
         setTicketDetails(data);
-        await loadTicketHistory(ticketId);
+        await Promise.all([loadTicketHistory(ticketId), loadTicketComments(ticketId)]);
         setShowTicketDetailsPage(true);
       } else {
         alert("Erreur lors du chargement des détails du ticket");
@@ -983,6 +995,59 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
       }
     } catch {
       setTicketHistory([]);
+    }
+  }
+
+  async function loadTicketComments(ticketId: string) {
+    try {
+      const res = await fetch(`http://localhost:8000/tickets/${ticketId}/comments`, {
+        headers: { Authorization: `Bearer ${actualToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTicketComments(Array.isArray(data) ? data : []);
+      } else {
+        setTicketComments([]);
+      }
+    } catch {
+      setTicketComments([]);
+    }
+  }
+
+  async function handleAddCommentFromDetails(ticketId: string) {
+    const content = detailCommentText.trim();
+    if (!content) {
+      alert("Veuillez entrer un commentaire");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`http://localhost:8000/tickets/${ticketId}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${actualToken}`,
+        },
+        body: JSON.stringify({
+          ticket_id: ticketId,
+          content,
+          type: "utilisateur",
+        }),
+      });
+      if (res.ok) {
+        setDetailCommentText("");
+        await loadTicketComments(ticketId);
+        await loadTicketHistory(ticketId);
+        alert("Commentaire ajouté avec succès");
+      } else {
+        const error = await res.json();
+        alert(`Erreur: ${error.detail || "Impossible d'ajouter le commentaire"}`);
+      }
+    } catch (err) {
+      console.error("Erreur ajout commentaire:", err);
+      alert("Erreur lors de l'ajout du commentaire");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -1993,6 +2058,8 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                   setShowTicketDetailsPage(false);
                   setTicketDetails(null);
                   setTicketHistory([]);
+                  setTicketComments([]);
+                  setDetailCommentText("");
                   // Rediriger vers la bonne section selon d'où on vient
                   if (activeSection === "notifications" || location.pathname === "/dashboard/user/notifications") {
                     navigate("/dashboard/user/notifications");
@@ -2112,6 +2179,127 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                   </div>
                 )}
               </div>
+
+              {/* Section Commentaires (Utilisateur) - sans case interne, commentaires visibles partout */}
+              <div style={{
+                marginTop: "24px",
+                padding: "16px",
+                background: "white",
+                borderRadius: "8px",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.08)"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+                  <MessageCircle size={20} color="hsl(25, 95%, 53%)" strokeWidth={2} />
+                  <strong style={{ fontSize: "15px", color: "#111827" }}>
+                    Commentaires ({ticketComments.length})
+                  </strong>
+                </div>
+                {ticketComments.length === 0 ? (
+                  <p style={{ color: "#6b7280", fontStyle: "italic", marginBottom: "16px", fontSize: "14px" }}>
+                    Aucun commentaire pour ce ticket
+                  </p>
+                ) : (
+                  <div style={{ marginBottom: "16px" }}>
+                    {ticketComments.map((c) => (
+                      <div
+                        key={c.id}
+                        style={{
+                          padding: "12px 14px",
+                          background: "#f8f9fa",
+                          borderRadius: "8px",
+                          border: "1px solid #e5e7eb",
+                          marginBottom: "8px"
+                        }}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+                          <div style={{
+                            width: "32px",
+                            height: "32px",
+                            borderRadius: "50%",
+                            background: "rgba(255, 122, 27, 0.2)",
+                            color: "hsl(25, 95%, 53%)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            flexShrink: 0
+                          }}>
+                            {(c.user?.full_name || "?").split(/\s+/).map(s => s[0] || "").slice(0, 2).join("").toUpperCase() || "?"}
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                            <span style={{ fontSize: "14px", fontWeight: 600, color: "#111827" }}>
+                              {c.user?.full_name || "Utilisateur"}
+                            </span>
+                            <span style={{ fontSize: "12px", color: "#6b7280" }}>
+                              {new Date(c.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })} à {new Date(c.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </div>
+                        </div>
+                        <div style={{ fontSize: "14px", color: "#111827", marginLeft: "42px" }}>{c.content}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "16px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                    <div style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      background: "rgba(255, 122, 27, 0.2)",
+                      color: "hsl(25, 95%, 53%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "13px",
+                      fontWeight: 600
+                    }}>
+                      {userInfo?.full_name ? userInfo.full_name.split(/\s+/).map(s => s[0] || "").slice(0, 2).join("").toUpperCase() : "?"}
+                    </div>
+                    <span style={{ fontSize: "14px", fontWeight: 500, color: "#111827" }}>
+                      {userInfo?.full_name || "Utilisateur"}
+                    </span>
+                  </div>
+                  <textarea
+                    value={detailCommentText}
+                    onChange={(e) => setDetailCommentText(e.target.value)}
+                    placeholder="Ajouter un commentaire..."
+                    style={{
+                      width: "100%",
+                      minHeight: "80px",
+                      padding: "10px 12px",
+                      marginBottom: "12px",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      fontSize: "14px",
+                      resize: "vertical",
+                      background: "#f8f9fa"
+                    }}
+                  />
+                  <button
+                    onClick={() => handleAddCommentFromDetails(ticketDetails.id)}
+                    disabled={loading || !detailCommentText.trim()}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 20px",
+                      background: detailCommentText.trim() && !loading ? "hsl(25, 95%, 53%)" : "#d1d5db",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "8px",
+                      cursor: detailCommentText.trim() && !loading ? "pointer" : "not-allowed",
+                      fontSize: "14px",
+                      fontWeight: 600
+                    }}
+                  >
+                    <Send size={16} />
+                    Envoyer
+                  </button>
+                </div>
+              </div>
+
               <div style={{ marginTop: "16px" }}>
                 <strong>Historique :</strong>
                 <div style={{ marginTop: "8px" }}>
@@ -3658,7 +3846,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                           if (res.ok) {
                             const data = await res.json();
                             setSelectedNotificationTicketDetails(data);
-                            await loadTicketHistory(ticket.id);
+                            await Promise.all([loadTicketHistory(ticket.id), loadTicketComments(ticket.id)]);
                             await markTicketNotificationsAsRead(ticket.id);
                           }
                         } catch (err) {
@@ -3851,6 +4039,126 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                         </span>
                       </div>
                     )}
+                  </div>
+
+                  {/* Section Commentaires (Utilisateur) - sans case interne */}
+                  <div style={{
+                    marginTop: "24px",
+                    padding: "16px",
+                    background: "#f8f9fa",
+                    borderRadius: "8px",
+                    marginBottom: "16px"
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+                      <MessageCircle size={20} color="hsl(25, 95%, 53%)" strokeWidth={2} />
+                      <strong style={{ fontSize: "15px", color: "#111827" }}>
+                        Commentaires ({ticketComments.length})
+                      </strong>
+                    </div>
+                    {ticketComments.length === 0 ? (
+                      <p style={{ color: "#6b7280", fontStyle: "italic", marginBottom: "16px", fontSize: "14px" }}>
+                        Aucun commentaire pour ce ticket
+                      </p>
+                    ) : (
+                      <div style={{ marginBottom: "16px" }}>
+                        {ticketComments.map((c) => (
+                          <div
+                            key={c.id}
+                            style={{
+                              padding: "12px 14px",
+                              background: "white",
+                              borderRadius: "8px",
+                              border: "1px solid #e5e7eb",
+                              marginBottom: "8px"
+                            }}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+                              <div style={{
+                                width: "32px",
+                                height: "32px",
+                                borderRadius: "50%",
+                                background: "rgba(255, 122, 27, 0.2)",
+                                color: "hsl(25, 95%, 53%)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "12px",
+                                fontWeight: 600,
+                                flexShrink: 0
+                              }}>
+                                {(c.user?.full_name || "?").split(/\s+/).map(s => s[0] || "").slice(0, 2).join("").toUpperCase() || "?"}
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                                <span style={{ fontSize: "14px", fontWeight: 600, color: "#111827" }}>
+                                  {c.user?.full_name || "Utilisateur"}
+                                </span>
+                                <span style={{ fontSize: "12px", color: "#6b7280" }}>
+                                  {new Date(c.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })} à {new Date(c.created_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                                </span>
+                              </div>
+                            </div>
+                            <div style={{ fontSize: "14px", color: "#111827", marginLeft: "42px" }}>{c.content}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "16px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                        <div style={{
+                          width: "36px",
+                          height: "36px",
+                          borderRadius: "50%",
+                          background: "rgba(255, 122, 27, 0.2)",
+                          color: "hsl(25, 95%, 53%)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "13px",
+                          fontWeight: 600
+                        }}>
+                          {userInfo?.full_name ? userInfo.full_name.split(/\s+/).map(s => s[0] || "").slice(0, 2).join("").toUpperCase() : "?"}
+                        </div>
+                        <span style={{ fontSize: "14px", fontWeight: 500, color: "#111827" }}>
+                          {userInfo?.full_name || "Utilisateur"}
+                        </span>
+                      </div>
+                      <textarea
+                        value={detailCommentText}
+                        onChange={(e) => setDetailCommentText(e.target.value)}
+                        placeholder="Ajouter un commentaire..."
+                        style={{
+                          width: "100%",
+                          minHeight: "80px",
+                          padding: "10px 12px",
+                          marginBottom: "12px",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                          fontSize: "14px",
+                          resize: "vertical",
+                          background: "white"
+                        }}
+                      />
+                      <button
+                        onClick={() => handleAddCommentFromDetails(selectedNotificationTicketDetails.id)}
+                        disabled={loading || !detailCommentText.trim()}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "10px 20px",
+                          background: detailCommentText.trim() && !loading ? "hsl(25, 95%, 53%)" : "#d1d5db",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "8px",
+                          cursor: detailCommentText.trim() && !loading ? "pointer" : "not-allowed",
+                          fontSize: "14px",
+                          fontWeight: 600
+                        }}
+                      >
+                        <Send size={16} />
+                        Envoyer
+                      </button>
+                    </div>
                   </div>
 
                   <div style={{ marginTop: "24px", marginBottom: "16px" }}>
