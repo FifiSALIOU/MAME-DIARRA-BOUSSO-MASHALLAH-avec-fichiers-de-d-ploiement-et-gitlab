@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
-import { Clock3, Users, CheckCircle2, CheckCircle, ChevronRight, ChevronLeft, ChevronDown, LayoutDashboard, Bell, Search, Clock, Monitor, Wrench, Forward, AlertTriangle, BarChart3, TrendingUp, Box, UserPlus, FileText, UserCheck, RefreshCcw, Filter, Calendar, Layers, Building2, User, FileSpreadsheet, MessageCircle, Flag, Share2, Package, Trash2, DollarSign, Ticket as TicketIcon, Archive, Banknote, Download, Plus, Pencil, X, FolderTree, Tag, HardDrive, Laptop, Printer, Keyboard, Mouse, Phone, Tablet, Network, QrCode, MapPin, Eye } from "lucide-react";
+import { Clock3, Users, CheckCircle2, CheckCircle, ChevronRight, ChevronLeft, ChevronDown, LayoutDashboard, Bell, Search, Clock, Monitor, Wrench, Forward, AlertTriangle, BarChart3, TrendingUp, Box, UserPlus, FileText, UserCheck, RefreshCcw, Filter, Calendar, Layers, Building2, User, FileSpreadsheet, MessageCircle, Flag, Share2, Package, Trash2, DollarSign, Ticket as TicketIcon, Archive, Banknote, Download, Plus, Pencil, X, FolderTree, Tag, HardDrive, Laptop, Printer, Keyboard, Mouse, Phone, Tablet, Network, QrCode, MapPin, Eye, Lock, Send } from "lucide-react";
 import helpdeskLogo from "../assets/helpdesk-logo.png";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -89,6 +89,16 @@ interface TicketHistory {
   user?: {
     full_name: string;
   } | null;
+}
+
+interface TicketComment {
+  id: number;
+  ticket_id: number;
+  user_id: number;
+  content: string;
+  type: string;
+  created_at: string;
+  user?: { full_name: string } | null;
 }
 
 interface UserRead {
@@ -392,6 +402,9 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
   const [viewTicketDetails, setViewTicketDetails] = useState<string | null>(null);
   const [ticketDetails, setTicketDetails] = useState<Ticket | null>(null);
   const [ticketHistory, setTicketHistory] = useState<TicketHistory[]>([]);
+  const [ticketComments, setTicketComments] = useState<TicketComment[]>([]);
+  const [detailCommentText, setDetailCommentText] = useState("");
+  const [detailCommentInternal, setDetailCommentInternal] = useState(true);
   const [showTicketDetailsPage, setShowTicketDetailsPage] = useState<boolean>(false);
   const [showReopenModal, setShowReopenModal] = useState<boolean>(false);
   const [showAssignModal, setShowAssignModal] = useState<boolean>(false);
@@ -415,6 +428,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
   const [advancedPeriodRange, setAdvancedPeriodRange] = useState<{ from: Date | undefined; to?: Date | undefined } | undefined>(undefined);
   const [showPeriodCalendar, setShowPeriodCalendar] = useState<boolean>(false);
   const periodCalendarRef = useRef<HTMLDivElement>(null);
+  const commentSectionRef = useRef<HTMLDivElement>(null);
   const [advancedAgencyFilter, setAdvancedAgencyFilter] = useState<string>("all");
   const [advancedCategoryFilter, setAdvancedCategoryFilter] = useState<string>("all");
   const [advancedTypeFilter, setAdvancedTypeFilter] = useState<string>("all");
@@ -3423,6 +3437,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         const data = await res.json();
         setTicketDetails(data);
         await loadTicketHistory(ticketId);
+        await loadTicketComments(ticketId);
         setShowTicketDetailsPage(true);
       } else {
         alert("Erreur lors du chargement des détails du ticket");
@@ -3449,6 +3464,65 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
       setTicketHistory([]);
     }
   }
+
+  async function loadTicketComments(ticketId: string) {
+    try {
+      const res = await fetch(`http://localhost:8000/tickets/${ticketId}/comments`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTicketComments(Array.isArray(data) ? data : []);
+      } else {
+        setTicketComments([]);
+      }
+    } catch {
+      setTicketComments([]);
+    }
+  }
+
+  async function handleAddCommentFromDetails(ticketId: string) {
+    const content = detailCommentText.trim();
+    if (!content) {
+      alert("Veuillez entrer un commentaire");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`http://localhost:8000/tickets/${ticketId}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ticket_id: ticketId,
+          content,
+          type: detailCommentInternal ? "technique" : "utilisateur",
+        }),
+      });
+      if (res.ok) {
+        setDetailCommentText("");
+        await loadTicketComments(ticketId);
+        if (ticketDetails?.id === ticketId) await loadTicketDetails(ticketId);
+        alert("Commentaire ajouté avec succès");
+      } else {
+        const error = await res.json();
+        alert(`Erreur: ${error.detail || "Impossible d'ajouter le commentaire"}`);
+      }
+    } catch (err) {
+      console.error("Erreur ajout commentaire:", err);
+      alert("Erreur lors de l'ajout du commentaire");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const getInitialsForComment = (name: string) => {
+    if (!name) return "??";
+    const parts = name.split(" ");
+    return parts.length >= 2 ? `${parts[0][0]}${parts[1][0]}`.toUpperCase() : name.slice(0, 2).toUpperCase();
+  };
 
   async function loadNotificationsTickets() {
     if (!token || notifications.length === 0) {
@@ -5003,6 +5077,8 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     setShowTicketDetailsPage(false);
                     setTicketDetails(null);
                     setTicketHistory([]);
+                    setTicketComments([]);
+                    setDetailCommentText("");
                   }}
                   style={{
                     display: "flex",
@@ -5112,6 +5188,123 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     </div>
                   )}
                 </div>
+
+                {/* Section Commentaires (Secrétaire DSI et Adjoint DSI) */}
+                <div
+                  ref={commentSectionRef}
+                  style={{
+                    marginTop: "24px",
+                    padding: "16px",
+                    background: "white",
+                    borderRadius: "8px",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+                    <MessageCircle size={20} color="hsl(25, 95%, 53%)" strokeWidth={2} />
+                    <strong style={{ fontSize: "15px", color: "#111827" }}>
+                      Commentaires ({ticketComments.length})
+                    </strong>
+                  </div>
+                  {ticketComments.length === 0 ? (
+                    <p style={{ color: "#6b7280", fontStyle: "italic", marginBottom: "16px", fontSize: "14px" }}>
+                      Aucun commentaire pour ce ticket
+                    </p>
+                  ) : (
+                    <div style={{ marginBottom: "16px" }}>
+                      {ticketComments.map((c) => (
+                        <div
+                          key={c.id}
+                          style={{
+                            padding: "10px 12px",
+                            background: "white",
+                            borderRadius: "6px",
+                            border: "1px solid #e5e7eb",
+                            marginBottom: "8px"
+                          }}
+                        >
+                          <div style={{ fontSize: "13px", color: "#111827" }}>{c.content}</div>
+                          <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>
+                            {c.user?.full_name || "Utilisateur"} • {new Date(c.created_at).toLocaleString("fr-FR")}
+                            {c.type === "technique" && (
+                              <span style={{ marginLeft: "6px", color: "hsl(25, 95%, 53%)" }}>
+                                (interne)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "16px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                      <div style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "50%",
+                        background: "rgba(255, 122, 27, 0.2)",
+                        color: "hsl(25, 95%, 53%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "13px",
+                        fontWeight: 600
+                      }}>
+                        {userInfo?.full_name ? getInitialsForComment(userInfo.full_name) : "?"}
+                      </div>
+                      <span style={{ fontSize: "14px", fontWeight: 500, color: "#111827" }}>
+                        {userInfo?.full_name || "Utilisateur"}
+                      </span>
+                    </div>
+                    <textarea
+                      value={detailCommentText}
+                      onChange={(e) => setDetailCommentText(e.target.value)}
+                      placeholder="Ajouter un commentaire..."
+                      style={{
+                        width: "100%",
+                        minHeight: "80px",
+                        padding: "10px 12px",
+                        marginBottom: "12px",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                        fontSize: "14px",
+                        resize: "vertical",
+                        background: "#f8f9fa"
+                      }}
+                    />
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px", cursor: "pointer", fontSize: "13px", color: "#6b7280" }}>
+                      <input
+                        type="checkbox"
+                        checked={detailCommentInternal}
+                        onChange={(e) => setDetailCommentInternal(e.target.checked)}
+                        style={{ width: 16, height: 16 }}
+                      />
+                      <Lock size={14} color="hsl(25, 95%, 53%)" />
+                      Commentaire interne (visible par l'équipe uniquement)
+                    </label>
+                    <button
+                      onClick={() => handleAddCommentFromDetails(ticketDetails.id)}
+                      disabled={loading || !detailCommentText.trim()}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "10px 20px",
+                        background: detailCommentText.trim() && !loading ? "hsl(25, 95%, 53%)" : "#d1d5db",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "8px",
+                        cursor: detailCommentText.trim() && !loading ? "pointer" : "not-allowed",
+                        fontSize: "14px",
+                        fontWeight: 600
+                      }}
+                    >
+                      <Send size={16} />
+                      Envoyer
+                    </button>
+                  </div>
+                </div>
+
                 <div style={{ marginTop: "16px" }}>
                   <strong>Historique :</strong>
                   <div style={{ marginTop: "8px" }}>
@@ -5222,7 +5415,32 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     <strong>Actions :</strong>
                     <div style={{ marginTop: "12px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
                       {(ticketDetails.status === "resolu" || ticketDetails.status === "retraite") ? (
-                        <span style={{ fontStyle: "italic" }}>Aucune action disponible pour ce ticket</span>
+                        <button
+                          onClick={() => commentSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                          disabled={loading}
+                          style={{
+                            padding: "10px 20px",
+                            backgroundColor: "#e5e7eb",
+                            color: "black",
+                            border: "none",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px"
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!loading) e.currentTarget.style.backgroundColor = "#d1d5db";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = "#e5e7eb";
+                          }}
+                        >
+                          <MessageCircle size={16} color="#374151" strokeWidth={2} />
+                          Ajouter un commentaire
+                        </button>
                       ) : (
                         <>
                       {/* Bouton Assigner à un technicien */}
