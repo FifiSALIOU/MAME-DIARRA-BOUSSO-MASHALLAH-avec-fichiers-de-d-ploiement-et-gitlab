@@ -7444,7 +7444,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           </div>
           <div
             style={{
-              fontSize: "24px",
+              fontSize: "18px",
               fontWeight: 700,
               color: "#111827",
               marginBottom: "2px",
@@ -7518,7 +7518,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           </div>
           <div
             style={{
-              fontSize: "24px",
+              fontSize: "18px",
               fontWeight: 700,
               color: "#111827",
               marginBottom: "2px",
@@ -7667,7 +7667,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           </div>
           <div
             style={{
-              fontSize: "24px",
+              fontSize: "18px",
               fontWeight: 700,
               color: "#111827",
               marginBottom: "2px",
@@ -7741,7 +7741,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           </div>
           <div
             style={{
-              fontSize: "24px",
+              fontSize: "18px",
               fontWeight: 700,
               color: "#111827",
               marginBottom: "2px",
@@ -7815,7 +7815,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           </div>
           <div
             style={{
-              fontSize: "24px",
+              fontSize: "18px",
               fontWeight: 700,
               color: "#111827",
               marginBottom: "2px",
