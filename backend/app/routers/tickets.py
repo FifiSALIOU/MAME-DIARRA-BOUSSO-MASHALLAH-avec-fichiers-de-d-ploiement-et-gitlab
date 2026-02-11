@@ -967,8 +967,9 @@ def add_comment(
         type=comment_in.type,
     )
     db.add(comment)
-    # Inscrire l'ajout du commentaire dans l'historique du ticket
-    comment_reason = f"Commentaire: {comment_in.content}"
+    # Inscrire l'ajout du commentaire dans l'historique du ticket (marquer (interne) pour filtrage créateur)
+    is_internal = comment_in.type == models.CommentType.TECHNIQUE
+    comment_reason = f"Commentaire (interne): {comment_in.content}" if is_internal else f"Commentaire: {comment_in.content}"
     history = models.TicketHistory(
         ticket_id=ticket_id,
         old_status=ticket.status,
@@ -980,8 +981,8 @@ def add_comment(
     db.commit()
     db.refresh(comment)
     
-    # Si le commentaire n'est pas de l'utilisateur créateur, notifier le créateur
-    if ticket.creator_id != current_user.id:
+    # Si le commentaire n'est pas interne et n'est pas du créateur, notifier le créateur
+    if not is_internal and ticket.creator_id != current_user.id:
         creator = db.query(models.User).filter(models.User.id == ticket.creator_id).first()
         if creator:
             # Créer une notification pour le créateur
@@ -1031,6 +1032,9 @@ def get_ticket_comments(
         .order_by(models.Comment.created_at.asc())
         .all()
     )
+    # Si le créateur du ticket consulte : masquer les commentaires internes (technique)
+    if ticket.creator_id == current_user.id:
+        comments = [c for c in comments if c.type != models.CommentType.TECHNIQUE]
     return comments
 
 
@@ -1679,5 +1683,12 @@ def get_ticket_history(
         .order_by(models.TicketHistory.changed_at.desc())
         .all()
     )
-    
+    # Si le créateur consulte : masquer les entrées de commentaires internes
+    if is_creator:
+        history = [h for h in history if not (h.reason and h.reason.startswith("Commentaire (interne):"))]
+    else:
+        # Pour l'équipe DSI : afficher "Commentaire: ..." sans "(interne)"
+        for h in history:
+            if h.reason and h.reason.startswith("Commentaire (interne):"):
+                h.reason = "Commentaire: " + h.reason[len("Commentaire (interne): "):]
     return history
