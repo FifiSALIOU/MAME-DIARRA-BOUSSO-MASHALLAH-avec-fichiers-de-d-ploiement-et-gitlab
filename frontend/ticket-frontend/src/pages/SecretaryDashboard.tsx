@@ -4270,7 +4270,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
             marginBottom: "8px"
           }}
         >
-          <div style={{ width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <PlusCircle size={20} color="rgba(180, 180, 180, 0.7)" />
           </div>
           <div style={{ fontSize: "15px", fontFamily: "'Inter', system-ui, sans-serif", fontWeight: "500", color: "white" }}>Nouveau ticket</div>
