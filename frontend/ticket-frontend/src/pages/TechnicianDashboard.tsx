@@ -4200,7 +4200,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                             <input type="text" value={assetForm.localisation} onChange={(e) => setAssetForm((f) => ({ ...f, localisation: e.target.value }))} placeholder="Ex: Bâtiment A - Étage 2" style={{ width: "100%", padding: "9px 11px", borderRadius: "10px", border: "1px solid #e5e7eb", fontSize: "14px", outline: "none" }} />
                           </div>
                           <div>
-                            <label style={{ display: "block", marginBottom: "4px", fontSize: "13px", fontWeight: 500, color: "#111827" }}>Département</label>
+                            <label style={{ display: "block", marginBottom: "4px", fontSize: "13px", fontWeight: 500, color: "#111827" }}>Agence</label>
                             <input type="text" value={assetForm.departement} onChange={(e) => setAssetForm((f) => ({ ...f, departement: e.target.value }))} placeholder="Ex: Marketing" style={{ width: "100%", padding: "9px 11px", borderRadius: "10px", border: "1px solid #e5e7eb", fontSize: "14px", outline: "none" }} />
                           </div>
                           <div style={{ gridColumn: "1 / -1" }}>

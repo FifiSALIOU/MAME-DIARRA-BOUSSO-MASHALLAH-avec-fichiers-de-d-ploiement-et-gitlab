@@ -2250,7 +2250,7 @@ function DSIDashboard({ token }: DSIDashboardProps) {
     }
   }, [activeSection, userRole, token]);
 
-  // Charger tous les départements (y compris inactifs) pour la section Départements
+  // Charger toutes les agences (y compris inactives) pour la section Agences
   useEffect(() => {
     if (activeSection === "departements" && (userRole === "Admin" || userRole === "DSI") && token) {
       void loadAssetDepartments(true);
@@ -2632,13 +2632,13 @@ function DSIDashboard({ token }: DSIDashboardProps) {
         return;
       }
 
-      alert("Département créé avec succès");
+      alert("Agence créée avec succès");
       setShowDepartmentModal(false);
       setDepartmentName("");
       await loadAssetDepartments(true);
     } catch (err) {
       console.error("Erreur lors de la création du département:", err);
-      alert("Erreur lors de la création du département");
+      alert("Erreur lors de la création de l'agence");
     }
   }
 
@@ -2662,14 +2662,14 @@ function DSIDashboard({ token }: DSIDashboardProps) {
         return;
       }
 
-      alert("Département modifié avec succès");
+      alert("Agence modifiée avec succès");
       setShowDepartmentModal(false);
       setEditingDepartment(null);
       setDepartmentName("");
       await loadAssetDepartments(true);
     } catch (err) {
       console.error("Erreur lors de la modification du département:", err);
-      alert("Erreur lors de la modification du département");
+      alert("Erreur lors de la modification de l'agence");
     }
   }
 
@@ -6892,7 +6892,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     fontSize: "14px"
                   }}
                 >
-                  Départements
+                  Agences
                 </div>
               </div>
             )}
@@ -13285,7 +13285,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                       >
                         <option value="">[Sélectionner un type ▼]</option>
                         <option value="performance">Performance Globale</option>
-                        <option value="tickets_department">Tickets par Département</option>
+                        <option value="tickets_department">Tickets par Agence</option>
                         <option value="technicians">Performance des Techniciens</option>
                         <option value="satisfaction">Satisfaction Utilisateurs</option>
                         <option value="recurrent">Problèmes Récurrents</option>
@@ -13298,7 +13298,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
                           <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#1e3a5f", marginRight: "12px" }}></div>
-                          <span style={{ color: "#1e3a5f", fontSize: "16px", fontFamily: "monospace" }}>Tickets par Département</span>
+                          <span style={{ color: "#1e3a5f", fontSize: "16px", fontFamily: "monospace" }}>Tickets par Agence</span>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
                           <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#1e3a5f", marginRight: "12px" }}></div>
@@ -13380,7 +13380,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                       <div style={{ marginBottom: "16px" }}>
                         <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
                           <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#1e3a5f", marginRight: "12px" }}></div>
-                          <label style={{ color: "#1e3a5f", fontSize: "16px", fontFamily: "monospace" }}>Département :</label>
+                          <label style={{ color: "#1e3a5f", fontSize: "16px", fontFamily: "monospace" }}>Agence :</label>
                         </div>
                         <select
                           value={reportFilters.department}
@@ -13951,7 +13951,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                          <tr>
                            <th style={{ padding: "12px 16px", textAlign: "left", borderBottom: `1px solid ${borderColor}`, fontWeight: 500, fontSize: "14px", color: mutedFg }}>Utilisateur</th>
                            <th style={{ padding: "12px 16px", textAlign: "left", borderBottom: `1px solid ${borderColor}`, fontWeight: 500, fontSize: "14px", color: mutedFg }}>Rôle</th>
-                           <th style={{ padding: "12px 16px", textAlign: "left", borderBottom: `1px solid ${borderColor}`, fontWeight: 500, fontSize: "14px", color: mutedFg }}>Département</th>
+                           <th style={{ padding: "12px 16px", textAlign: "left", borderBottom: `1px solid ${borderColor}`, fontWeight: 500, fontSize: "14px", color: mutedFg }}>Agence</th>
                            <th style={{ padding: "12px 16px", textAlign: "left", borderBottom: `1px solid ${borderColor}`, fontWeight: 500, fontSize: "14px", color: mutedFg }}>Statut</th>
                            <th style={{ padding: "12px 16px", textAlign: "right", borderBottom: `1px solid ${borderColor}`, fontWeight: 500, fontSize: "14px", color: mutedFg }}>Actions</th>
                          </tr>
@@ -18160,7 +18160,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                                        recipients: "creator",
                                        customRecipients: "",
                                        active: template.active,
-                                       content: `Bonjour {{USER_NAME}},\n\nVotre ticket a été créé avec succès.\n\nDétails du Ticket :\n• Numéro : #{{TICKET_ID}}\n• Titre : {{TICKET_TITLE}}\n• Priorité : {{PRIORITY}}\n• Département : {{DEPARTMENT}}\n• Date de Création : {{CREATION_DATE}}\n\nVous pouvez suivre l'avancement de votre ticket en vous connectant à l'application.\n\nSi vous avez des questions, contactez-nous à :\n{{SUPPORT_EMAIL}}\n\nCordialement,\nÉquipe Support`
+                                       content: `Bonjour {{USER_NAME}},\n\nVotre ticket a été créé avec succès.\n\nDétails du Ticket :\n• Numéro : #{{TICKET_ID}}\n• Titre : {{TICKET_TITLE}}\n• Priorité : {{PRIORITY}}\n• Agence : {{DEPARTMENT}}\n• Date de Création : {{CREATION_DATE}}\n\nVous pouvez suivre l'avancement de votre ticket en vous connectant à l'application.\n\nSi vous avez des questions, contactez-nous à :\n{{SUPPORT_EMAIL}}\n\nCordialement,\nÉquipe Support`
                                      });
                                      setShowTemplateEditor(true);
                                    }}
@@ -19484,7 +19484,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                             color: "#111827",
                           }}
                         >
-                          Département
+                          Agence
                         </label>
                         <input
                           type="text"
@@ -19903,10 +19903,10 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
                 <div>
                   <h1 style={{ fontSize: "28px", fontWeight: "600", color: "#333", marginBottom: "8px" }}>
-                    Départements
+                    Agences
                   </h1>
                   <p style={{ color: "#666", fontSize: "14px" }}>
-                    Gestion des départements de l'organisation
+                    Gestion des agences de l'organisation
                   </p>
                 </div>
                 <button
@@ -19926,7 +19926,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                   }}
                 >
                   <span style={{ fontSize: "18px" }}>+</span>
-                  Ajouter un département
+                  Ajouter une agence
                 </button>
               </div>
 
@@ -19940,7 +19940,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                   <thead>
                     <tr style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
                       <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: "600", fontSize: "14px", color: "#374151" }}>
-                        Nom du département
+                        Nom de l'agence
                       </th>
                       <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: "600", fontSize: "14px", color: "#374151" }}>
                         Statut
@@ -19954,7 +19954,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     {assetDepartments.length === 0 ? (
                       <tr>
                         <td colSpan={3} style={{ padding: "40px", textAlign: "center", color: "#999", fontSize: "14px" }}>
-                          Aucun département trouvé
+                          Aucune agence trouvée
                         </td>
                       </tr>
                     ) : (
@@ -20037,11 +20037,11 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)"
                   }}>
                     <h2 style={{ fontSize: "20px", fontWeight: "600", color: "#333", marginBottom: "20px" }}>
-                      {editingDepartment ? "Modifier le département" : "Ajouter un département"}
+                      {editingDepartment ? "Modifier l'agence" : "Ajouter une agence"}
                     </h2>
                     <div style={{ marginBottom: "20px" }}>
                       <label style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: "500", color: "#374151" }}>
-                        Nom du département <span style={{ color: "#dc3545" }}>*</span>
+                        Nom de l'agence <span style={{ color: "#dc3545" }}>*</span>
                       </label>
                       <input
                         type="text"
@@ -20602,15 +20602,15 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                  </div>
                  <div>
                    <label style={{ display: "block", marginBottom: "6px", fontSize: "14px", fontWeight: "500", color: "#374151" }}>
-                     Département <span style={{ color: "#dc3545" }}>*</span>
+                     Agence <span style={{ color: "#dc3545" }}>*</span>
                    </label>
-                  <select
+                   <select
                     required
                     value={newUser.agency}
                     onChange={(e) => setNewUser({ ...newUser, agency: e.target.value })}
                     style={{ width: "100%", padding: "10px 12px", border: "1px solid #e5e7eb", borderRadius: "8px", fontSize: "14px", backgroundColor: "white", cursor: "pointer" }}
                   >
-                    <option value="">Sélectionner un département</option>
+                    <option value="">Sélectionner une agence</option>
                     {assetDepartments.filter(d => d.is_active).map((dept) => (
                       <option key={dept.id} value={dept.name}>{dept.name}</option>
                     ))}
@@ -20834,15 +20834,15 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                    </div>
                    <div style={{ marginBottom: "16px" }}>
                      <label style={{ display: "block", marginBottom: "8px", color: "#333", fontWeight: "500" }}>
-                       Département <span style={{ color: "#dc3545" }}>*</span>
+                       Agence <span style={{ color: "#dc3545" }}>*</span>
                      </label>
-                    <select
+                     <select
                       required
                       value={editUser.agency}
                       onChange={(e) => setEditUser({ ...editUser, agency: e.target.value })}
                       style={{ width: "100%", padding: "8px 12px", border: "1px solid #ddd", borderRadius: "4px", fontSize: "14px" }}
                     >
-                      <option value="">Sélectionner un département</option>
+                      <option value="">Sélectionner une agence</option>
                       {assetDepartments.filter(d => d.is_active).map((dept) => (
                         <option key={dept.id} value={dept.name}>{dept.name}</option>
                       ))}

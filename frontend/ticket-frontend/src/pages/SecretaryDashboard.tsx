@@ -1127,7 +1127,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
         },
         {
           id: "2",
-          name: "Tickets par Département",
+          name: "Tickets par Agence",
           generated_by: "DSI",
           date: new Date(Date.now() - 86400000).toLocaleDateString("fr-FR"),
           type: "tickets_department"
@@ -8012,7 +8012,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                             <input type="text" value={assetForm.localisation} onChange={(e) => setAssetForm((f) => ({ ...f, localisation: e.target.value }))} placeholder="Ex: Bâtiment A - Étage 2" style={{ width: "100%", padding: "9px 11px", borderRadius: "10px", border: "1px solid #e5e7eb", fontSize: "14px", outline: "none" }} />
                           </div>
                           <div>
-                            <label style={{ display: "block", marginBottom: "4px", fontSize: "13px", fontWeight: 500, color: "#111827" }}>Département</label>
+                            <label style={{ display: "block", marginBottom: "4px", fontSize: "13px", fontWeight: 500, color: "#111827" }}>Agence</label>
                             <input type="text" value={assetForm.departement} onChange={(e) => setAssetForm((f) => ({ ...f, departement: e.target.value }))} placeholder="Ex: Marketing" style={{ width: "100%", padding: "9px 11px", borderRadius: "10px", border: "1px solid #e5e7eb", fontSize: "14px", outline: "none" }} />
                           </div>
                           <div style={{ gridColumn: "1 / -1" }}>
@@ -10606,7 +10606,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                       >
                         <option value="">[Sélectionner un type ▼]</option>
                         <option value="performance">Performance Globale</option>
-                        <option value="tickets_department">Tickets par Département</option>
+                        <option value="tickets_department">Tickets par Agence</option>
                         <option value="technicians">Performance des Techniciens</option>
                         <option value="satisfaction">Satisfaction Utilisateurs</option>
                         <option value="recurrent">Problèmes Récurrents</option>
@@ -10619,7 +10619,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
                           <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#1e3a5f", marginRight: "12px" }}></div>
-                          <span style={{ color: "#1e3a5f", fontSize: "16px", fontFamily: "monospace" }}>Tickets par Département</span>
+                          <span style={{ color: "#1e3a5f", fontSize: "16px", fontFamily: "monospace" }}>Tickets par Agence</span>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
                           <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#1e3a5f", marginRight: "12px" }}></div>
@@ -10701,7 +10701,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                       <div style={{ marginBottom: "16px" }}>
                         <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
                           <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#1e3a5f", marginRight: "12px" }}></div>
-                          <label style={{ color: "#1e3a5f", fontSize: "16px", fontFamily: "monospace" }}>Département :</label>
+                          <label style={{ color: "#1e3a5f", fontSize: "16px", fontFamily: "monospace" }}>Agence :</label>
                         </div>
                         <select
                           value={reportFilters.department}
