@@ -63,7 +63,8 @@ import {
   Eye,
   Edit,
   Lock,
-  Send
+  Send,
+  Activity
 } from "lucide-react";
 import React from "react";
 import helpdeskLogo from "../assets/helpdesk-logo.png";
@@ -912,6 +913,8 @@ function DSIDashboard({ token }: DSIDashboardProps) {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [usersPerPage] = useState<number>(10);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Onglets internes de la section Maintenance (État système, Base de données, Tâches, Journaux)
+  const [maintenanceTab, setMaintenanceTab] = useState<string>("etat-systeme");
   // États pour la section Techniciens
   const [selectedTechnicianDetails, setSelectedTechnicianDetails] = useState<Technician | null>(null);
   const [showTechnicianDetailsModal, setShowTechnicianDetailsModal] = useState<boolean>(false);
@@ -935,6 +938,10 @@ function DSIDashboard({ token }: DSIDashboardProps) {
   });
   const [showOutputFormat, setShowOutputFormat] = useState<boolean>(false);
   const [outputFormat, setOutputFormat] = useState<string>("");
+  // Journaux de maintenance (onglet Journaux de la section Maintenance)
+  const [maintenanceLogs, setMaintenanceLogs] = useState<Notification[]>([]);
+  const [isLoadingMaintenanceLogs, setIsLoadingMaintenanceLogs] = useState<boolean>(false);
+  const [maintenanceLogsError, setMaintenanceLogsError] = useState<string | null>(null);
   
   // États pour les paramètres d'apparence
   const [appName, setAppName] = useState<string>(() => {
@@ -2055,6 +2062,36 @@ function DSIDashboard({ token }: DSIDashboardProps) {
     }
   }
 
+  // Charger l'historique des notifications pour l'onglet Journaux de la section Maintenance
+  async function loadMaintenanceLogs() {
+    if (!token || token.trim() === "") {
+      return;
+    }
+
+    try {
+      setIsLoadingMaintenanceLogs(true);
+      setMaintenanceLogsError(null);
+
+      const res = await fetch("http://localhost:8000/notifications/?skip=0&limit=100", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setMaintenanceLogs(data);
+      } else {
+        setMaintenanceLogsError("Impossible de charger les journaux système.");
+      }
+    } catch (err) {
+      console.error("Erreur lors du chargement des journaux de maintenance:", err);
+      setMaintenanceLogsError("Erreur lors du chargement des journaux système.");
+    } finally {
+      setIsLoadingMaintenanceLogs(false);
+    }
+  }
+
   async function loadNotificationsTickets() {
     if (!token || notifications.length === 0) {
       setNotificationsTickets([]);
@@ -2168,6 +2205,13 @@ function DSIDashboard({ token }: DSIDashboardProps) {
       void loadNotificationsTickets();
     }
   }, [activeSection, showNotificationsTicketsView, notifications.length]);
+
+  // Charger les journaux de maintenance quand l'onglet Journaux est ouvert dans la section Maintenance
+  useEffect(() => {
+    if (activeSection === "maintenance" && maintenanceTab === "journaux") {
+      void loadMaintenanceLogs();
+    }
+  }, [activeSection, maintenanceTab, token]);
 
   // Charger automatiquement les détails du ticket sélectionné dans la section notifications
   useEffect(() => {
@@ -20095,6 +20139,327 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                       </button>
                     </div>
                   </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeSection === "maintenance" && (
+            <div style={{ padding: "24px" }}>
+              {/* En-tête de section volontairement sans titre (design épuré) */}
+
+              {/* Onglets internes de la section Maintenance (design type cartes avec icônes) */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "stretch",
+                  gap: "0",
+                  padding: "4px",
+                  borderRadius: "9999px",
+                  background: "#f5f5f5",
+                  marginBottom: "24px",
+                  boxShadow: "inset 0 0 0 1px rgba(148, 163, 184, 0.15)",
+                }}
+              >
+                {[
+                  { id: "etat-systeme", label: "État système", icon: Activity },
+                  { id: "base-de-donnees", label: "Base de données", icon: HardDrive },
+                  { id: "taches", label: "Tâches", icon: Wrench },
+                  { id: "journaux", label: "Journaux", icon: FileText },
+                ].map((tab, index, allTabs) => {
+                  const isActive = maintenanceTab === tab.id;
+                  const isFirst = index === 0;
+                  const isLast = index === allTabs.length - 1;
+                  const radius = isFirst
+                    ? "9999px 0 0 9999px"
+                    : isLast
+                    ? "0 9999px 9999px 0"
+                    : "0";
+
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setMaintenanceTab(tab.id)}
+                      style={{
+                        flex: 1,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "8px",
+                        padding: "10px 18px",
+                        borderRadius: radius,
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "13px",
+                        fontWeight: 500,
+                        backgroundColor: isActive ? "#ffffff" : "transparent",
+                        color: isActive ? "#111827" : "#4b5563",
+                        boxShadow: isActive ? "0 1px 2px rgba(15, 23, 42, 0.08)" : "none",
+                      }}
+                    >
+                      <tab.icon
+                        size={16}
+                        color={isActive ? "#111827" : "#6b7280"}
+                        strokeWidth={2.5}
+                      />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Contenus des onglets Maintenance */}
+              {maintenanceTab !== "journaux" && (
+                <div
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "12px",
+                    padding: "32px",
+                    boxShadow: "0 2px 4px rgba(15,23,42,0.06)",
+                    textAlign: "center",
+                    color: "#6b7280",
+                    fontSize: "14px"
+                  }}
+                >
+                  Cette sous-section sera développée ultérieurement. Pour l'instant, seul l'onglet
+                  <span style={{ fontWeight: 600 }}> Journaux</span> utilise les données réelles.
+                </div>
+              )}
+
+              {maintenanceTab === "journaux" && (
+                <div
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "12px",
+                    padding: "24px",
+                    boxShadow: "0 2px 4px rgba(15,23,42,0.06)"
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "20px",
+                      gap: "16px",
+                      flexWrap: "wrap"
+                    }}
+                  >
+                    <div>
+                      <h2
+                        style={{
+                          margin: 0,
+                          fontSize: "20px",
+                          fontWeight: 600,
+                          color: "#111827"
+                        }}
+                      >
+                        Journal d'activité système
+                      </h2>
+                      <p
+                        style={{
+                          marginTop: "4px",
+                          fontSize: "13px",
+                          color: "#6b7280"
+                        }}
+                      >
+                        Historique des événements récents de maintenance et des notifications système
+                        pour ce compte administrateur.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        try {
+                          const rows = maintenanceLogs.map((log) => ({
+                            Date: new Date(log.created_at).toLocaleString("fr-FR"),
+                            Type: log.type,
+                            Message: log.message,
+                            Ticket: log.ticket_id ?? ""
+                          }));
+                          const wb = XLSX.utils.book_new();
+                          const ws = XLSX.utils.json_to_sheet(rows);
+                          XLSX.utils.book_append_sheet(wb, ws, "Journaux");
+                          XLSX.writeFile(
+                            wb,
+                            `Journaux_maintenance_${new Date().toISOString().split("T")[0]}.xlsx`
+                          );
+                        } catch (error) {
+                          console.error("Erreur export journaux maintenance:", error);
+                          alert("Erreur lors de l'export des journaux.");
+                        }
+                      }}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "8px 14px",
+                        borderRadius: "9999px",
+                        border: "1px solid #e5e7eb",
+                        backgroundColor: "#f9fafb",
+                        fontSize: "13px",
+                        fontWeight: 500,
+                        color: "#111827",
+                        cursor: "pointer"
+                      }}
+                    >
+                      <Download size={16} />
+                      <span>Exporter</span>
+                    </button>
+                  </div>
+
+                  {maintenanceLogsError && (
+                    <div
+                      style={{
+                        marginBottom: "12px",
+                        padding: "8px 12px",
+                        borderRadius: "8px",
+                        background: "#fef2f2",
+                        color: "#b91c1c",
+                        fontSize: "13px"
+                      }}
+                    >
+                      {maintenanceLogsError}
+                    </div>
+                  )}
+
+                  {isLoadingMaintenanceLogs ? (
+                    <p
+                      style={{
+                        textAlign: "center",
+                        padding: "24px",
+                        color: "#6b7280",
+                        fontSize: "14px"
+                      }}
+                    >
+                      Chargement des journaux...
+                    </p>
+                  ) : maintenanceLogs.length === 0 ? (
+                    <p
+                      style={{
+                        textAlign: "center",
+                        padding: "24px",
+                        color: "#6b7280",
+                        fontSize: "14px"
+                      }}
+                    >
+                      Aucun événement de maintenance récent trouvé pour ce compte.
+                    </p>
+                  ) : (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "8px"
+                      }}
+                    >
+                      {maintenanceLogs.map((log) => {
+                        const typeString = String(log.type || "");
+                        const isWarning =
+                          typeString.includes("alerte") ||
+                          typeString.includes("problème") ||
+                          typeString.includes("faible") ||
+                          typeString.includes("indisponible");
+                        const iconBg = isWarning ? "#fef3c7" : "#dcfce7";
+                        const iconColor = isWarning ? "#f59e0b" : "#16a34a";
+
+                        return (
+                          <div
+                            key={log.id}
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              padding: "12px 16px",
+                              borderRadius: "10px",
+                              background: "#f9fafb",
+                              border: "1px solid #e5e7eb",
+                              gap: "12px"
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "12px",
+                                flex: 1,
+                                minWidth: 0
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: "32px",
+                                  height: "32px",
+                                  borderRadius: "9999px",
+                                  background: iconBg,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  flexShrink: 0
+                                }}
+                              >
+                                {isWarning ? (
+                                  <AlertTriangle size={18} color={iconColor} />
+                                ) : (
+                                  <CheckCircle size={18} color={iconColor} />
+                                )}
+                              </div>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: "2px",
+                                  minWidth: 0
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontSize: "14px",
+                                    fontWeight: 500,
+                                    color: "#111827",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap"
+                                  }}
+                                >
+                                  {formatNotificationMessage(log.message)}
+                                </div>
+                                <div
+                                  style={{
+                                    fontSize: "12px",
+                                    color: "#6b7280",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap"
+                                  }}
+                                >
+                                  {typeString || "Notification"}{" "}
+                                  {log.ticket_id ? `• Ticket #${log.ticket_id}` : ""}
+                                </div>
+                              </div>
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "#6b7280",
+                                whiteSpace: "nowrap",
+                                marginLeft: "8px"
+                              }}
+                            >
+                              {new Date(log.created_at).toLocaleString("fr-FR", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit"
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
