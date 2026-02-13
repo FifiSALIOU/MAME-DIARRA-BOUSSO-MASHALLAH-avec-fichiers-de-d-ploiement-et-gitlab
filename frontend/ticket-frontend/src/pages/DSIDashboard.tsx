@@ -7259,6 +7259,8 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                 ? "Apparence"
                 : activeSection === "email"
                 ? "Email"
+                : activeSection === "securite"
+                ? "Sécurité"
                 : "Tableau de bord"}
             </div>
             <div style={{ 
@@ -7298,6 +7300,8 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                 ? "Personnalisez le thème et l'aspect de l'interface"
                 : activeSection === "email"
                 ? "Configurez les paramètres d'envoi et de réception des emails"
+                : activeSection === "securite"
+                ? "Gérez les mots de passe et les paramètres de sécurité du compte"
                 : "Vue d'ensemble de votre activité"}
             </div>
           </div>
