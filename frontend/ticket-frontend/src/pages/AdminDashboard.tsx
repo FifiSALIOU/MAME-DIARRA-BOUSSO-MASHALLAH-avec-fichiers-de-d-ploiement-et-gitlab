@@ -819,7 +819,7 @@ function AdminDashboard({ token }: AdminDashboardProps) {
   };
   const activeSection = getActiveSection();
 
-  // Fermer la vue "détails du ticket" quand on change de section (ex: clic sur Actifs) pour afficher le contenu de la section
+  // Fermer la vue "détails du ticket" quand on change de section (ex: Actifs, Types, Catégories) pour afficher le contenu de la section
   useEffect(() => {
     if (activeSection !== "dashboard" && activeSection !== "tickets") {
       setShowTicketDetailsPage(false);
