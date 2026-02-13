@@ -21679,7 +21679,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           )}
 
           {activeSection === "audit-logs" && (
-            <div style={{ padding: "24px" }}>
+            <div style={{ padding: "24px 24px 24px 0" }}>
               <div style={{ 
                 background: "white", 
                 borderRadius: "8px", 
