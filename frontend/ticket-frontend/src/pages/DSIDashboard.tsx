@@ -6895,6 +6895,26 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
             <div style={{ flex: 1 }}>Rôles</div>
           </div>
         )}
+        {/* Agences (déplacé au-dessus de Statistiques) */}
+        <div 
+          onClick={() => navigate(`${getRoutePrefix()}/parametres/departements`)}
+          style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "12px", 
+            padding: "12px", 
+            background: activeSection === "departements" ? "hsl(25, 95%, 53%)" : "transparent",
+            borderRadius: "8px",
+            cursor: "pointer"
+          }}
+        >
+          <div style={{ width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <MapPin size={20} color={activeSection === "departements" ? "white" : "rgba(180, 180, 180, 0.7)"} strokeWidth={2.5} />
+          </div>
+          <div style={{ flex: 1 }}>Agences</div>
+        </div>
+
+        {/* Statistiques */}
         <div 
           onClick={() => {
             setSelectedReport("statistiques");
@@ -7062,19 +7082,6 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                   }}
                 >
                   Priorités
-                </div>
-                <div
-                  onClick={() => navigate(`${getRoutePrefix()}/parametres/departements`)}
-                  style={{
-                    padding: "8px 12px",
-                    cursor: "pointer",
-                    color: "white",
-                    borderRadius: "4px",
-                    background: activeSection === "departements" ? "hsl(25, 95%, 53%)" : "transparent",
-                    fontSize: "14px"
-                  }}
-                >
-                  Agences
                 </div>
               </div>
             )}
