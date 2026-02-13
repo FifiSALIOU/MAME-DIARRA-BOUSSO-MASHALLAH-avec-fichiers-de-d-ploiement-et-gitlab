@@ -17014,11 +17014,8 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
              </div>
            )}
 
-           {activeSection === "apparence" && (
+          {activeSection === "apparence" && (
                <div style={{ padding: "24px 24px 24px 0" }}>
-                 <h1 style={{ marginBottom: "32px", fontSize: "28px", fontWeight: "600", color: "#333" }}>
-                   Apparence
-                 </h1>
 
                  {/* Nom de l'Application */}
                  <div style={{ 
