@@ -20868,20 +20868,6 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                           >
                             Tables de la base de données
                           </h3>
-                          <p
-                            style={{
-                              margin: 0,
-                              marginTop: "2px",
-                              fontSize: "12px",
-                              color: "#6b7280",
-                            }}
-                          >
-                            Statistiques pour{" "}
-                            {databaseTables.length > 0
-                              ? `${databaseTables.length} table(s)`
-                              : "aucune table détectée"}
-                            .
-                          </p>
                         </div>
                       </div>
 
@@ -20908,7 +20894,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                                   fontWeight: 500,
                                 }}
                               >
-                                Table
+                                Tables
                               </th>
                               <th
                                 style={{
@@ -20917,7 +20903,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                                   fontWeight: 500,
                                 }}
                               >
-                                Enregistrements (estimation)
+                                Enregistrements
                               </th>
                               <th
                                 style={{
