@@ -64,7 +64,8 @@ import {
   Edit,
   Lock,
   Send,
-  Activity
+  Activity,
+  Database
 } from "lucide-react";
 import React from "react";
 import helpdeskLogo from "../assets/helpdesk-logo.png";
@@ -20276,7 +20277,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                       {
                         id: "db",
                         label: "Base de données",
-                        icon: HardDrive,
+                        icon: Database,
                       },
                       {
                         id: "auth",
