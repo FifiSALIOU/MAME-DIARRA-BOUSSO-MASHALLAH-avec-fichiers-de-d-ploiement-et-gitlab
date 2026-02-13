@@ -20859,24 +20859,55 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                           padding: "12px 16px",
                           borderBottom: "1px solid #e5e7eb",
                           background: "#f9fafb",
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          gap: "12px",
-                          flexWrap: "wrap",
                         }}
                       >
-                        <div>
-                          <h3
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "4px",
+                          }}
+                        >
+                          <div
                             style={{
-                              margin: 0,
-                              fontSize: "15px",
-                              fontWeight: 600,
-                              color: "#111827",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
                             }}
                           >
-                            Tables de la base de données
-                          </h3>
+                            <span
+                              style={{
+                                width: "20px",
+                                height: "20px",
+                                borderRadius: "9999px",
+                                background: "#eef2ff",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <Database size={14} strokeWidth={2.4} color="#4f46e5" />
+                            </span>
+                            <h3
+                              style={{
+                                margin: 0,
+                                fontSize: "15px",
+                                fontWeight: 600,
+                                color: "#111827",
+                              }}
+                            >
+                              Tables de la base de données
+                            </h3>
+                          </div>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: "12px",
+                              color: "#6b7280",
+                            }}
+                          >
+                            Statistiques des tables principales
+                          </p>
                         </div>
                       </div>
 
