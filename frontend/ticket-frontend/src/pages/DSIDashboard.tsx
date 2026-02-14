@@ -3725,9 +3725,8 @@ function DSIDashboard({ token }: DSIDashboardProps) {
       if (res.ok) {
         const data = await res.json();
         setTicketDetails(data);
-        await loadTicketHistory(ticketId);
-        await loadTicketComments(ticketId);
         setShowTicketDetailsPage(true);
+        await Promise.all([loadTicketHistory(ticketId), loadTicketComments(ticketId)]);
       } else {
         alert("Erreur lors du chargement des détails du ticket");
       }
