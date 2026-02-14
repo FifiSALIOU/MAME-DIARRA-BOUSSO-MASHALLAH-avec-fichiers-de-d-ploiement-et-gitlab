@@ -407,6 +407,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
   const [showReassignModal, setShowReassignModal] = useState<boolean>(false);
   const [reassignTicketId, setReassignTicketId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [ticketsSectionReady, setTicketsSectionReady] = useState(false);
   const [roleName, setRoleName] = useState<string>(() => {
     try {
       return localStorage.getItem("userRole") || "";
@@ -541,6 +542,20 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
   }
 
   const currentActiveSection = getActiveSectionFromPath();
+  const showTicketsPlaceholder = currentActiveSection === "tickets" && !ticketsSectionReady;
+
+  // Afficher la section Tickets : d'abord "En chargement", puis le contenu au frame suivant (Adjoint DSI / Secrétaire DSI)
+  useEffect(() => {
+    if (currentActiveSection === "tickets") {
+      const id = requestAnimationFrame(() => setTicketsSectionReady(true));
+      return () => {
+        cancelAnimationFrame(id);
+        setTicketsSectionReady(false);
+      };
+    } else {
+      setTicketsSectionReady(false);
+    }
+  }, [currentActiveSection]);
 
   // Synchroniser activeSection avec l'URL pour Adjoint DSI
   useEffect(() => {
@@ -8199,6 +8214,20 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
 
           {currentActiveSection === "tickets" && (
             <>
+              {showTicketsPlaceholder ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minHeight: "280px",
+                    width: "100%",
+                  }}
+                >
+                  <span style={{ fontSize: "16px", color: "#6b7280" }}>En chargement.......</span>
+                </div>
+              ) : (
+                <>
               {/* Barre de recherche (au-dessus des filtres avancés, comme DSI) */}
               <div style={{ 
                 display: "flex", 
@@ -9383,6 +9412,8 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                   })
                 )}
               </div>
+                </>
+              )}
     </>
   )}
 
