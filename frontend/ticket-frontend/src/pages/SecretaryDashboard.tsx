@@ -23,6 +23,7 @@ import {
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/style.css";
 import { fr } from "date-fns/locale";
+import { PrioritesSection } from "../components/dashboard/PrioritesSection.tsx";
 
 interface SecretaryDashboardProps {
   token: string;
@@ -526,6 +527,45 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
   const [editCategoryName, setEditCategoryName] = useState("");
   const [editCategoryTypeCode, setEditCategoryTypeCode] = useState("");
 
+  // États pour la section Priorités (Adjoint DSI)
+  const [prioritiesFromDb, setPrioritiesFromDb] = useState<Array<{
+    id: number;
+    code: string;
+    label: string;
+    color_hex: string | null;
+    background_hex: string | null;
+    display_order: number;
+    is_active: boolean;
+  }>>([]);
+  const [loadingPrioritiesFromDb, setLoadingPrioritiesFromDb] = useState(false);
+  const [editingPriorityFromDb, setEditingPriorityFromDb] = useState<{
+    id: number;
+    code: string;
+    label: string;
+    color_hex: string | null;
+    background_hex: string | null;
+    display_order: number;
+    is_active: boolean;
+  } | null>(null);
+  const [editPriorityForm, setEditPriorityForm] = useState({ label: "", color_hex: "", background_hex: "" });
+  const [showAddPriorityFromDbModal, setShowAddPriorityFromDbModal] = useState(false);
+  const [addPriorityForm, setAddPriorityForm] = useState({
+    code: "",
+    label: "",
+    color_hex: "#E53E3E",
+    background_hex: "rgba(229, 62, 62, 0.1)",
+    display_order: 1,
+  });
+  const [showAddPriorityModal, setShowAddPriorityModal] = useState(false);
+  const [editingPriority, setEditingPriority] = useState<number | null>(null);
+  const [newPriority, setNewPriority] = useState({
+    priority: "",
+    level: 1,
+    color: "#dc3545",
+    maxTimeValue: 1,
+    maxTimeUnit: "heure",
+  });
+
   // Fonction pour déterminer la section active basée sur l'URL (uniquement pour Adjoint DSI)
   function getActiveSectionFromPath(): string {
     if (roleName !== "Adjoint DSI") {
@@ -537,6 +577,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
     if (location.pathname === "/dashboard/adjoint/actifs") return "actifs";
     if (location.pathname === "/dashboard/adjoint/types") return "types";
     if (location.pathname === "/dashboard/adjoint/categories") return "categories";
+    if (location.pathname === "/dashboard/adjoint/priorites") return "priorites";
     if (location.pathname === "/dashboard/adjoint/tickets") return "tickets";
     if (location.pathname === "/dashboard/adjoint") return "dashboard";
     return activeSection;
@@ -602,6 +643,37 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
       .finally(() => { if (!cancelled) setLoadingCategories(false); });
     return () => { cancelled = true; };
   }, [currentActiveSection, roleName, token]);
+
+  const loadPrioritiesFromDb = async () => {
+    if (!token) return;
+    setLoadingPrioritiesFromDb(true);
+    try {
+      const res = await fetch("http://localhost:8000/ticket-config/priorities?all=true", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = res.ok ? await res.json() : [];
+      setPrioritiesFromDb(Array.isArray(data) ? data : []);
+    } catch {
+      setPrioritiesFromDb([]);
+    } finally {
+      setLoadingPrioritiesFromDb(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!token || currentActiveSection !== "priorites" || roleName !== "Adjoint DSI") return;
+    loadPrioritiesFromDb();
+  }, [currentActiveSection, roleName, token]);
+
+  const handleAddPriority = () => {
+    setShowAddPriorityModal(false);
+    setNewPriority({ priority: "", level: 1, color: "#dc3545", maxTimeValue: 1, maxTimeUnit: "heure" });
+  };
+  const handleUpdatePriority = () => {
+    setEditingPriority(null);
+    setShowAddPriorityModal(false);
+    setNewPriority({ priority: "", level: 1, color: "#dc3545", maxTimeValue: 1, maxTimeUnit: "heure" });
+  };
 
   async function loadAssets(): Promise<void> {
     if (!token || token.trim() === "" || currentActiveSection !== "actifs" || roleName !== "Adjoint DSI") return;
@@ -4396,6 +4468,26 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {roleName === "Adjoint DSI" && (
         <div 
+          onClick={() => navigate("/dashboard/adjoint/priorites")}
+          style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "12px", 
+            padding: "10px", 
+            background: currentActiveSection === "priorites" ? "hsl(25, 95%, 53%)" : "transparent",
+            borderRadius: "8px",
+            cursor: "pointer",
+            marginBottom: "8px"
+          }}
+        >
+          <div style={{ width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Flag size={18} color={currentActiveSection === "priorites" ? "white" : "rgba(180, 180, 180, 0.7)"} strokeWidth={2} />
+          </div>
+          <div style={{ fontSize: "16px", fontFamily: "'Inter', system-ui, sans-serif", fontWeight: "500" }}>Priorités</div>
+        </div>
+        )}
+        {roleName === "Adjoint DSI" && (
+        <div 
           onClick={() => {
             navigate("/dashboard/adjoint/actifs");
           }}
@@ -4618,7 +4710,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
               color: "#111827",
               fontFamily: "system-ui, -apple-system, sans-serif"
             }}>
-              {currentActiveSection === "actifs" ? "Gestion des Actifs" : currentActiveSection === "types" ? "Types" : currentActiveSection === "categories" ? "Catégories" : "Tableau de bord"}
+              {currentActiveSection === "actifs" ? "Gestion des Actifs" : currentActiveSection === "types" ? "Types" : currentActiveSection === "categories" ? "Catégories" : currentActiveSection === "priorites" ? "Priorités" : "Tableau de bord"}
             </div>
             <div style={{ 
               fontSize: "13px", 
@@ -4632,6 +4724,8 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                 ? "Types de tickets (Matériel / Applicatif)"
                 : currentActiveSection === "categories"
                 ? "Gérez les catégories par type de ticket"
+                : currentActiveSection === "priorites"
+                ? "Gérez les niveaux de priorité des tickets"
                 : "Vue d'ensemble de votre activité"}
             </div>
           </div>
@@ -7399,6 +7493,31 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                 </div>
               )}
             </div>
+          )}
+
+          {currentActiveSection === "priorites" && roleName === "Adjoint DSI" && (
+            <PrioritesSection
+              token={token}
+              prioritiesFromDb={prioritiesFromDb}
+              loadingPrioritiesFromDb={loadingPrioritiesFromDb}
+              loadPrioritiesFromDb={loadPrioritiesFromDb}
+              addPriorityForm={addPriorityForm}
+              setAddPriorityForm={setAddPriorityForm}
+              showAddPriorityFromDbModal={showAddPriorityFromDbModal}
+              setShowAddPriorityFromDbModal={setShowAddPriorityFromDbModal}
+              editingPriorityFromDb={editingPriorityFromDb}
+              setEditingPriorityFromDb={setEditingPriorityFromDb}
+              editPriorityForm={editPriorityForm}
+              setEditPriorityForm={setEditPriorityForm}
+              showAddPriorityModal={showAddPriorityModal}
+              setShowAddPriorityModal={setShowAddPriorityModal}
+              editingPriority={editingPriority}
+              setEditingPriority={setEditingPriority}
+              newPriority={newPriority}
+              setNewPriority={setNewPriority}
+              handleAddPriority={handleAddPriority}
+              handleUpdatePriority={handleUpdatePriority}
+            />
           )}
 
           {currentActiveSection === "actifs" && roleName === "Adjoint DSI" && (

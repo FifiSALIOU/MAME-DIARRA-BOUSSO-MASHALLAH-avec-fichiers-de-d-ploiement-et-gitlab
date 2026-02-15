@@ -108,6 +108,10 @@ function App() {
           element={token ? <SecretaryDashboard token={token} /> : <Navigate to="/" replace />}
         />
         <Route
+          path="/dashboard/adjoint/priorites"
+          element={token ? <SecretaryDashboard token={token} /> : <Navigate to="/" replace />}
+        />
+        <Route
           path="/dashboard/adjoint/technicians"
           element={token ? <SecretaryDashboard token={token} /> : <Navigate to="/" replace />}
         />
