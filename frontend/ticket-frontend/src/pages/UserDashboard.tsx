@@ -2447,7 +2447,35 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                       );
                     }
                     if (ticketDetails.status === "resolu" || ticketDetails.status === "retraite") {
-                      return null;
+                      return (
+                        <button
+                          onClick={() => {
+                            setCommentModalTicketId(ticketDetails.id);
+                            setModalCommentText("");
+                          }}
+                          disabled={loading}
+                          style={{
+                            padding: "10px 20px",
+                            backgroundColor: "#e5e7eb",
+                            color: "black",
+                            border: "none",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px"
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#d1d5db"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#e5e7eb"; }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                          </svg>
+                          Ajouter un commentaire
+                        </button>
+                      );
                     }
                     return (
                       <>
@@ -2497,6 +2525,33 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                         >
                           <Trash2 size={16} color="red" />
                           Supprimer
+                        </button>
+                        <button
+                          onClick={() => {
+                            setCommentModalTicketId(ticketDetails.id);
+                            setModalCommentText("");
+                          }}
+                          disabled={loading}
+                          style={{
+                            padding: "10px 20px",
+                            backgroundColor: "#e5e7eb",
+                            color: "black",
+                            border: "none",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px"
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#d1d5db"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#e5e7eb"; }}
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                          </svg>
+                          Ajouter un commentaire
                         </button>
                       </>
                     );
