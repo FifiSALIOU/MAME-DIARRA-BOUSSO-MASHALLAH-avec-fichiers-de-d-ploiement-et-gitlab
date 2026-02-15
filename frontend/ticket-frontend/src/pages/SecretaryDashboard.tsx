@@ -4710,7 +4710,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
               color: "#111827",
               fontFamily: "system-ui, -apple-system, sans-serif"
             }}>
-              {currentActiveSection === "actifs" ? "Gestion des Actifs" : currentActiveSection === "types" ? "Types" : currentActiveSection === "categories" ? "Catégories" : currentActiveSection === "priorites" ? "Priorités" : "Tableau de bord"}
+              {currentActiveSection === "notifications" ? "Notifications" : currentActiveSection === "actifs" ? "Gestion des Actifs" : currentActiveSection === "types" ? "Types" : currentActiveSection === "categories" ? "Catégories" : currentActiveSection === "priorites" ? "Priorités" : "Tableau de bord"}
             </div>
             <div style={{ 
               fontSize: "13px", 
@@ -4718,7 +4718,9 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
               color: "#6b7280",
               fontFamily: "system-ui, -apple-system, sans-serif"
             }}>
-              {currentActiveSection === "actifs"
+              {currentActiveSection === "notifications"
+                ? `${unreadCount} notification${unreadCount > 1 ? "s" : ""} non lue${unreadCount > 1 ? "s" : ""}`
+                : currentActiveSection === "actifs"
                 ? "Gérez l'inventaire des équipements informatiques"
                 : currentActiveSection === "types"
                 ? "Types de tickets (Matériel / Applicatif)"

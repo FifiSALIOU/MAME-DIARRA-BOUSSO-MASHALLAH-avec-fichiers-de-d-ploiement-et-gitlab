@@ -1959,7 +1959,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                 color: "#111827",
                 fontFamily: "system-ui, -apple-system, sans-serif"
               }}>
-                {currentActiveSection === "actifs" ? "Gestion des Actifs" : "Tableau de bord"}
+                {currentActiveSection === "notifications" ? "Notifications" : currentActiveSection === "actifs" ? "Gestion des Actifs" : "Tableau de bord"}
               </div>
               <div style={{ 
                 fontSize: "13px", 
@@ -1970,7 +1970,9 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                 marginLeft: 0,
                 textAlign: "left"
               }}>
-                {currentActiveSection === "actifs"
+                {currentActiveSection === "notifications"
+                  ? `${unreadCount} notification${unreadCount > 1 ? "s" : ""} non lue${unreadCount > 1 ? "s" : ""}`
+                  : currentActiveSection === "actifs"
                   ? "Gérez l'inventaire des équipements informatiques"
                   : "Vue d'ensemble de votre activité"}
               </div>
