@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import type { FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Clock, CheckCircle, LayoutDashboard, PlusCircle, Ticket as TicketIcon, ChevronLeft, ChevronRight, ChevronDown, Bell, Wrench, Monitor, Search, Send, CheckCircle2, Pencil, Trash2, RefreshCcw, FileText, UserCheck, Users, MessageCircle } from "lucide-react";
 import helpdeskLogo from "../assets/helpdesk-logo.png";
@@ -576,7 +577,9 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
   const [resumedFlags, setResumedFlags] = useState<Record<string, boolean>>({});
   const [confirmDeleteTicket, setConfirmDeleteTicket] = useState<Ticket | null>(null);
   const [openActionsMenuFor, setOpenActionsMenuFor] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const actionsMenuContainerRef = useRef<HTMLDivElement | null>(null);
+  const portalMenuRef = useRef<HTMLDivElement | null>(null);
   const [ticketTypes, setTicketTypes] = useState<TicketTypeConfig[]>([]);
   const [ticketCategories, setTicketCategories] = useState<TicketCategoryConfig[]>([]);
   const [_notificationSearch, _setNotificationSearch] = useState<string>("");
@@ -596,13 +599,16 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
     }
   }, [tokenProp]);
 
-  // Fermer le menu d'actions au clic en dehors
+  // Fermer le menu d'actions au clic en dehors (bouton ou menu en portail)
   useEffect(() => {
     if (openActionsMenuFor === null) return;
     function handleClickOutside(e: MouseEvent) {
       const target = e.target as Node;
-      if (actionsMenuContainerRef.current && !actionsMenuContainerRef.current.contains(target)) {
+      const inTrigger = actionsMenuContainerRef.current?.contains(target);
+      const inMenu = portalMenuRef.current?.contains(target);
+      if (!inTrigger && !inMenu) {
         setOpenActionsMenuFor(null);
+        setMenuPosition(null);
       }
     }
     document.addEventListener("click", handleClickOutside);
@@ -3573,7 +3579,17 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setOpenActionsMenuFor(openActionsMenuFor === t.id ? null : t.id);
+                            const nextOpen = openActionsMenuFor === t.id ? null : t.id;
+                            setOpenActionsMenuFor(nextOpen);
+                            if (nextOpen) {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const MENU_H = 220;
+                              let top = rect.bottom + 4;
+                              if (top + MENU_H > window.innerHeight - 8) top = window.innerHeight - MENU_H - 8;
+                              setMenuPosition({ top, left: rect.right - 160 });
+                            } else {
+                              setMenuPosition(null);
+                            }
                           }}
                           disabled={loading}
                           title="Actions"
@@ -3603,149 +3619,6 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                                 e.currentTarget.style.backgroundColor = "transparent";
                           }}
                         />
-                        {openActionsMenuFor === t.id && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: "100%",
-                              right: 0,
-                              marginTop: "4px",
-                              background: "white",
-                              border: "1px solid #e5e7eb",
-                              borderRadius: 8,
-                              boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
-                              minWidth: 160,
-                              zIndex: 1000,
-                              overflow: "visible"
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                            ref={(el) => {
-                              if (el) {
-                                const button = el.previousElementSibling as HTMLElement;
-                                if (button) {
-                                  const rect = button.getBoundingClientRect();
-                                  const viewportHeight = window.innerHeight;
-                                      const menuHeight = 150;
-                                  const spaceBelow = viewportHeight - rect.bottom;
-                                  const spaceAbove = rect.top;
-                                  
-                                  if (spaceBelow < menuHeight && spaceAbove > menuHeight) {
-                                    el.style.bottom = "100%";
-                                    el.style.top = "auto";
-                                    el.style.marginBottom = "4px";
-                                    el.style.marginTop = "0";
-                                  } else {
-                                    el.style.top = "100%";
-                                    el.style.bottom = "auto";
-                                    el.style.marginTop = "4px";
-                                    el.style.marginBottom = "0";
-                                  }
-                                }
-                              }
-                            }}
-                          >
-                            <button
-                              onClick={() => { loadTicketDetails(t.id); setOpenActionsMenuFor(null); }}
-                              disabled={loading}
-                              style={{ 
-                                width: "100%", 
-                                padding: "10px 12px", 
-                                background: "transparent", 
-                                border: "none", 
-                                textAlign: "left", 
-                                cursor: "pointer",
-                                color: "#111827",
-                                fontSize: "14px",
-                                display: "block",
-                                whiteSpace: "nowrap"
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = "#f3f4f6";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = "transparent";
-                              }}
-                            >
-                              Voir détails
-                            </button>
-                            <button
-                              onClick={() => { 
-                                const isAssigned = t.technician !== null && t.technician !== undefined;
-                                const blockedStatuses = ["assigne_technicien", "en_cours", "cloture", "resolu", "retraite", "rejete"];
-                                const isBlocked = blockedStatuses.includes(t.status) || isAssigned;
-                                
-                                if (isBlocked) {
-                                  alert(getBlockedMessage(t, "modification"));
-                                  setOpenActionsMenuFor(null);
-                                  return;
-                                }
-                                openEditModal(t); 
-                                setOpenActionsMenuFor(null); 
-                              }}
-                              disabled={loading}
-                              style={{ 
-                                width: "100%", 
-                                padding: "10px 12px", 
-                                background: "transparent", 
-                                border: "none", 
-                                borderTop: "1px solid #e5e7eb",
-                                textAlign: "left", 
-                                cursor: "pointer",
-                                color: "#111827",
-                                fontSize: "14px",
-                                display: "block",
-                                whiteSpace: "nowrap"
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = "#f3f4f6";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = "transparent";
-                              }}
-                            >
-                              Modifier
-                            </button>
-                            <button
-                              onClick={() => { 
-                                if (loading) return;
-                                const isAssigned = t.technician !== null && t.technician !== undefined;
-                                const blockedStatuses = ["assigne_technicien", "en_cours", "cloture", "resolu", "retraite", "rejete"];
-                                const isBlocked = blockedStatuses.includes(t.status) || isAssigned;
-                                
-                                if (isBlocked) {
-                                  alert(getBlockedMessage(t, "suppression"));
-                                  setOpenActionsMenuFor(null);
-                                  return;
-                                }
-                                setConfirmDeleteTicket(t); 
-                                setOpenActionsMenuFor(null);
-                              }}
-                              disabled={loading}
-                              style={{ 
-                                width: "100%", 
-                                padding: "10px 12px", 
-                                background: "transparent", 
-                                border: "none", 
-                                borderTop: "1px solid #e5e7eb",
-                                textAlign: "left", 
-                                cursor: "pointer",
-                                color: "#b91c1c",
-                                fontSize: "14px",
-                                fontWeight: 500,
-                                display: "block",
-                                whiteSpace: "nowrap"
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = "#fee2e2";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = "transparent";
-                              }}
-                            >
-                              Supprimer
-                            </button>
-                          </div>
-                        )}
                           </div>
                         </div>
 
@@ -3847,6 +3720,80 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                   })
               )}
         </div>
+        {openActionsMenuFor && menuPosition && (() => {
+          const t = tickets.find((ticket) => ticket.id === openActionsMenuFor);
+          if (!t) return null;
+          return createPortal(
+            <div
+              ref={portalMenuRef}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                position: "fixed",
+                top: menuPosition.top,
+                left: menuPosition.left,
+                background: "white",
+                border: "1px solid #e5e7eb",
+                borderRadius: 8,
+                boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+                minWidth: 160,
+                zIndex: 10000
+              }}
+            >
+              <button
+                onClick={() => { loadTicketDetails(t.id); setOpenActionsMenuFor(null); setMenuPosition(null); }}
+                disabled={loading}
+                style={{ width: "100%", padding: "10px 12px", background: "transparent", border: "none", textAlign: "left", cursor: "pointer", color: "#111827", fontSize: "14px", display: "block", whiteSpace: "nowrap" }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f3f4f6"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+              >
+                Voir détails
+              </button>
+              <button
+                onClick={() => {
+                  const isAssigned = t.technician != null;
+                  const blockedStatuses = ["assigne_technicien", "en_cours", "cloture", "resolu", "retraite", "rejete"];
+                  const isBlocked = blockedStatuses.includes(t.status) || isAssigned;
+                  if (isBlocked) { alert(getBlockedMessage(t, "modification")); setOpenActionsMenuFor(null); setMenuPosition(null); return; }
+                  openEditModal(t);
+                  setOpenActionsMenuFor(null); setMenuPosition(null);
+                }}
+                disabled={loading}
+                style={{ width: "100%", padding: "10px 12px", background: "transparent", border: "none", borderTop: "1px solid #e5e7eb", textAlign: "left", cursor: "pointer", color: "#111827", fontSize: "14px", display: "block", whiteSpace: "nowrap" }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f3f4f6"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+              >
+                Modifier
+              </button>
+              <button
+                onClick={() => {
+                  if (loading) return;
+                  const isAssigned = t.technician != null;
+                  const blockedStatuses = ["assigne_technicien", "en_cours", "cloture", "resolu", "retraite", "rejete"];
+                  const isBlocked = blockedStatuses.includes(t.status) || isAssigned;
+                  if (isBlocked) { alert(getBlockedMessage(t, "suppression")); setOpenActionsMenuFor(null); setMenuPosition(null); return; }
+                  setConfirmDeleteTicket(t);
+                  setOpenActionsMenuFor(null); setMenuPosition(null);
+                }}
+                disabled={loading}
+                style={{ width: "100%", padding: "10px 12px", background: "transparent", border: "none", borderTop: "1px solid #e5e7eb", textAlign: "left", cursor: "pointer", color: "#b91c1c", fontSize: "14px", fontWeight: 500, display: "block", whiteSpace: "nowrap" }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#fee2e2"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+              >
+                Supprimer
+              </button>
+              <button
+                onClick={() => { setCommentModalTicketId(t.id); setModalCommentText(""); setOpenActionsMenuFor(null); setMenuPosition(null); }}
+                disabled={loading}
+                style={{ width: "100%", padding: "10px 12px", background: "transparent", border: "none", borderTop: "1px solid #e5e7eb", textAlign: "left", cursor: "pointer", color: "#111827", fontSize: "14px", display: "block", whiteSpace: "nowrap" }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "#f3f4f6"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+              >
+                Ajouter un commentaire
+              </button>
+            </div>,
+            document.body
+          );
+        })()}
         </div>
       )}
           </>
