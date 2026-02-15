@@ -2416,7 +2416,6 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                     if (noActionsAvailable) {
                       return (
                         <>
-                          <span style={{ fontStyle: "italic" }}>Aucune action disponible pour ce ticket</span>
                           <button
                             onClick={() => {
                               setCommentModalTicketId(ticketDetails.id);
