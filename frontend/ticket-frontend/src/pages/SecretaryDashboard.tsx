@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { Clock3, Users, CheckCircle2, CheckCircle, ChevronRight, ChevronLeft, ChevronDown, LayoutDashboard, Bell, Search, Clock, Monitor, Wrench, Forward, AlertTriangle, BarChart3, TrendingUp, Box, UserPlus, FileText, UserCheck, RefreshCcw, Filter, Calendar, Layers, Building2, User, FileSpreadsheet, MessageCircle, Flag, Share2, Package, Trash2, Ticket as TicketIcon, Archive, Banknote, Download, Plus, PlusCircle, Pencil, X, FolderTree, Tag, HardDrive, Laptop, Printer, Keyboard, Mouse, Phone, Tablet, Network, QrCode, MapPin, Eye, Lock, Send } from "lucide-react";
 import helpdeskLogo from "../assets/helpdesk-logo.png";
 import jsPDF from "jspdf";
@@ -371,7 +371,6 @@ function OrangeSelect({
 function SecretaryDashboard({ token }: SecretaryDashboardProps) {
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const navigate = useNavigate();
   
   // Fonction helper pour formater le numéro de ticket en "TKT-XXX"
   const formatTicketNumber = (number: number): string => {
@@ -3639,23 +3638,56 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
   }
 
   async function loadTicketDetails(ticketId: string) {
-    try {
-      const res = await fetch(`http://localhost:8000/tickets/${ticketId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setTicketDetails(data);
-        await loadTicketHistory(ticketId);
-        await loadTicketComments(ticketId);
+    // Pour l'Adjoint DSI : afficher immédiatement avec les données déjà disponibles dans allTickets
+    // puis charger les détails complets en arrière-plan
+    if (roleName === "Adjoint DSI") {
+      // Chercher le ticket dans allTickets pour un affichage instantané
+      const ticketFromList = allTickets.find(t => t.id === ticketId);
+      if (ticketFromList) {
+        // Afficher immédiatement avec les données disponibles
+        setTicketDetails(ticketFromList);
         setShowTicketDetailsPage(true);
-      } else {
-        alert("Erreur lors du chargement des détails du ticket");
+        // Réinitialiser l'historique et les commentaires pendant le chargement
+        setTicketHistory([]);
+        setTicketComments([]);
       }
-    } catch {
-      alert("Erreur lors du chargement des détails");
+      
+      // Charger les détails complets, l'historique et les commentaires en parallèle en arrière-plan
+      Promise.all([
+        fetch(`http://localhost:8000/tickets/${ticketId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).then(res => res.ok ? res.json() : null),
+        loadTicketHistory(ticketId),
+        loadTicketComments(ticketId)
+      ]).then(([fullTicketData]) => {
+        // Mettre à jour avec les données complètes une fois chargées
+        if (fullTicketData) {
+          setTicketDetails(fullTicketData);
+        }
+      }).catch(() => {
+        // En cas d'erreur, garder les données déjà affichées
+        console.error("Erreur lors du chargement des détails complets");
+      });
+    } else {
+      // Pour les autres rôles : comportement original (séquentiel)
+      try {
+        const res = await fetch(`http://localhost:8000/tickets/${ticketId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setTicketDetails(data);
+          await loadTicketHistory(ticketId);
+          await loadTicketComments(ticketId);
+          setShowTicketDetailsPage(true);
+        } else {
+          alert("Erreur lors du chargement des détails du ticket");
+        }
+      } catch {
+        alert("Erreur lors du chargement des détails");
+      }
     }
   }
 
