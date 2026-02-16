@@ -6129,36 +6129,62 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                   {[
                     "Quelle est la différence entre Matériel et Applicatif?",
                     "Mon problème concerne le réseau, quel type choisir ?"
-                  ].map((question, index) => (
-                    <div key={index} style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "12px 0",
-                      borderBottom: index < 1 ? "1px solid #f3f4f6" : "none",
-                      cursor: "pointer"
-                    }}
-                    onClick={() => {
-                      const key = `types-${index}`;
-                      setExpandedFaqCategories(prev => ({
-                        ...prev,
-                        [key]: !prev[key]
-                      }));
-                    }}
-                    >
-                      <span style={{
-                        fontSize: "15px",
-                        color: "#374151",
-                        fontFamily: "'Inter', system-ui, sans-serif"
-                      }}>
-                        {question}
-                      </span>
-                      <ChevronDown size={18} color="#6b7280" style={{
-                        transform: expandedFaqCategories[`types-${index}`] ? "rotate(180deg)" : "rotate(0deg)",
-                        transition: "transform 0.2s"
-                      }} />
-                    </div>
-                  ))}
+                  ].map((question, index) => {
+                    const key = `types-${index}`;
+                    const isExpanded = expandedFaqCategories[key];
+                    const typeAnswers = [
+                      "• Matériel (Hardware) : Concerne les équipements physiques — ordinateurs, imprimantes, écrans, claviers, souris, câbles réseau, etc.\n• Applicatif (Software) : Concerne les logiciels et applications — bugs, erreurs, installation, mise à jour, accès aux outils, etc.",
+                      ""
+                    ];
+                    return (
+                      <div key={index}>
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "12px 0",
+                          borderBottom: index < 1 ? "1px solid #f3f4f6" : "none",
+                          cursor: "pointer"
+                        }}
+                        onClick={() => {
+                          setExpandedFaqCategories(prev => ({
+                            ...prev,
+                            [key]: !prev[key]
+                          }));
+                        }}
+                        >
+                          <span style={{
+                            fontSize: "15px",
+                            color: "#374151",
+                            fontFamily: "'Inter', system-ui, sans-serif"
+                          }}>
+                            {question}
+                          </span>
+                          <ChevronDown size={18} color="#6b7280" style={{
+                            transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                            transition: "transform 0.2s"
+                          }} />
+                        </div>
+                        {isExpanded && typeAnswers[index] && (
+                          <div style={{
+                            padding: "12px 0 12px 0",
+                            borderBottom: index < 1 ? "1px solid #f3f4f6" : "none"
+                          }}>
+                            <p style={{
+                              fontSize: "14px",
+                              color: "#6b7280",
+                              lineHeight: "1.6",
+                              margin: 0,
+                              fontFamily: "'Inter', system-ui, sans-serif",
+                              whiteSpace: "pre-line"
+                            }}>
+                              {typeAnswers[index]}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
