@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import logoImage from "../assets/logo.png";
-import { User, Mail, Building2, Phone, Lock, Eye, EyeOff, ArrowRight, Headphones, Shield, Clock, ChevronDown } from "lucide-react";
+import { User, Mail, Building2, Phone, ArrowRight, Headphones, Shield, Clock, ChevronDown } from "lucide-react";
 
 const primaryOrange = "#f97316";
 const darkBg = "#0f172a";
@@ -21,10 +21,6 @@ export default function RegistrationPage() {
   const agencyDropdownRef = useRef<HTMLDivElement>(null);
   const [phone, setPhone] = useState("");
   const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,10 +50,6 @@ export default function RegistrationPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (password !== confirmPassword) {
-      setError("Les mots de passe ne correspondent pas.");
-      return;
-    }
     if (!defaultRoleId) {
       setError("Inscription temporairement indisponible.");
       return;
@@ -73,7 +65,6 @@ export default function RegistrationPage() {
           agency: agency.trim() || null,
           phone: phone.trim() || null,
           username: username.trim(),
-          password,
           role_id: defaultRoleId,
         }),
       });
@@ -304,62 +295,7 @@ export default function RegistrationPage() {
               </div>
             ))}
 
-            <div style={{ marginBottom: "16px" }}>
-              <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: darkText, marginBottom: "6px" }}>Mot de passe</label>
-              <div style={{ position: "relative" }}>
-                <Lock size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }} />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "12px 40px 12px 40px",
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    boxSizing: "border-box",
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((s) => !s)}
-                  style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                >
-                  {showPassword ? <EyeOff size={18} color="#9ca3af" /> : <Eye size={18} color="#9ca3af" />}
-                </button>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: "24px" }}>
-              <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: darkText, marginBottom: "6px" }}>Confirmer le mot de passe</label>
-              <div style={{ position: "relative" }}>
-                <Lock size={18} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#9ca3af" }} />
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  style={{
-                    width: "100%",
-                    padding: "12px 40px 12px 40px",
-                    border: `1px solid ${borderColor}`,
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    boxSizing: "border-box",
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword((s) => !s)}
-                  style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                >
-                  {showConfirmPassword ? <EyeOff size={18} color="#9ca3af" /> : <Eye size={18} color="#9ca3af" />}
-                </button>
-              </div>
-            </div>
-
+            <div style={{ marginTop: "8px", marginBottom: "0" }}>
             <button
               type="submit"
               disabled={loading}
@@ -382,6 +318,7 @@ export default function RegistrationPage() {
             >
               {loading ? "Inscription..." : <>Créer mon compte <ArrowRight size={18} /></>}
             </button>
+            </div>
           </form>
 
           <p style={{ textAlign: "center", marginTop: "24px", fontSize: "14px", color: "#6b7280" }}>
