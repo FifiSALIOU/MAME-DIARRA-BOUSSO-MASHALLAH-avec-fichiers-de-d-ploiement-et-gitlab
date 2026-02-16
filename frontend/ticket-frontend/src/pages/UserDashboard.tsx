@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import type { FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
-import { Clock, CheckCircle, LayoutDashboard, PlusCircle, Ticket as TicketIcon, ChevronLeft, ChevronRight, ChevronDown, Bell, Wrench, Monitor, Search, Send, CheckCircle2, Pencil, Trash2, RefreshCcw, FileText, UserCheck, Users, MessageCircle } from "lucide-react";
+import { Clock, CheckCircle, LayoutDashboard, PlusCircle, Ticket as TicketIcon, ChevronLeft, ChevronRight, ChevronDown, Bell, Wrench, Monitor, Search, Send, CheckCircle2, Pencil, Trash2, RefreshCcw, FileText, UserCheck, Users, MessageCircle, BookOpen, Lightbulb, HelpCircle, ChevronRight as ChevronRightIcon } from "lucide-react";
 import helpdeskLogo from "../assets/helpdesk-logo.png";
 
 interface UserDashboardProps {
@@ -583,6 +583,8 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
   const [ticketTypes, setTicketTypes] = useState<TicketTypeConfig[]>([]);
   const [ticketCategories, setTicketCategories] = useState<TicketCategoryConfig[]>([]);
   const [_notificationSearch, _setNotificationSearch] = useState<string>("");
+  const [expandedFaqCategories, setExpandedFaqCategories] = useState<Record<string, boolean>>({});
+  const [faqSearchQuery, setFaqSearchQuery] = useState<string>("");
   
   // Mettre à jour le token si le prop change
   useEffect(() => {
@@ -1832,13 +1834,15 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
           }}>Mes tickets</div>
         </div>
         <div 
-          onClick={() => {}}
+          onClick={() => changeSectionForUser("faq")}
           style={{ 
             display: "flex", 
             alignItems: "center", 
             gap: "12px", 
             padding: "10px", 
-            cursor: "pointer"
+            cursor: "pointer",
+            background: activeSection === "faq" ? "hsl(25, 95%, 53%)" : "transparent",
+            borderRadius: "6px"
           }}
         >
           <div style={{ 
@@ -1848,7 +1852,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
             alignItems: "center", 
             justifyContent: "center"
           }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(180, 180, 180, 0.7)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={activeSection === "faq" ? "white" : "rgba(180, 180, 180, 0.7)"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -1858,7 +1862,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
             fontSize: "15px",
             fontFamily: "'Inter', system-ui, sans-serif",
             fontWeight: "500",
-            color: "white"
+            color: activeSection === "faq" ? "white" : "white"
           }}>FAQ & Aide</div>
         </div>
         </div>
@@ -1990,7 +1994,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
               color: "#111827",
               fontFamily: "system-ui, -apple-system, sans-serif"
             }}>
-              {activeSection === "notifications" ? "Notifications" : activeSection === "tickets" ? "Tickets" : "Tableau de bord"}
+              {activeSection === "notifications" ? "Notifications" : activeSection === "tickets" ? "Tickets" : activeSection === "faq" ? "FAQ & Aide" : "Tableau de bord"}
             </div>
             <div style={{ 
               fontSize: "13px", 
@@ -2002,7 +2006,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
               marginLeft: 0,
               textAlign: "left"
             }}>
-              {activeSection === "notifications" ? `${unreadCount} notification${unreadCount > 1 ? "s" : ""} non lue${unreadCount > 1 ? "s" : ""}` : activeSection === "tickets" ? "Gérez tous vos tickets" : "Vue d'ensemble de votre\u00A0activité"}
+              {activeSection === "notifications" ? `${unreadCount} notification${unreadCount > 1 ? "s" : ""} non lue${unreadCount > 1 ? "s" : ""}` : activeSection === "tickets" ? "Gérez tous vos tickets" : activeSection === "faq" ? "Trouvez rapidement des réponses à vos questions" : "Vue d'ensemble de votre\u00A0activité"}
             </div>
           </div>
 
@@ -5629,6 +5633,659 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                     Sélectionnez un ticket pour voir les détails
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Section FAQ & Aide */}
+        {activeSection === "faq" && (
+          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "20px 0" }}>
+            {/* Header Centre d'aide */}
+            <div style={{
+              textAlign: "center",
+              marginBottom: "48px",
+              padding: "40px 20px",
+              background: "linear-gradient(135deg, rgba(255, 126, 0, 0.1) 0%, rgba(255, 126, 0, 0.05) 100%)",
+              borderRadius: "16px"
+            }}>
+              <div style={{
+                width: "80px",
+                height: "80px",
+                margin: "0 auto 24px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "hsl(25, 95%, 53%)",
+                borderRadius: "16px"
+              }}>
+                <BookOpen size={48} color="white" strokeWidth={2} />
+              </div>
+              <h1 style={{
+                fontSize: "32px",
+                fontWeight: "700",
+                color: "#111827",
+                marginBottom: "12px",
+                fontFamily: "'Inter', system-ui, sans-serif"
+              }}>
+                Centre d'aide
+              </h1>
+              <p style={{
+                fontSize: "16px",
+                color: "#6b7280",
+                marginBottom: "32px",
+                fontFamily: "'Inter', system-ui, sans-serif"
+              }}>
+                Trouvez rapidement des réponses à vos questions
+              </p>
+              <div style={{
+                maxWidth: "600px",
+                margin: "0 auto",
+                position: "relative"
+              }}>
+                <Search size={20} color="#9ca3af" style={{
+                  position: "absolute",
+                  left: "16px",
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  pointerEvents: "none"
+                }} />
+                <input
+                  type="text"
+                  placeholder="Rechercher une question..."
+                  value={faqSearchQuery}
+                  onChange={(e) => setFaqSearchQuery(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "14px 16px 14px 48px",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "12px",
+                    fontSize: "15px",
+                    fontFamily: "'Inter', system-ui, sans-serif",
+                    outline: "none",
+                    transition: "border-color 0.2s"
+                  }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = "hsl(25, 95%, 53%)"}
+                  onBlur={(e) => e.currentTarget.style.borderColor = "#e5e7eb"}
+                />
+              </div>
+            </div>
+
+            {/* Section Guides rapides */}
+            <div style={{ marginBottom: "48px" }}>
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginBottom: "24px"
+              }}>
+                <Lightbulb size={24} color="hsl(25, 95%, 53%)" strokeWidth={2} />
+                <h2 style={{
+                  fontSize: "24px",
+                  fontWeight: "700",
+                  color: "#111827",
+                  fontFamily: "'Inter', system-ui, sans-serif"
+                }}>
+                  Guides rapides
+                </h2>
+              </div>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: "24px"
+              }}>
+                {/* Carte 1: Créer votre premier ticket */}
+                <div style={{
+                  background: "white",
+                  borderRadius: "12px",
+                  padding: "24px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                  border: "1px solid #f3f4f6"
+                }}>
+                  <div style={{
+                    width: "56px",
+                    height: "56px",
+                    borderRadius: "12px",
+                    background: "rgba(255, 126, 0, 0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: "20px"
+                  }}>
+                    <TicketIcon size={28} color="hsl(25, 95%, 53%)" strokeWidth={2} />
+                  </div>
+                  <h3 style={{
+                    fontSize: "18px",
+                    fontWeight: "700",
+                    color: "#111827",
+                    marginBottom: "8px",
+                    fontFamily: "'Inter', system-ui, sans-serif"
+                  }}>
+                    Créer votre premier ticket
+                  </h3>
+                  <p style={{
+                    fontSize: "14px",
+                    color: "#6b7280",
+                    marginBottom: "20px",
+                    lineHeight: "1.6",
+                    fontFamily: "'Inter', system-ui, sans-serif"
+                  }}>
+                    Apprenez à soumettre une demande d'assistance en quelques étapes simples.
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {[
+                      "Cliquez sur « Nouveau ticket »",
+                      "Sélectionnez le type (Matériel/Applicatif)",
+                      "Remplissez le titre et la description",
+                      "Choisissez la priorité",
+                      "Cliquez sur « Soumettre »"
+                    ].map((step, index) => (
+                      <div key={index} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div style={{
+                          width: "24px",
+                          height: "24px",
+                          borderRadius: "50%",
+                          background: "#f3f4f6",
+                          border: "2px solid hsl(25, 95%, 53%)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          color: "hsl(25, 95%, 53%)"
+                        }}>
+                          {index + 1}
+                        </div>
+                        <span style={{ fontSize: "14px", color: "#374151", fontFamily: "'Inter', system-ui, sans-serif" }}>
+                          {step}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Carte 2: Suivre vos tickets */}
+                <div style={{
+                  background: "white",
+                  borderRadius: "12px",
+                  padding: "24px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                  border: "1px solid #f3f4f6"
+                }}>
+                  <div style={{
+                    width: "56px",
+                    height: "56px",
+                    borderRadius: "12px",
+                    background: "rgba(255, 126, 0, 0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: "20px"
+                  }}>
+                    <Clock size={28} color="hsl(25, 95%, 53%)" strokeWidth={2} />
+                  </div>
+                  <h3 style={{
+                    fontSize: "18px",
+                    fontWeight: "700",
+                    color: "#111827",
+                    marginBottom: "8px",
+                    fontFamily: "'Inter', system-ui, sans-serif"
+                  }}>
+                    Suivre vos tickets
+                  </h3>
+                  <p style={{
+                    fontSize: "14px",
+                    color: "#6b7280",
+                    marginBottom: "20px",
+                    lineHeight: "1.6",
+                    fontFamily: "'Inter', system-ui, sans-serif"
+                  }}>
+                    Gardez un œil sur l'avancement de vos demandes.
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {[
+                      "Allez dans « Tickets »",
+                      "Utilisez les filtres pour trouver un ticket",
+                      "Cliquez sur un ticket pour voir les détails",
+                      "Consultez l'historique et les commentaires"
+                    ].map((step, index) => (
+                      <div key={index} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div style={{
+                          width: "24px",
+                          height: "24px",
+                          borderRadius: "50%",
+                          background: "#f3f4f6",
+                          border: "2px solid hsl(25, 95%, 53%)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          color: "hsl(25, 95%, 53%)"
+                        }}>
+                          {index + 1}
+                        </div>
+                        <span style={{ fontSize: "14px", color: "#374151", fontFamily: "'Inter', system-ui, sans-serif" }}>
+                          {step}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Carte 3: Bien décrire un problème */}
+                <div style={{
+                  background: "white",
+                  borderRadius: "12px",
+                  padding: "24px",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                  border: "1px solid #f3f4f6"
+                }}>
+                  <div style={{
+                    width: "56px",
+                    height: "56px",
+                    borderRadius: "12px",
+                    background: "rgba(255, 126, 0, 0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: "20px"
+                  }}>
+                    <Lightbulb size={28} color="hsl(25, 95%, 53%)" strokeWidth={2} />
+                  </div>
+                  <h3 style={{
+                    fontSize: "18px",
+                    fontWeight: "700",
+                    color: "#111827",
+                    marginBottom: "8px",
+                    fontFamily: "'Inter', system-ui, sans-serif"
+                  }}>
+                    Bien décrire un problème
+                  </h3>
+                  <p style={{
+                    fontSize: "14px",
+                    color: "#6b7280",
+                    marginBottom: "20px",
+                    lineHeight: "1.6",
+                    fontFamily: "'Inter', system-ui, sans-serif"
+                  }}>
+                    Une bonne description accélère la résolution.
+                  </p>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {[
+                      "Soyez précis : que faisiez-vous quand le problème est apparu ?",
+                      "Décrivez le message d'erreur exact",
+                      "Indiquez si le problème est récurrent",
+                      "Mentionnez les solutions déjà tentées"
+                    ].map((step, index) => (
+                      <div key={index} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div style={{
+                          width: "24px",
+                          height: "24px",
+                          borderRadius: "50%",
+                          background: "#f3f4f6",
+                          border: "2px solid hsl(25, 95%, 53%)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          color: "hsl(25, 95%, 53%)"
+                        }}>
+                          {index + 1}
+                        </div>
+                        <span style={{ fontSize: "14px", color: "#374151", fontFamily: "'Inter', system-ui, sans-serif" }}>
+                          {step}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Section Questions fréquentes */}
+            <div>
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginBottom: "24px"
+              }}>
+                <div style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  border: "2px solid hsl(25, 95%, 53%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}>
+                  <HelpCircle size={18} color="hsl(25, 95%, 53%)" strokeWidth={2} />
+                </div>
+                <h2 style={{
+                  fontSize: "24px",
+                  fontWeight: "700",
+                  color: "#111827",
+                  fontFamily: "'Inter', system-ui, sans-serif"
+                }}>
+                  Questions fréquentes
+                </h2>
+              </div>
+
+              {/* Catégorie Tickets */}
+              <div style={{
+                background: "white",
+                borderRadius: "12px",
+                padding: "24px",
+                marginBottom: "16px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                border: "1px solid #f3f4f6"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                  <div style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "8px",
+                    background: "rgba(59, 130, 246, 0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}>
+                    <TicketIcon size={20} color="#3b82f6" strokeWidth={2} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{
+                      fontSize: "18px",
+                      fontWeight: "700",
+                      color: "#111827",
+                      marginBottom: "4px",
+                      fontFamily: "'Inter', system-ui, sans-serif"
+                    }}>
+                      Tickets
+                    </h3>
+                    <p style={{
+                      fontSize: "14px",
+                      color: "#6b7280",
+                      fontFamily: "'Inter', system-ui, sans-serif"
+                    }}>
+                      5 question(s)
+                    </p>
+                  </div>
+                </div>
+                <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "16px" }}>
+                  {[
+                    "Comment créer un nouveau ticket ?",
+                    "Comment suivre l'état de mon ticket ?",
+                    "Que signifient les différents statuts ?",
+                    "Puis-je modifier un ticket après l'avoir soumis ?",
+                    "Comment relancer un ticket résolu ?"
+                  ].map((question, index) => (
+                    <div key={index} style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "12px 0",
+                      borderBottom: index < 4 ? "1px solid #f3f4f6" : "none",
+                      cursor: "pointer"
+                    }}
+                    onClick={() => {
+                      const key = `tickets-${index}`;
+                      setExpandedFaqCategories(prev => ({
+                        ...prev,
+                        [key]: !prev[key]
+                      }));
+                    }}
+                    >
+                      <span style={{
+                        fontSize: "15px",
+                        color: "#374151",
+                        fontFamily: "'Inter', system-ui, sans-serif"
+                      }}>
+                        {question}
+                      </span>
+                      <ChevronDown size={18} color="#6b7280" style={{
+                        transform: expandedFaqCategories[`tickets-${index}`] ? "rotate(180deg)" : "rotate(0deg)",
+                        transition: "transform 0.2s"
+                      }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Catégorie Priorités */}
+              <div style={{
+                background: "white",
+                borderRadius: "12px",
+                padding: "24px",
+                marginBottom: "16px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                border: "1px solid #f3f4f6"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                  <div style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "8px",
+                    background: "rgba(245, 158, 11, 0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}>
+                    <HelpCircle size={20} color="#f59e0b" strokeWidth={2} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{
+                      fontSize: "18px",
+                      fontWeight: "700",
+                      color: "#111827",
+                      marginBottom: "4px",
+                      fontFamily: "'Inter', system-ui, sans-serif"
+                    }}>
+                      Priorités
+                    </h3>
+                    <p style={{
+                      fontSize: "14px",
+                      color: "#6b7280",
+                      fontFamily: "'Inter', system-ui, sans-serif"
+                    }}>
+                      2 question(s)
+                    </p>
+                  </div>
+                </div>
+                <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "16px" }}>
+                  {[
+                    "Comment choisir la bonne priorité ?",
+                    "Quel est le délai de traitement selon la priorité ?"
+                  ].map((question, index) => (
+                    <div key={index} style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "12px 0",
+                      borderBottom: index < 1 ? "1px solid #f3f4f6" : "none",
+                      cursor: "pointer"
+                    }}
+                    onClick={() => {
+                      const key = `priorites-${index}`;
+                      setExpandedFaqCategories(prev => ({
+                        ...prev,
+                        [key]: !prev[key]
+                      }));
+                    }}
+                    >
+                      <span style={{
+                        fontSize: "15px",
+                        color: "#374151",
+                        fontFamily: "'Inter', system-ui, sans-serif"
+                      }}>
+                        {question}
+                      </span>
+                      <ChevronDown size={18} color="#6b7280" style={{
+                        transform: expandedFaqCategories[`priorites-${index}`] ? "rotate(180deg)" : "rotate(0deg)",
+                        transition: "transform 0.2s"
+                      }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Catégorie Types de problèmes */}
+              <div style={{
+                background: "white",
+                borderRadius: "12px",
+                padding: "24px",
+                marginBottom: "16px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                border: "1px solid #f3f4f6"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                  <div style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "8px",
+                    background: "rgba(34, 197, 94, 0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}>
+                    <Monitor size={20} color="#22c55e" strokeWidth={2} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{
+                      fontSize: "18px",
+                      fontWeight: "700",
+                      color: "#111827",
+                      marginBottom: "4px",
+                      fontFamily: "'Inter', system-ui, sans-serif"
+                    }}>
+                      Types de problèmes
+                    </h3>
+                    <p style={{
+                      fontSize: "14px",
+                      color: "#6b7280",
+                      fontFamily: "'Inter', system-ui, sans-serif"
+                    }}>
+                      2 question(s)
+                    </p>
+                  </div>
+                </div>
+                <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "16px" }}>
+                  {[
+                    "Quelle est la différence entre Matériel et Applicatif?",
+                    "Mon problème concerne le réseau, quel type choisir ?"
+                  ].map((question, index) => (
+                    <div key={index} style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "12px 0",
+                      borderBottom: index < 1 ? "1px solid #f3f4f6" : "none",
+                      cursor: "pointer"
+                    }}
+                    onClick={() => {
+                      const key = `types-${index}`;
+                      setExpandedFaqCategories(prev => ({
+                        ...prev,
+                        [key]: !prev[key]
+                      }));
+                    }}
+                    >
+                      <span style={{
+                        fontSize: "15px",
+                        color: "#374151",
+                        fontFamily: "'Inter', system-ui, sans-serif"
+                      }}>
+                        {question}
+                      </span>
+                      <ChevronDown size={18} color="#6b7280" style={{
+                        transform: expandedFaqCategories[`types-${index}`] ? "rotate(180deg)" : "rotate(0deg)",
+                        transition: "transform 0.2s"
+                      }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Catégorie Mon compte */}
+              <div style={{
+                background: "white",
+                borderRadius: "12px",
+                padding: "24px",
+                marginBottom: "16px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                border: "1px solid #f3f4f6"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                  <div style={{
+                    width: "40px",
+                    height: "40px",
+                    borderRadius: "8px",
+                    background: "rgba(168, 85, 247, 0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}>
+                    <UserCheck size={20} color="#a855f7" strokeWidth={2} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{
+                      fontSize: "18px",
+                      fontWeight: "700",
+                      color: "#111827",
+                      marginBottom: "4px",
+                      fontFamily: "'Inter', system-ui, sans-serif"
+                    }}>
+                      Mon compte
+                    </h3>
+                    <p style={{
+                      fontSize: "14px",
+                      color: "#6b7280",
+                      fontFamily: "'Inter', system-ui, sans-serif"
+                    }}>
+                      3 question(s)
+                    </p>
+                  </div>
+                </div>
+                <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: "16px" }}>
+                  {[
+                    "Comment me connecter à l'application?",
+                    "J'ai oublié mon mot de passe, que faire ?",
+                    "Qui contacter en cas d'urgence ?"
+                  ].map((question, index) => (
+                    <div key={index} style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "12px 0",
+                      borderBottom: index < 2 ? "1px solid #f3f4f6" : "none",
+                      cursor: "pointer"
+                    }}
+                    onClick={() => {
+                      const key = `compte-${index}`;
+                      setExpandedFaqCategories(prev => ({
+                        ...prev,
+                        [key]: !prev[key]
+                      }));
+                    }}
+                    >
+                      <span style={{
+                        fontSize: "15px",
+                        color: "#374151",
+                        fontFamily: "'Inter', system-ui, sans-serif"
+                      }}>
+                        {question}
+                      </span>
+                      <ChevronDown size={18} color="#6b7280" style={{
+                        transform: expandedFaqCategories[`compte-${index}`] ? "rotate(180deg)" : "rotate(0deg)",
+                        transition: "transform 0.2s"
+                      }} />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
