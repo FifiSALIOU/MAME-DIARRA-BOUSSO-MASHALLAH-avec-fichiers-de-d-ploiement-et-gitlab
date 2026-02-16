@@ -329,6 +329,7 @@ function DSIDashboard({ token }: DSIDashboardProps) {
   const [selectedAdjoint, setSelectedAdjoint] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [ticketsSectionReady, setTicketsSectionReady] = useState(false);
+  const ticketsSectionReadyRef = useRef<number | null>(null);
   const [metrics, setMetrics] = useState<{
     openTickets: number;
     avgResolutionTime: string | null;
@@ -398,8 +399,8 @@ function DSIDashboard({ token }: DSIDashboardProps) {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Déterminer activeSection depuis l'URL (DSI : uniquement routes /dashboard/dsi)
-  const getActiveSection = (): string => {
+  // Fonction pour déterminer la section depuis l'URL au montage
+  const getInitialSection = (): string => {
     const path = location.pathname;
     if (path === "/dashboard/dsi/notifications") return "notifications";
     if (path === "/dashboard/dsi/audit-logs") return "audit-logs";
@@ -417,8 +418,99 @@ function DSIDashboard({ token }: DSIDashboardProps) {
     if (path === "/dashboard/dsi") return "dashboard";
     return "dashboard";
   };
-  const activeSection = getActiveSection();
+  
+  // État local pour la navigation instantanée (DSI)
+  const [activeSection, setActiveSection] = useState<string>(getInitialSection());
+  // Flag pour désactiver la synchronisation URL lors des clics internes (DSI)
+  const isInternalNavigationRef = useRef(false);
+  
+  // Déterminer activeSection depuis l'URL (DSI : uniquement routes /dashboard/dsi)
+  const getActiveSectionFromPath = (): string => {
+    const path = location.pathname;
+    if (path === "/dashboard/dsi/notifications") return "notifications";
+    if (path === "/dashboard/dsi/audit-logs") return "audit-logs";
+    if (path === "/dashboard/dsi/maintenance") return "maintenance";
+    if (path === "/dashboard/dsi/reports") return "reports";
+    if (path === "/dashboard/dsi/users") return "users";
+    if (path === "/dashboard/dsi/roles") return "roles";
+    if (path === "/dashboard/dsi/technicians") return "technicians";
+    if (path === "/dashboard/dsi/actifs") return "actifs";
+    if (path === "/dashboard/dsi/types") return "types";
+    if (path === "/dashboard/dsi/categories") return "categories";
+    if (path === "/dashboard/dsi/parametres/priorites") return "priorites";
+    if (path === "/dashboard/dsi/tickets") return "tickets";
+    if (path === "/dashboard/dsi/departements") return "departements";
+    if (path === "/dashboard/dsi") return "dashboard";
+    return "dashboard";
+  };
+  
+  // Pour DSI : utiliser activeSection directement pour une navigation instantanée
+  // La synchronisation avec l'URL se fait uniquement au montage ou si l'URL change depuis l'extérieur
   const showTicketsPlaceholder = activeSection === "tickets" && !ticketsSectionReady;
+
+  // Afficher la section Tickets : d'abord "En chargement", puis le contenu au frame suivant (DSI)
+  // Le chargement ne bloque pas la navigation - on peut changer de section même pendant "En chargement"
+  useEffect(() => {
+    // Annuler immédiatement tout requestAnimationFrame en cours quand on change de section
+    if (ticketsSectionReadyRef.current !== null) {
+      cancelAnimationFrame(ticketsSectionReadyRef.current);
+      ticketsSectionReadyRef.current = null;
+    }
+    
+    if (activeSection === "tickets") {
+      // Utiliser requestAnimationFrame pour afficher "En chargement" brièvement
+      // Mais la navigation reste possible même pendant ce temps
+      ticketsSectionReadyRef.current = requestAnimationFrame(() => {
+        // Vérifier qu'on est toujours sur la section Tickets avant de mettre à jour
+        if (activeSection === "tickets") {
+          setTicketsSectionReady(true);
+        }
+        ticketsSectionReadyRef.current = null;
+      });
+      return () => {
+        if (ticketsSectionReadyRef.current !== null) {
+          cancelAnimationFrame(ticketsSectionReadyRef.current);
+          ticketsSectionReadyRef.current = null;
+        }
+        setTicketsSectionReady(false);
+      };
+    } else {
+      // Réinitialiser immédiatement quand on quitte la section Tickets
+      setTicketsSectionReady(false);
+    }
+  }, [activeSection]);
+
+  // Fonction helper pour changer de section (DSI) - désactive la synchronisation URL temporairement
+  const changeSectionForDSI = (section: string) => {
+    // Annuler immédiatement tout chargement en cours de la section Tickets
+    if (ticketsSectionReadyRef.current !== null) {
+      cancelAnimationFrame(ticketsSectionReadyRef.current);
+      ticketsSectionReadyRef.current = null;
+    }
+    setTicketsSectionReady(false);
+    
+    // Changer de section immédiatement
+    isInternalNavigationRef.current = true;
+    setActiveSection(section);
+    // Réactiver la synchronisation après un court délai pour permettre les changements d'URL externes
+    setTimeout(() => {
+      isInternalNavigationRef.current = false;
+    }, 100);
+  };
+
+  // Synchroniser activeSection avec l'URL pour DSI (uniquement au montage ou si l'URL change depuis l'extérieur)
+  // La navigation interne utilise maintenant changeSectionForDSI pour être instantanée
+  useEffect(() => {
+    // Ignorer la synchronisation si c'est une navigation interne (clic utilisateur)
+    if (isInternalNavigationRef.current) {
+      return;
+    }
+    const sectionFromPath = getActiveSectionFromPath();
+    // Ne mettre à jour que si la section a vraiment changé pour éviter les re-renders inutiles
+    if (activeSection !== sectionFromPath) {
+      setActiveSection(sectionFromPath);
+    }
+  }, [location.pathname, activeSection]);
 
   // Fermer la vue "détails du ticket" quand on change de section (ex: Actifs, Types, Catégories) pour afficher le contenu de la section
   useEffect(() => {
@@ -1817,7 +1909,7 @@ function DSIDashboard({ token }: DSIDashboardProps) {
     
     // Ouvrir la vue des tickets avec notifications dans le contenu principal
     setShowNotifications(false);
-    navigate(`${getRoutePrefix()}/notifications`);
+    changeSectionForDSI("notifications");
     setSelectedNotificationTicket(notification.ticket_id);
     
     // Charger les tickets avec notifications
@@ -2161,7 +2253,7 @@ function DSIDashboard({ token }: DSIDashboardProps) {
       setNewTicketCategory("");
       setNewTicketPriority("");
       setShowCreateTicketModal(false);
-      navigate(getRoutePrefix());
+      changeSectionForDSI("dashboard");
       void loadTickets();
       void loadNotifications();
       void loadUnreadCount();
@@ -6258,7 +6350,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
             setTicketHistory([]);
             setTicketComments([]);
             setDetailCommentText("");
-            navigate(getRoutePrefix());
+            changeSectionForDSI("dashboard");
           }}
           style={{ 
             display: "flex", 
@@ -6304,7 +6396,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
             setTicketComments([]);
             setDetailCommentText("");
             setStatusFilter("all");
-            navigate(`${getRoutePrefix()}/tickets`);
+            changeSectionForDSI("tickets");
           }}
           style={{ 
             display: "flex", 
@@ -6332,7 +6424,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         {(userRole === "Admin" || userRole === "DSI") && (
           <div 
             onClick={() => {
-              navigate(`${getRoutePrefix()}/actifs`);
+              changeSectionForDSI("actifs");
             }}
             style={{ 
               display: "flex", 
@@ -6354,7 +6446,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {userRole === "Admin" && (
           <div 
-            onClick={() => navigate(`${getRoutePrefix()}/types`)}
+            onClick={() => changeSectionForDSI("types")}
             style={{ 
               display: "flex", 
               alignItems: "center", 
@@ -6375,7 +6467,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {userRole === "Admin" && (
           <div 
-            onClick={() => navigate(`${getRoutePrefix()}/categories`)}
+            onClick={() => changeSectionForDSI("categories")}
             style={{ 
               display: "flex", 
               alignItems: "center", 
@@ -6396,7 +6488,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {userRole !== "Admin" && (
           <div 
-            onClick={() => navigate(`${getRoutePrefix()}/types`)}
+            onClick={() => changeSectionForDSI("types")}
             style={{ 
               display: "flex", 
               alignItems: "center", 
@@ -6417,7 +6509,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {userRole !== "Admin" && (
           <div 
-            onClick={() => navigate(`${getRoutePrefix()}/categories`)}
+            onClick={() => changeSectionForDSI("categories")}
             style={{ 
               display: "flex", 
               alignItems: "center", 
@@ -6438,7 +6530,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {(userRole === "DSI" || userRole === "Admin") && (
           <div 
-            onClick={() => navigate(`${getRoutePrefix()}/parametres/priorites`)}
+            onClick={() => changeSectionForDSI("priorites")}
             style={{ 
               display: "flex", 
               alignItems: "center", 
@@ -6459,7 +6551,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {userRole !== "Admin" && (
           <div 
-            onClick={() => navigate(`${getRoutePrefix()}/technicians`)}
+            onClick={() => changeSectionForDSI("technicians")}
             style={{ 
               display: "flex", 
               alignItems: "center", 
@@ -6480,7 +6572,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {userRole === "Admin" && (
           <div 
-            onClick={() => navigate(`${getRoutePrefix()}/users`)}
+            onClick={() => changeSectionForDSI("users")}
             style={{ 
               display: "flex", 
               alignItems: "center", 
@@ -6506,7 +6598,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {userRole === "Admin" && (
           <div 
-            onClick={() => navigate(`${getRoutePrefix()}/groupes`)}
+            onClick={() => changeSectionForDSI("groupes")}
             style={{ 
               display: "flex", 
               alignItems: "center", 
@@ -6532,7 +6624,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {userRole === "Admin" && (
           <div 
-            onClick={() => navigate(`${getRoutePrefix()}/roles`)}
+            onClick={() => changeSectionForDSI("roles")}
             style={{ 
               display: "flex", 
               alignItems: "center", 
@@ -6553,7 +6645,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {/* Agences (déplacé au-dessus de Statistiques) */}
         <div 
-          onClick={() => navigate(`${getRoutePrefix()}/departements`)}
+          onClick={() => changeSectionForDSI("departements")}
           style={{ 
             display: "flex", 
             alignItems: "center", 
@@ -6575,7 +6667,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         <div 
           onClick={() => {
             setSelectedReport("statistiques");
-            navigate(`${getRoutePrefix()}/reports`);
+            changeSectionForDSI("reports");
           }}
           style={{ 
             display: "flex", 
@@ -6595,7 +6687,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         </div>
         {userRole === "Admin" && (
           <div 
-            onClick={() => navigate(`${getRoutePrefix()}/maintenance`)}
+            onClick={() => changeSectionForDSI("maintenance")}
             style={{ 
               display: "flex", 
               alignItems: "center", 
@@ -6618,7 +6710,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {userRole === "Admin" && (
           <div 
-            onClick={() => navigate(`${getRoutePrefix()}/audit-logs`)}
+            onClick={() => changeSectionForDSI("audit-logs")}
             style={{ 
               display: "flex", 
               alignItems: "center", 
@@ -6680,7 +6772,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                 gap: "4px"
               }}>
                 <div
-                  onClick={() => navigate(`${getRoutePrefix()}/parametres/apparence`)}
+                  onClick={() => changeSectionForDSI("apparence")}
                   style={{
                     padding: "8px 12px",
                     cursor: "pointer",
@@ -6693,7 +6785,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                   Apparence
                 </div>
                 <div
-                  onClick={() => navigate(`${getRoutePrefix()}/parametres/email`)}
+                  onClick={() => changeSectionForDSI("email")}
                   style={{
                     padding: "8px 12px",
                     cursor: "pointer",
@@ -6706,7 +6798,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                   Email
                 </div>
                 <div
-                  onClick={() => navigate(`${getRoutePrefix()}/parametres/securite`)}
+                  onClick={() => changeSectionForDSI("securite")}
                   style={{
                     padding: "8px 12px",
                     cursor: "pointer",
@@ -6734,7 +6826,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           }} />
           {/* Bouton Notifications */}
           <div
-            onClick={() => navigate(`${getRoutePrefix()}/notifications`)}
+            onClick={() => changeSectionForDSI("notifications")}
             style={{
               display: "flex",
               alignItems: "center",
@@ -9654,7 +9746,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     </h3>
                     <button
                       onClick={() => {
-                        navigate(getRoutePrefix());
+                        changeSectionForDSI("dashboard");
                         setSelectedNotificationTicket(null);
                         setSelectedNotificationTicketDetails(null);
                       }}
