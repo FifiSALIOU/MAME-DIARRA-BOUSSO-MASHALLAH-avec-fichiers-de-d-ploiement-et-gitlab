@@ -16,11 +16,11 @@ from ..security import (
     authenticate_user,
     create_access_token,
     create_password_reset_token,
-    create_set_initial_password_token,
     decode_password_reset_token,
     decode_set_initial_password_token,
     get_password_hash,
     get_current_user,
+    verify_password,
 )
 
 router = APIRouter()
@@ -63,32 +63,30 @@ def register_user(
             detail="User with same email or username already exists",
         )
 
-    # Mot de passe temporaire : l'utilisateur définira le sien via le lien envoyé par email (pas d'envoi en clair)
-    temporary_password = secrets.token_urlsafe(32)
+    # Mot de passe par défaut : envoyé par email ; l'utilisateur devra le changer à la première connexion
+    default_password = secrets.token_urlsafe(10)  # mot de passe par défaut lisible
     db_user = models.User(
         full_name=user_in.full_name,
         email=user_in.email,
         agency=user_in.agency,
         phone=user_in.phone,
         username=user_in.username,
-        password_hash=get_password_hash(temporary_password),
+        password_hash=get_password_hash(default_password),
+        must_change_password=True,
         role_id=user_in.role_id,
     )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
 
-    # Envoyer l'email de bienvenue avec lien « première connexion / définition du mot de passe » (sans mot de passe)
+    # Envoyer l'email avec identifiants (username + mot de passe par défaut)
     if user_in.email and user_in.email.strip():
-        token = create_set_initial_password_token(db_user.id)
-        app_base_url = os.getenv("APP_BASE_URL", "http://localhost:5173")
-        set_password_link = f"{app_base_url}/reset-password?token={token}"
         background_tasks.add_task(
             email_service.send_registration_welcome,
             to_email=user_in.email.strip(),
             full_name=user_in.full_name,
             username=user_in.username,
-            set_password_link=set_password_link,
+            password=default_password,
         )
 
     return db_user
@@ -127,7 +125,11 @@ def login_for_access_token(
     access_token = create_access_token(
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
-    return schemas.Token(access_token=access_token)
+    must_change = getattr(user, "must_change_password", False)
+    return schemas.Token(
+        access_token=access_token,
+        must_change_password=must_change,
+    )
 
 
 @router.post("/forgot-password")
@@ -188,8 +190,33 @@ def reset_password(
             detail="Le mot de passe doit contenir au moins 6 caractères",
         )
     user.password_hash = get_password_hash(body.new_password)
+    if getattr(user, "must_change_password", None) is True:
+        user.must_change_password = False
     db.commit()
     return {"message": "Mot de passe mis à jour. Vous pouvez vous connecter."}
+
+
+@router.post("/change-password")
+def change_password(
+    body: schemas.ChangePasswordRequest,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Permet à l'utilisateur connecté de changer son mot de passe (ex. après première connexion)."""
+    if not verify_password(body.current_password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mot de passe actuel incorrect",
+        )
+    if not body.new_password or len(body.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le nouveau mot de passe doit contenir au moins 6 caractères",
+        )
+    current_user.password_hash = get_password_hash(body.new_password)
+    current_user.must_change_password = False
+    db.commit()
+    return {"message": "Mot de passe mis à jour. Vous pouvez continuer."}
 
 
 @router.get("/me", response_model=schemas.UserRead)

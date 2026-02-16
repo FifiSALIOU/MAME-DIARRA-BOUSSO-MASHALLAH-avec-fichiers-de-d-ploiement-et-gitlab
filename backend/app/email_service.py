@@ -1333,14 +1333,15 @@ Cordialement,
         to_email: str,
         full_name: str,
         username: str,
-        set_password_link: str
+        password: str
     ) -> bool:
         """
-        Envoie un email de bienvenue avec un lien pour définir son mot de passe (première connexion).
-        Le mot de passe n'est plus envoyé par email.
+        Envoie un email de bienvenue avec identifiants (username + mot de passe par défaut).
+        L'utilisateur devra changer ce mot de passe à sa première connexion.
         """
         if not to_email or not to_email.strip():
             return False
+        login_url = f"{self.app_base_url}/login"
         subject = "Bienvenue - Confirmation de votre inscription - HelpDesk"
         body = f"""Bonjour {full_name},
 
@@ -1348,12 +1349,13 @@ Bienvenue ! Votre inscription a bien été enregistrée.
 
 Ce message confirme la création de votre compte sur le système HelpDesk (Caisse de Sécurité Sociale).
 
-Nom d'utilisateur : {username}
+Vos identifiants de connexion :
+- Nom d'utilisateur : {username}
+- Mot de passe : {password}
 
-Pour activer votre compte et définir votre mot de passe, cliquez sur le lien suivant (valide 24 heures) :
-{set_password_link}
+Connectez-vous à l'application ici : {login_url}
 
-Après avoir défini votre mot de passe, vous pourrez vous connecter à l'application.
+À votre première connexion, vous devrez réinitialiser ce mot de passe pour en définir un personnel.
 
 Cordialement,
 {self.sender_name}
@@ -1364,10 +1366,13 @@ Cordialement,
     <p>Bonjour <strong>{full_name}</strong>,</p>
     <p><strong>Bienvenue !</strong> Votre inscription a bien été enregistrée.</p>
     <p>Ce message confirme la création de votre compte sur le système HelpDesk (Caisse de Sécurité Sociale).</p>
-    <p><strong>Nom d'utilisateur :</strong> <code>{username}</code></p>
-    <p>Pour activer votre compte et définir votre mot de passe, cliquez sur le lien suivant (valide 24 heures) :</p>
-    <p><a href="{set_password_link}">Définir mon mot de passe</a></p>
-    <p>Après avoir défini votre mot de passe, vous pourrez vous connecter à l'application.</p>
+    <p><strong>Vos identifiants de connexion :</strong></p>
+    <ul>
+        <li>Nom d'utilisateur : <code>{username}</code></li>
+        <li>Mot de passe : <code>{password}</code></li>
+    </ul>
+    <p>Connectez-vous à l'application <a href="{login_url}">ici</a>.</p>
+    <p>À votre première connexion, vous devrez réinitialiser ce mot de passe pour en définir un personnel.</p>
     <p>Cordialement,<br>{self.sender_name}</p>
 </body>
 </html>

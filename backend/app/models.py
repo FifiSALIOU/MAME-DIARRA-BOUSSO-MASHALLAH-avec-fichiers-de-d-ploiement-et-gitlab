@@ -46,6 +46,7 @@ class User(Base):
 
     username = Column(String(100), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
+    must_change_password = Column(Boolean, default=False)  # True après inscription : oblige à changer le mot de passe à la 1ère connexion
 
     role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
     role = relationship("Role", back_populates="users")

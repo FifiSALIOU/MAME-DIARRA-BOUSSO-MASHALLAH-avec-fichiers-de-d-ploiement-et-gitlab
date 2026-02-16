@@ -37,7 +37,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     username: str
-    password: str
+    password: Optional[str] = None  # Optionnel à l'inscription : un mot de passe par défaut est envoyé par email
     role_id: int
     send_credentials_email: Optional[bool] = False
 
@@ -58,6 +58,7 @@ class UserRead(UserBase):
     id: int
     role: RoleRead
     actif: bool
+    must_change_password: bool = False
 
     class Config:
         from_attributes = True
@@ -246,6 +247,13 @@ class CommentRead(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    must_change_password: bool = False  # True si l'utilisateur doit changer son mot de passe (ex. après inscription)
+
+
+class ChangePasswordRequest(BaseModel):
+    """Changement de mot de passe pour un utilisateur connecté (mot de passe actuel + nouveau)."""
+    current_password: str
+    new_password: str
 
 
 class TokenData(BaseModel):

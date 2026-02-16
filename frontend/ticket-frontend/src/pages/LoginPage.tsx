@@ -121,6 +121,12 @@ function LoginPage({ onLogin }: LoginPageProps) {
       
       onLogin(data.access_token);
       
+      // Si l'utilisateur doit changer son mot de passe (ex. après inscription), redirection vers la page dédiée
+      if (data.must_change_password) {
+        setTimeout(() => navigate("/change-password", { replace: true }), 100);
+        return;
+      }
+      
       // Construire l'URL de redirection avec les paramètres préservés
       let finalRedirect = redirectPath;
       const redirectParams = new URLSearchParams();
