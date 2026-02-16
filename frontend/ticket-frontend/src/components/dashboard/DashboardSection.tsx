@@ -913,13 +913,17 @@ export function DashboardSection(props: DashboardSectionProps) {
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart 
                       data={techData} 
-                      margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
+                      margin={{ top: 10, right: 20, left: 0, bottom: 50 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                       <XAxis 
                         dataKey="technicien" 
                         stroke="#6B7280" 
-                        style={{ fontSize: "12px" }}
+                        style={{ fontSize: "11px" }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={60}
+                        interval={0}
                       />
                       <YAxis 
                         domain={[0, 60]}

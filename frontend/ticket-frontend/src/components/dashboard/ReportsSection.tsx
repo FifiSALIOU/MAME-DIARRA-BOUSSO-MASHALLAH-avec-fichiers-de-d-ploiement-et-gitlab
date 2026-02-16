@@ -345,9 +345,17 @@ export function ReportsSection(props: ReportsSectionProps) {
                   const techData = prepareTechnicianPerformanceData();
                   return techData.length > 0 ? (
                     <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={techData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
+                      <BarChart data={techData} margin={{ top: 10, right: 20, left: 0, bottom: 50 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                        <XAxis dataKey="technicien" stroke="#6B7280" style={{ fontSize: "12px" }} />
+                        <XAxis 
+                          dataKey="technicien" 
+                          stroke="#6B7280" 
+                          style={{ fontSize: "11px" }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={60}
+                          interval={0}
+                        />
                         <YAxis domain={[0, 60]} ticks={[0, 15, 30, 45, 60]} stroke="#6B7280" style={{ fontSize: "12px" }} />
                         <Tooltip contentStyle={{ backgroundColor: "white", border: "1px solid #e5e7eb", borderRadius: "8px", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }} content={({ active, payload, label }: any) => (active && payload?.length ? (
                           <div style={{ backgroundColor: "white", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "8px 12px", boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}>
