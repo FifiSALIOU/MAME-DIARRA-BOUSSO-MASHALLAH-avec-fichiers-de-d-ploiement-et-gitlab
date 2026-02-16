@@ -417,6 +417,8 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
     }
   });
   const [activeSection, setActiveSection] = useState<string>("dashboard");
+  // Flag pour désactiver la synchronisation URL lors des clics internes (Adjoint DSI)
+  const isInternalNavigationRef = useRef(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [agencyFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -583,7 +585,10 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
     return activeSection;
   }
 
-  const currentActiveSection = getActiveSectionFromPath();
+  // Pour l'Adjoint DSI : utiliser activeSection directement pour une navigation instantanée
+  // La synchronisation avec l'URL se fait uniquement au montage ou si l'URL change depuis l'extérieur
+  const currentActiveSection = roleName === "Adjoint DSI" ? activeSection : getActiveSectionFromPath();
+
   const showTicketsPlaceholder = currentActiveSection === "tickets" && !ticketsSectionReady;
 
   // Afficher la section Tickets : d'abord "En chargement", puis le contenu au frame suivant (Adjoint DSI / Secrétaire DSI)
@@ -599,13 +604,31 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
     }
   }, [currentActiveSection]);
 
-  // Synchroniser activeSection avec l'URL pour Adjoint DSI
+  // Fonction helper pour changer de section (Adjoint DSI) - désactive la synchronisation URL temporairement
+  const changeSectionForAdjointDSI = (section: string) => {
+    isInternalNavigationRef.current = true;
+    setActiveSection(section);
+    // Réactiver la synchronisation après un court délai pour permettre les changements d'URL externes
+    setTimeout(() => {
+      isInternalNavigationRef.current = false;
+    }, 100);
+  };
+
+  // Synchroniser activeSection avec l'URL pour Adjoint DSI (uniquement au montage ou si l'URL change depuis l'extérieur)
+  // La navigation interne utilise maintenant changeSectionForAdjointDSI pour être instantanée
   useEffect(() => {
     if (roleName === "Adjoint DSI") {
+      // Ignorer la synchronisation si c'est une navigation interne (clic utilisateur)
+      if (isInternalNavigationRef.current) {
+        return;
+      }
       const sectionFromPath = getActiveSectionFromPath();
-      setActiveSection(sectionFromPath);
+      // Ne mettre à jour que si la section a vraiment changé pour éviter les re-renders inutiles
+      if (activeSection !== sectionFromPath) {
+        setActiveSection(sectionFromPath);
+      }
     }
-  }, [location.pathname, roleName]);
+  }, [location.pathname, roleName, activeSection]);
 
   // Charger les types de tickets pour la section Types (Adjoint DSI)
   useEffect(() => {
@@ -1409,7 +1432,11 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
       setNewTicketCategory("");
       setNewTicketPriority("");
       setShowCreateTicketModal(false);
-      navigate("/dashboard/adjoint");
+      if (roleName === "Adjoint DSI") {
+        changeSectionForAdjointDSI("dashboard");
+      } else {
+        setActiveSection("dashboard");
+      }
       void loadTickets();
       void loadNotifications();
       void loadUnreadCount();
@@ -3760,7 +3787,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
     // Ouvrir la vue des tickets avec notifications dans le contenu principal
     setShowNotifications(false);
     if (roleName === "Adjoint DSI") {
-      navigate("/dashboard/adjoint/notifications");
+      setActiveSection("notifications");
     } else {
       setActiveSection("notifications");
     }
@@ -4356,7 +4383,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
               setTicketComments([]);
               setDetailCommentText("");
               setSelectedTicket(null);
-              navigate("/dashboard/adjoint");
+              changeSectionForAdjointDSI("dashboard");
             } else {
               setActiveSection("dashboard");
             }
@@ -4402,6 +4429,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         <div 
           onClick={() => {
             if (roleName === "Adjoint DSI") {
+              // Navigation instantanée par état local
               setShowTicketDetailsPage(false);
               setTicketDetails(null);
               setTicketHistory([]);
@@ -4409,7 +4437,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
               setDetailCommentText("");
               setSelectedTicket(null);
               setStatusFilter("all");
-              navigate("/dashboard/adjoint/tickets");
+              changeSectionForAdjointDSI("tickets");
             } else {
               setStatusFilter("all");
               setActiveSection("tickets");
@@ -4440,7 +4468,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         
         {roleName === "Adjoint DSI" && (
         <div 
-          onClick={() => navigate("/dashboard/adjoint/types")}
+          onClick={() => changeSectionForAdjointDSI("types")}
           style={{ 
             display: "flex", 
             alignItems: "center", 
@@ -4460,7 +4488,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {roleName === "Adjoint DSI" && (
         <div 
-          onClick={() => navigate("/dashboard/adjoint/categories")}
+          onClick={() => changeSectionForAdjointDSI("categories")}
           style={{ 
             display: "flex", 
             alignItems: "center", 
@@ -4480,7 +4508,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {roleName === "Adjoint DSI" && (
         <div 
-          onClick={() => navigate("/dashboard/adjoint/priorites")}
+          onClick={() => changeSectionForAdjointDSI("priorites")}
           style={{ 
             display: "flex", 
             alignItems: "center", 
@@ -4501,7 +4529,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         {roleName === "Adjoint DSI" && (
         <div 
           onClick={() => {
-            navigate("/dashboard/adjoint/actifs");
+            changeSectionForAdjointDSI("actifs");
           }}
           style={{ 
             display: "flex", 
@@ -4524,7 +4552,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         <div 
           onClick={() => {
             if (roleName === "Adjoint DSI") {
-              navigate("/dashboard/adjoint/technicians");
+              changeSectionForAdjointDSI("technicians");
             } else {
               setActiveSection("technicians");
             }
@@ -4550,7 +4578,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           <div 
             onClick={() => {
               if (roleName === "Adjoint DSI") {
-                navigate("/dashboard/adjoint/statistics");
+                changeSectionForAdjointDSI("reports");
               } else {
                 setActiveSection("reports");
               }
@@ -4586,7 +4614,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           <div
             onClick={() => {
               if (roleName === "Adjoint DSI") {
-                navigate("/dashboard/adjoint/notifications");
+                changeSectionForAdjointDSI("notifications");
               } else {
                 setActiveSection("notifications");
               }
@@ -4920,7 +4948,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                 <button
                   onClick={() => {
                     if (roleName === "Adjoint DSI") {
-                      navigate("/dashboard/adjoint");
+                      changeSectionForAdjointDSI("dashboard");
                     } else {
                       setActiveSection("dashboard");
                     }
