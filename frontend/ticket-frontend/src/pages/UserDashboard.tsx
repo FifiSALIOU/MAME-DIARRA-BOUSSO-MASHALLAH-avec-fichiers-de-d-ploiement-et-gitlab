@@ -2001,7 +2001,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
               fontWeight: "400",
               color: "#6b7280",
               fontFamily: "system-ui, -apple-system, sans-serif",
-              whiteSpace: activeSection === "dashboard" ? "nowrap" : undefined,
+              whiteSpace: (activeSection === "dashboard" || activeSection === "faq") ? "nowrap" : undefined,
               paddingLeft: 0,
               marginLeft: 0,
               textAlign: "left"
