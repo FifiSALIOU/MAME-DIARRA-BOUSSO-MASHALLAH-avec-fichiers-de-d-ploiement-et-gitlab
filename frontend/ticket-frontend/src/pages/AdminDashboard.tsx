@@ -3377,22 +3377,53 @@ function AdminDashboard({ token }: AdminDashboardProps) {
   }
 
   async function loadTicketDetails(ticketId: string) {
-    try {
-      const res = await fetch(`http://localhost:8000/tickets/${ticketId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setTicketDetails(data);
+    if (userRole === "Admin") {
+      // Chercher le ticket dans allTickets pour un affichage instantané
+      const ticketFromList = allTickets.find(t => t.id === ticketId);
+      if (ticketFromList) {
+        // Afficher immédiatement avec les données disponibles
+        setTicketDetails(ticketFromList);
         setShowTicketDetailsPage(true);
-        await Promise.all([loadTicketHistory(ticketId), loadTicketComments(ticketId)]);
-      } else {
-        alert("Erreur lors du chargement des détails du ticket");
+        // Réinitialiser l'historique et les commentaires pendant le chargement
+        setTicketHistory([]);
+        setTicketComments([]);
       }
-    } catch {
-      alert("Erreur lors du chargement des détails");
+      
+      // Charger les détails complets, l'historique et les commentaires en parallèle en arrière-plan
+      Promise.all([
+        fetch(`http://localhost:8000/tickets/${ticketId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).then(res => res.ok ? res.json() : null),
+        loadTicketHistory(ticketId),
+        loadTicketComments(ticketId)
+      ]).then(([fullTicketData]) => {
+        // Mettre à jour avec les données complètes une fois chargées
+        if (fullTicketData) {
+          setTicketDetails(fullTicketData);
+        }
+      }).catch(() => {
+        // En cas d'erreur, garder les données déjà affichées
+        console.error("Erreur lors du chargement des détails complets");
+      });
+    } else {
+      // Pour les autres rôles : comportement original (séquentiel)
+      try {
+        const res = await fetch(`http://localhost:8000/tickets/${ticketId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setTicketDetails(data);
+          setShowTicketDetailsPage(true);
+          await Promise.all([loadTicketHistory(ticketId), loadTicketComments(ticketId)]);
+        } else {
+          alert("Erreur lors du chargement des détails du ticket");
+        }
+      } catch {
+        alert("Erreur lors du chargement des détails");
+      }
     }
   }
 
