@@ -398,8 +398,16 @@ function AdminDashboard({ token }: AdminDashboardProps) {
   const location = useLocation();
   const navigate = useNavigate();
   
+  // Déclarer userRole avant son utilisation
+  const [userRole, setUserRole] = useState<string | null>(null);
+  
+  // État local pour la navigation instantanée (Admin uniquement)
+  const [activeSectionState, setActiveSectionState] = useState<string>("dashboard");
+  // Flag pour désactiver la synchronisation URL lors des clics internes (Admin uniquement)
+  const isInternalNavigationRef = useRef(false);
+  
   // Déterminer activeSection depuis l'URL (Admin : uniquement routes /dashboard/admin)
-  const getActiveSection = (): string => {
+  const getActiveSectionFromPath = (): string => {
     const path = location.pathname;
     if (path === "/dashboard/admin/notifications") return "notifications";
     if (path === "/dashboard/admin/audit-logs" || path === "/dashboard/admin/audit-et-logs") return "audit-logs";
@@ -423,7 +431,36 @@ function AdminDashboard({ token }: AdminDashboardProps) {
     if (path === "/dashboard/admin") return "dashboard";
     return "dashboard";
   };
-  const activeSection = getActiveSection();
+  
+  // Pour Admin : utiliser activeSectionState directement pour une navigation instantanée
+  // La synchronisation avec l'URL se fait uniquement au montage ou si l'URL change depuis l'extérieur
+  const activeSection = userRole === "Admin" ? activeSectionState : getActiveSectionFromPath();
+  
+  // Fonction helper pour changer de section (Admin) - désactive la synchronisation URL temporairement
+  const changeSectionForAdmin = (section: string) => {
+    // Changer de section immédiatement
+    isInternalNavigationRef.current = true;
+    setActiveSectionState(section);
+    // Réactiver la synchronisation après un court délai pour permettre les changements d'URL externes
+    setTimeout(() => {
+      isInternalNavigationRef.current = false;
+    }, 100);
+  };
+  
+  // Synchroniser activeSectionState avec l'URL pour Admin (uniquement au montage ou si l'URL change depuis l'extérieur)
+  useEffect(() => {
+    if (userRole === "Admin") {
+      // Ignorer la synchronisation si c'est une navigation interne (clic utilisateur)
+      if (isInternalNavigationRef.current) {
+        return;
+      }
+      const sectionFromPath = getActiveSectionFromPath();
+      // Ne mettre à jour que si la section a vraiment changé pour éviter les re-renders inutiles
+      if (activeSectionState !== sectionFromPath) {
+        setActiveSectionState(sectionFromPath);
+      }
+    }
+  }, [location.pathname, userRole, activeSectionState]);
 
   // Fermer la vue "détails du ticket" quand on change de section (ex: Actifs, Types, Catégories) pour afficher le contenu de la section
   useEffect(() => {
@@ -448,7 +485,6 @@ function AdminDashboard({ token }: AdminDashboardProps) {
   const [advancedUserFilter, setAdvancedUserFilter] = useState<string>("all");
   const [advancedCreatorFilter, setAdvancedCreatorFilter] = useState<string>("");
   const [showSettingsDropdown, setShowSettingsDropdown] = useState<boolean>(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
 
   const canEditAssets =
     userRole === "Admin" || userRole === "DSI" || userRole === "Adjoint DSI";
@@ -1822,7 +1858,11 @@ function AdminDashboard({ token }: AdminDashboardProps) {
     
     // Ouvrir la vue des tickets avec notifications dans le contenu principal
     setShowNotifications(false);
-    navigate(`${getRoutePrefix()}/notifications`);
+    if (userRole === "Admin") {
+      changeSectionForAdmin("notifications");
+    } else {
+      navigate(`${getRoutePrefix()}/notifications`);
+    }
     setSelectedNotificationTicket(notification.ticket_id);
     
     // Charger les tickets avec notifications
@@ -2166,7 +2206,11 @@ function AdminDashboard({ token }: AdminDashboardProps) {
       setNewTicketCategory("");
       setNewTicketPriority("");
       setShowCreateTicketModal(false);
-      navigate(getRoutePrefix());
+      if (userRole === "Admin") {
+        changeSectionForAdmin("dashboard");
+      } else {
+        navigate(getRoutePrefix());
+      }
       void loadTickets();
       void loadNotifications();
       void loadUnreadCount();
@@ -6263,7 +6307,11 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
             setTicketHistory([]);
             setTicketComments([]);
             setDetailCommentText("");
-            navigate(getRoutePrefix());
+            if (userRole === "Admin") {
+              changeSectionForAdmin("dashboard");
+            } else {
+              navigate(getRoutePrefix());
+            }
           }}
           style={{ 
             display: "flex", 
@@ -6309,7 +6357,11 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
             setTicketComments([]);
             setDetailCommentText("");
             setStatusFilter("all");
-            navigate(`${getRoutePrefix()}/tickets`);
+            if (userRole === "Admin") {
+              changeSectionForAdmin("tickets");
+            } else {
+              navigate(`${getRoutePrefix()}/tickets`);
+            }
           }}
           style={{ 
             display: "flex", 
@@ -6337,7 +6389,11 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         {(userRole === "Admin" || userRole === "DSI") && (
           <div 
             onClick={() => {
-              navigate(`${getRoutePrefix()}/actifs`);
+              if (userRole === "Admin") {
+                changeSectionForAdmin("actifs");
+              } else {
+                navigate(`${getRoutePrefix()}/actifs`);
+              }
             }}
             style={{ 
               display: "flex", 
@@ -6359,7 +6415,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {userRole === "Admin" && (
           <div 
-            onClick={() => navigate(`${getRoutePrefix()}/types`)}
+            onClick={() => changeSectionForAdmin("types")}
             style={{ 
               display: "flex", 
               alignItems: "center", 
@@ -6380,7 +6436,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {userRole === "Admin" && (
           <div 
-            onClick={() => navigate(`${getRoutePrefix()}/categories`)}
+            onClick={() => changeSectionForAdmin("categories")}
             style={{ 
               display: "flex", 
               alignItems: "center", 
@@ -6401,7 +6457,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
         )}
         {userRole === "Admin" && (
           <div 
-            onClick={() => navigate(`${getRoutePrefix()}/parametres/priorites`)}
+            onClick={() => changeSectionForAdmin("priorites")}
             style={{ 
               display: "flex", 
               alignItems: "center", 

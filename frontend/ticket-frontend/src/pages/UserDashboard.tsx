@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import type { FormEvent } from "react";
 import { createPortal } from "react-dom";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Clock, CheckCircle, LayoutDashboard, PlusCircle, Ticket as TicketIcon, ChevronLeft, ChevronRight, ChevronDown, Bell, Wrench, Monitor, Search, Send, CheckCircle2, Pencil, Trash2, RefreshCcw, FileText, UserCheck, Users, MessageCircle } from "lucide-react";
 import helpdeskLogo from "../assets/helpdesk-logo.png";
 
@@ -1141,7 +1141,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
     
     // Ouvrir la vue des tickets avec notifications dans le contenu principal
     setShowNotifications(false);
-    navigate("/dashboard/user/notifications");
+    changeSectionForUser("notifications");
     setSelectedNotificationTicket(notification.ticket_id);
     
     // Charger les tickets avec notifications
@@ -1243,7 +1243,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
       setCategory("");
       setShowCreateModal(false);
       // S'assurer que la section est sur dashboard pour voir les tickets
-      navigate("/dashboard/user");
+      changeSectionForUser("dashboard");
       void loadTickets();
       void loadNotifications();
       void loadUnreadCount();
@@ -1381,16 +1381,47 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
   }
 
   const location = useLocation();
-  const navigate = useNavigate();
+  
+  // État local pour la navigation instantanée (User uniquement)
+  const [activeSectionState, setActiveSectionState] = useState<string>("dashboard");
+  // Flag pour désactiver la synchronisation URL lors des clics internes (User uniquement)
+  const isInternalNavigationRef = useRef(false);
   
   // Déterminer activeSection depuis l'URL
-  const getActiveSection = () => {
+  const getActiveSectionFromPath = () => {
     if (location.pathname === "/dashboard/user/notifications") return "notifications";
     if (location.pathname === "/dashboard/user/tickets") return "tickets";
     if (location.pathname === "/dashboard/user") return "dashboard";
     return "dashboard"; // Par défaut (pour /dashboard)
   };
-  const activeSection = getActiveSection();
+  
+  // Pour User : utiliser activeSectionState directement pour une navigation instantanée
+  // La synchronisation avec l'URL se fait uniquement au montage ou si l'URL change depuis l'extérieur
+  const activeSection = activeSectionState;
+  
+  // Fonction helper pour changer de section (User) - désactive la synchronisation URL temporairement
+  const changeSectionForUser = (section: string) => {
+    // Changer de section immédiatement
+    isInternalNavigationRef.current = true;
+    setActiveSectionState(section);
+    // Réactiver la synchronisation après un court délai pour permettre les changements d'URL externes
+    setTimeout(() => {
+      isInternalNavigationRef.current = false;
+    }, 100);
+  };
+  
+  // Synchroniser activeSectionState avec l'URL pour User (uniquement au montage ou si l'URL change depuis l'extérieur)
+  useEffect(() => {
+    // Ignorer la synchronisation si c'est une navigation interne (clic utilisateur)
+    if (isInternalNavigationRef.current) {
+      return;
+    }
+    const sectionFromPath = getActiveSectionFromPath();
+    // Ne mettre à jour que si la section a vraiment changé pour éviter les re-renders inutiles
+    if (activeSectionState !== sectionFromPath) {
+      setActiveSectionState(sectionFromPath);
+    }
+  }, [location.pathname, activeSectionState]);
   
   // Charger les tickets avec notifications quand on entre dans la section notifications
   useEffect(() => {
@@ -1695,7 +1726,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
             setTicketDetails(null);
             setTicketHistory([]);
             setViewTicketDetails(null);
-            navigate("/dashboard/user");
+            changeSectionForUser("dashboard");
           }}
           style={{ 
             display: "flex", 
@@ -1758,7 +1789,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
             setTicketDetails(null);
             setTicketHistory([]);
             setViewTicketDetails(null);
-            navigate("/dashboard/user/tickets");
+            changeSectionForUser("tickets");
             setTimeout(() => {
               ticketsListRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
             }, 100);
@@ -1837,7 +1868,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
               setTicketDetails(null);
               setTicketHistory([]);
               setViewTicketDetails(null);
-              navigate("/dashboard/user/notifications");
+              changeSectionForUser("notifications");
             }}
             style={{ 
               display: "flex", 
@@ -2077,11 +2108,11 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                   setDetailCommentText("");
                   // Rediriger vers la bonne section selon d'où on vient
                   if (activeSection === "notifications" || location.pathname === "/dashboard/user/notifications") {
-                    navigate("/dashboard/user/notifications");
+                    changeSectionForUser("notifications");
                   } else if (activeSection === "tickets" || location.pathname === "/dashboard/user/tickets") {
-                    navigate("/dashboard/user/tickets");
+                    changeSectionForUser("tickets");
                   } else {
-                    navigate("/dashboard/user");
+                    changeSectionForUser("dashboard");
                   }
                 }}
                 style={{
@@ -3006,7 +3037,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                 <button
                   onClick={() => {
                     setSelectedStatus(null);
-                    navigate("/dashboard/user");
+                    changeSectionForUser("dashboard");
                     setSearchFilter("");
                     setSelectedCharacteristic("statut");
                     setSelectedFilterValue("");
@@ -3833,7 +3864,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
               </h3>
               <button
                 onClick={() => {
-                  navigate("/dashboard/user");
+                  changeSectionForUser("dashboard");
                   setSelectedNotificationTicket(null);
                   setSelectedNotificationTicketDetails(null);
                 }}
