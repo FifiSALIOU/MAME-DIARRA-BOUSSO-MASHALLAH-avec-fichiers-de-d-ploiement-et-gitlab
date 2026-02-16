@@ -6569,7 +6569,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
             <div style={{ flex: 1, fontSize: "16px", fontFamily: "'Inter', system-ui, sans-serif", fontWeight: "500" }}>Équipe</div>
           </div>
         )}
-        {userRole === "Admin" && (
+        {(userRole === "Admin" || userRole === "DSI") && (
           <div 
             onClick={() => changeSectionForDSI("users")}
             style={{ 
@@ -6592,7 +6592,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
             </div>
-            <div style={{ flex: 1 }}>Utilisateurs</div>
+            <div style={{ flex: 1, fontSize: "16px", fontFamily: "'Inter', system-ui, sans-serif", fontWeight: "500" }}>Utilisateurs</div>
           </div>
         )}
         {userRole === "Admin" && (
