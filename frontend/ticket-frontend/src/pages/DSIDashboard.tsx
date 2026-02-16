@@ -372,7 +372,6 @@ function DSIDashboard({ token }: DSIDashboardProps) {
   });
 
   const [assetTypes, setAssetTypes] = useState<AssetTypeConfig[]>([]);
-  void assetTypes; // loaded from API for future use (e.g. type dropdowns)
   const [assetDepartments, setAssetDepartments] = useState<DepartmentConfig[]>([]);
 
   // États pour la gestion des départements
@@ -9026,21 +9025,12 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                             backgroundColor: "#ffffff",
                           }}
                         >
-                          <option value="desktop">
-                            Ordinateur fixe
-                          </option>
-                          <option value="laptop">
-                            Ordinateur portable
-                          </option>
-                          <option value="printer">Imprimante</option>
-                          <option value="monitor">Écran</option>
-                          <option value="mobile">Mobile</option>
-                          <option value="tablet">Tablette</option>
-                          <option value="phone">Téléphone</option>
-                          <option value="network">
-                            Équipement réseau
-                          </option>
-                          <option value="other">Autre</option>
+                          <option value="">Sélectionner un type</option>
+                          {assetTypes.map((type) => (
+                            <option key={type.code} value={type.code}>
+                              {type.label}
+                            </option>
+                          ))}
                         </select>
                       </div>
 

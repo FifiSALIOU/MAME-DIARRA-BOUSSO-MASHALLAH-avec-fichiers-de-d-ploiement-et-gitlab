@@ -8449,15 +8449,12 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                           <div>
                             <label style={{ display: "block", marginBottom: "4px", fontSize: "13px", fontWeight: 500, color: "#111827" }}>Type *</label>
                             <select value={assetForm.type} onChange={(e) => setAssetForm((f) => ({ ...f, type: e.target.value }))} style={{ width: "100%", padding: "9px 11px", borderRadius: "10px", border: "1px solid #e5e7eb", fontSize: "14px", backgroundColor: "#ffffff" }}>
-                              <option value="desktop">Ordinateur fixe</option>
-                              <option value="laptop">Ordinateur portable</option>
-                              <option value="printer">Imprimante</option>
-                              <option value="monitor">Écran</option>
-                              <option value="mobile">Mobile</option>
-                              <option value="tablet">Tablette</option>
-                              <option value="phone">Téléphone</option>
-                              <option value="network">Équipement réseau</option>
-                              <option value="other">Autre</option>
+                              <option value="">Sélectionner un type</option>
+                              {assetTypes.map((type) => (
+                                <option key={type.code} value={type.code}>
+                                  {type.label}
+                                </option>
+                              ))}
                             </select>
                           </div>
                           <div>
