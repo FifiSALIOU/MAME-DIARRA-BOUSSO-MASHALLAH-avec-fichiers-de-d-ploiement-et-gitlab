@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { Clock, CheckCircle, LayoutDashboard, PlusCircle, Ticket as TicketIcon, ChevronLeft, ChevronRight, ChevronDown, Bell, Wrench, Monitor, Search, Send, CheckCircle2, Pencil, Trash2, RefreshCcw, FileText, UserCheck, Users, MessageCircle, BookOpen, Lightbulb, HelpCircle, ChevronRight as ChevronRightIcon } from "lucide-react";
@@ -6233,36 +6233,62 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                     "Comment me connecter à l'application?",
                     "J'ai oublié mon mot de passe, que faire ?",
                     "Qui contacter en cas d'urgence ?"
-                  ].map((question, index) => (
-                    <div key={index} style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "12px 0",
-                      borderBottom: index < 2 ? "1px solid #f3f4f6" : "none",
-                      cursor: "pointer"
-                    }}
-                    onClick={() => {
-                      const key = `compte-${index}`;
-                      setExpandedFaqCategories(prev => ({
-                        ...prev,
-                        [key]: !prev[key]
-                      }));
-                    }}
-                    >
-                      <span style={{
-                        fontSize: "15px",
-                        color: "#374151",
-                        fontFamily: "'Inter', system-ui, sans-serif"
-                      }}>
-                        {question}
-                      </span>
-                      <ChevronDown size={18} color="#6b7280" style={{
-                        transform: expandedFaqCategories[`compte-${index}`] ? "rotate(180deg)" : "rotate(0deg)",
-                        transition: "transform 0.2s"
-                      }} />
-                    </div>
-                  ))}
+                  ].map((question, index) => {
+                    const key = `compte-${index}`;
+                    const isExpanded = expandedFaqCategories[key];
+                    const compteAnswers: (string | ReactNode)[] = [
+                      <>Utilisez l'adresse e-mail et le mot de passe qui vous ont été fournis par votre administrateur ou par email. Si vous n'avez pas encore de compte, au niveau de l'application (<a href="/inscription" style={{ color: "hsl(25, 95%, 53%)", fontWeight: 600, textDecoration: "none" }}>lien d'inscription</a>) ou contactez votre responsable informatique.</>,
+                      "",
+                      ""
+                    ];
+                    return (
+                      <div key={index}>
+                        <div style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "12px 0",
+                          borderBottom: index < 2 ? "1px solid #f3f4f6" : "none",
+                          cursor: "pointer"
+                        }}
+                        onClick={() => {
+                          setExpandedFaqCategories(prev => ({
+                            ...prev,
+                            [key]: !prev[key]
+                          }));
+                        }}
+                        >
+                          <span style={{
+                            fontSize: "15px",
+                            color: "#374151",
+                            fontFamily: "'Inter', system-ui, sans-serif"
+                          }}>
+                            {question}
+                          </span>
+                          <ChevronDown size={18} color="#6b7280" style={{
+                            transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                            transition: "transform 0.2s"
+                          }} />
+                        </div>
+                        {isExpanded && compteAnswers[index] && (
+                          <div style={{
+                            padding: "12px 0 12px 0",
+                            borderBottom: index < 2 ? "1px solid #f3f4f6" : "none"
+                          }}>
+                            <p style={{
+                              fontSize: "14px",
+                              color: "#6b7280",
+                              lineHeight: "1.6",
+                              margin: 0,
+                              fontFamily: "'Inter', system-ui, sans-serif"
+                            }}>
+                              {compteAnswers[index]}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
