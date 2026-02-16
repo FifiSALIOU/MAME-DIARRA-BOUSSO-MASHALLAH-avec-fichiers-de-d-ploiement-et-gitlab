@@ -5775,9 +5775,8 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                   <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                     {[
                       "Cliquez sur « Nouveau ticket »",
-                      "Sélectionnez le type (Matériel/Applicatif)",
                       "Remplissez le titre et la description",
-                      "Choisissez la priorité",
+                      "Sélectionnez le type (Matériel/Applicatif)",
                       "Cliquez sur « Soumettre »"
                     ].map((step, index) => (
                       <div key={index} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
