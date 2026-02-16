@@ -1482,7 +1482,7 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
         // Charger tous les tickets
         await loadTickets();
 
-        // Charger la liste des techniciens
+        // Charger la liste des techniciens avec leurs stats (pour l'Adjoint DSI aussi)
         const techRes = await fetch("http://localhost:8000/users/technicians", {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -1490,7 +1490,26 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
         });
         if (techRes.ok) {
           const techData = await techRes.json();
-          setTechnicians(techData);
+          // Charger les stats pour chaque technicien (comme pour DSI/Admin)
+          const techsWithStats = await Promise.all(
+            techData.map(async (tech: any) => {
+              try {
+                const statsRes = await fetch(`http://localhost:8000/users/technicians/${tech.id}/stats`, {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                });
+                if (statsRes.ok) {
+                  const stats = await statsRes.json();
+                  return { ...tech, ...stats };
+                }
+              } catch (err) {
+                console.error(`Erreur stats pour ${tech.id}:`, err);
+              }
+              return { ...tech, workload_ratio: "0/5", resolved_today: 0, avg_response_time_minutes: 0 };
+            })
+          );
+          setTechnicians(techsWithStats);
         }
 
         // Charger les priorités actives pour le formulaire d'assignation (Adjoint DSI)
