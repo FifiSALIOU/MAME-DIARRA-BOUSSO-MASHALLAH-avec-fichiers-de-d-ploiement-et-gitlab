@@ -1382,16 +1382,26 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
 
   const location = useLocation();
   
+  // Fonction pour déterminer la section depuis l'URL au montage
+  const getInitialSection = (): string => {
+    const path = location.pathname;
+    if (path === "/dashboard/user/notifications") return "notifications";
+    if (path === "/dashboard/user/tickets") return "tickets";
+    if (path === "/dashboard/user") return "dashboard";
+    return "dashboard"; // Par défaut (pour /dashboard)
+  };
+  
   // État local pour la navigation instantanée (User uniquement)
-  const [activeSectionState, setActiveSectionState] = useState<string>("dashboard");
+  const [activeSectionState, setActiveSectionState] = useState<string>(getInitialSection());
   // Flag pour désactiver la synchronisation URL lors des clics internes (User uniquement)
   const isInternalNavigationRef = useRef(false);
   
   // Déterminer activeSection depuis l'URL
   const getActiveSectionFromPath = () => {
-    if (location.pathname === "/dashboard/user/notifications") return "notifications";
-    if (location.pathname === "/dashboard/user/tickets") return "tickets";
-    if (location.pathname === "/dashboard/user") return "dashboard";
+    const path = location.pathname;
+    if (path === "/dashboard/user/notifications") return "notifications";
+    if (path === "/dashboard/user/tickets") return "tickets";
+    if (path === "/dashboard/user") return "dashboard";
     return "dashboard"; // Par défaut (pour /dashboard)
   };
   
