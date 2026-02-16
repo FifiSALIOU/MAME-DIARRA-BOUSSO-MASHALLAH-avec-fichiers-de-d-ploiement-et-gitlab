@@ -436,13 +436,16 @@ def assign_ticket(
     history_reason = assign_data.reason or ""
     if assign_data.notes:
         history_reason += f" | Instructions: {assign_data.notes}"
+    # Pour l'assignation initiale, enregistrer "Assigné à [nom]" pour que l'historique affiche toujours ce nom même après une réassignation
+    if old_status != models.TicketStatus.ASSIGNE_TECHNICIEN:
+        history_reason = (history_reason.strip() + f" | Assigné à {technician.full_name}").strip().lstrip("| ").strip() or f"Assigné à {technician.full_name}"
     
     history = models.TicketHistory(
         ticket_id=ticket.id,
         old_status=old_status,
         new_status=ticket.status,
         user_id=current_user.id,
-        reason=history_reason,
+        reason=history_reason or None,
     )
     db.add(history)
     
@@ -559,13 +562,13 @@ def reassign_ticket(
     if ticket.status == models.TicketStatus.EN_ATTENTE_ANALYSE:
         ticket.status = models.TicketStatus.ASSIGNE_TECHNICIEN
     
-    # Créer une entrée d'historique
+    # Créer une entrée d'historique : "Réassigné à [nom]" pour affichage cohérent (ne pas modifier l'entrée "Assigné à X" précédente)
     history = models.TicketHistory(
         ticket_id=ticket.id,
         old_status=old_status,
         new_status=ticket.status,
         user_id=current_user.id,
-        reason=f"Réassigné depuis {old_technician_id} vers {assign_data.technician_id}. {assign_data.reason or ''}",
+        reason=f"Réassigné à {technician.full_name}. {assign_data.reason or ''}".strip().rstrip("."),
     )
     db.add(history)
     

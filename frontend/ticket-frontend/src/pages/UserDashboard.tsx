@@ -330,6 +330,19 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
       return "Commentaire ajouté";
     }
 
+    // Réassignation (assigne_technicien → assigne_technicien) : afficher "Réassigné à [nom]" sans modifier l'entrée "Assigné à X" précédente
+    if (entry.old_status && entry.new_status) {
+      const oldStatus = (entry.old_status || "").toLowerCase();
+      const newStatus = (entry.new_status || "").toLowerCase();
+      if ((oldStatus.includes("assigne_technicien") || oldStatus.includes("assigné technicien")) &&
+          (newStatus.includes("assigne_technicien") || newStatus.includes("assigné technicien"))) {
+        if (reason.startsWith("réassigné à ")) {
+          return (entry.reason || "").split(".")[0].trim();
+        }
+        return ticket?.technician?.full_name ? `Réassigné à ${ticket.technician.full_name}` : "Réassigné à un technicien";
+      }
+    }
+
     // Réouverture et réassignation (rejete → assigne_technicien) : afficher "Réouverture du ticket"
     if (entry.old_status && entry.new_status) {
       const oldStatus = (entry.old_status || "").toLowerCase();
@@ -341,7 +354,11 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
     }
 
     if (status.includes("assigne") || status.includes("assigné") || status.includes("assign")) {
-      // Pour l'assignation, utiliser le technicien assigné du ticket, pas la personne qui a fait l'assignation
+      // Pour l'assignation initiale : utiliser "Assigné à X" enregistré dans reason pour ne pas écraser par le technicien actuel après réassignation
+      const assignMatch = (entry.reason || "").match(/Assigné à ([^|.]+?)(?:\s*[|.]|$)/i);
+      if (assignMatch && assignMatch[1]) {
+        return `Assigné à ${assignMatch[1].trim()}`;
+      }
       if (ticket?.technician?.full_name) {
         return `Assigné à ${ticket.technician.full_name}`;
       }

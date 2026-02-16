@@ -200,10 +200,22 @@ function AdminDashboard({ token }: AdminDashboardProps) {
       return "Ticket Délégué à Adjoint DSI";
     }
     
+    // Cas spécifique: réassignation (assigne_technicien → assigne_technicien) : afficher "Réassigné à [nom]"
+    if ((oldStatus.includes("assigne_technicien") || oldStatus.includes("assigné technicien")) &&
+        (newStatus.includes("assigne_technicien") || newStatus.includes("assigné technicien"))) {
+      if (reason.startsWith("réassigné à ")) {
+        return (entry.reason || "").split(".")[0].trim();
+      }
+      return ticket?.technician?.full_name ? `Réassigné à ${ticket.technician.full_name}` : "Réassigné à un technicien";
+    }
+    
     // Cas spécifique: assignation (en_attente_analyse → assigne_technicien)
     if ((oldStatus.includes("en_attente_analyse") || oldStatus.includes("en attente analyse")) &&
         (newStatus.includes("assigne_technicien") || newStatus.includes("assigne technicien") || newStatus.includes("assigné technicien"))) {
-      // Si le ticket a un technicien assigné, afficher son nom
+      const assignMatch = (entry.reason || "").match(/Assigné à ([^|.]+?)(?:\s*[|.]|$)/i);
+      if (assignMatch && assignMatch[1]) {
+        return `Assigné à ${assignMatch[1].trim()}`;
+      }
       if (ticket && ticket.technician && ticket.technician.full_name) {
         return `Assigné à ${ticket.technician.full_name}`;
       }
