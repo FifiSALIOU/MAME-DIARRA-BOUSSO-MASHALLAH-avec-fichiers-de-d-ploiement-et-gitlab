@@ -327,8 +327,24 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
   const [detailCommentText, setDetailCommentText] = useState("");
   const [detailCommentInternal, setDetailCommentInternal] = useState(true);
   const [showTicketDetailsPage, setShowTicketDetailsPage] = useState<boolean>(false);
-  const [activeSection, setActiveSection] = useState<string>("dashboard");
   const notificationsSectionRef = useRef<HTMLDivElement>(null);
+  
+  // Fonction pour déterminer la section depuis l'URL au montage
+  const getInitialSection = (): string => {
+    const path = location.pathname;
+    if (path === "/dashboard/techniciens/ticketsencours") return "tickets-en-cours";
+    if (path === "/dashboard/techniciens/ticketsresolus") return "tickets-resolus";
+    if (path === "/dashboard/techniciens/ticketsrejetes") return "tickets-rejetes";
+    if (path === "/dashboard/techniciens/actifs") return "actifs";
+    if (path === "/dashboard/techniciens/notifications") return "notifications";
+    if (path === "/dashboard/techniciens") return "dashboard";
+    return "dashboard";
+  };
+  
+  // État local pour la navigation instantanée (Technicien)
+  const [activeSection, setActiveSection] = useState<string>(getInitialSection());
+  // Flag pour désactiver la synchronisation URL lors des clics internes (Technicien)
+  const isInternalNavigationRef = useRef(false);
   const [rejectionReasons, setRejectionReasons] = useState<Record<string, string>>({});
   const [resumedFlags, setResumedFlags] = useState<Record<string, boolean>>({});
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -389,22 +405,44 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
 
   // Fonction pour déterminer la section active basée sur l'URL
   function getActiveSectionFromPath(): string {
-    if (location.pathname === "/dashboard/techniciens/ticketsencours") return "tickets-en-cours";
-    if (location.pathname === "/dashboard/techniciens/ticketsresolus") return "tickets-resolus";
-    if (location.pathname === "/dashboard/techniciens/ticketsrejetes") return "tickets-rejetes";
-    if (location.pathname === "/dashboard/techniciens/actifs") return "actifs";
-    if (location.pathname === "/dashboard/techniciens/notifications") return "notifications";
-    if (location.pathname === "/dashboard/techniciens") return "dashboard";
-    return activeSection;
+    const path = location.pathname;
+    if (path === "/dashboard/techniciens/ticketsencours") return "tickets-en-cours";
+    if (path === "/dashboard/techniciens/ticketsresolus") return "tickets-resolus";
+    if (path === "/dashboard/techniciens/ticketsrejetes") return "tickets-rejetes";
+    if (path === "/dashboard/techniciens/actifs") return "actifs";
+    if (path === "/dashboard/techniciens/notifications") return "notifications";
+    if (path === "/dashboard/techniciens") return "dashboard";
+    return "dashboard";
   }
 
-  const currentActiveSection = getActiveSectionFromPath();
+  // Pour Technicien : utiliser activeSection directement pour une navigation instantanée
+  // La synchronisation avec l'URL se fait uniquement au montage ou si l'URL change depuis l'extérieur
+  const currentActiveSection = activeSection;
 
-  // Synchroniser activeSection avec l'URL
+  // Fonction helper pour changer de section (Technicien) - désactive la synchronisation URL temporairement
+  const changeSectionForTechnician = (section: string) => {
+    // Changer de section immédiatement
+    isInternalNavigationRef.current = true;
+    setActiveSection(section);
+    // Réactiver la synchronisation après un court délai pour permettre les changements d'URL externes
+    setTimeout(() => {
+      isInternalNavigationRef.current = false;
+    }, 100);
+  };
+
+  // Synchroniser activeSection avec l'URL pour Technicien (uniquement au montage ou si l'URL change depuis l'extérieur)
+  // La navigation interne utilise maintenant changeSectionForTechnician pour être instantanée
   useEffect(() => {
+    // Ignorer la synchronisation si c'est une navigation interne (clic utilisateur)
+    if (isInternalNavigationRef.current) {
+      return;
+    }
     const sectionFromPath = getActiveSectionFromPath();
-    setActiveSection(sectionFromPath);
-  }, [location.pathname]);
+    // Ne mettre à jour que si la section a vraiment changé pour éviter les re-renders inutiles
+    if (activeSection !== sectionFromPath) {
+      setActiveSection(sectionFromPath);
+    }
+  }, [location.pathname, activeSection]);
 
   async function loadAssets(): Promise<void> {
     if (!token || token.trim() === "" || currentActiveSection !== "actifs") return;
@@ -1182,7 +1220,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
     
     // Ouvrir la vue des tickets avec notifications dans le contenu principal
     setShowNotifications(false);
-    navigate("/dashboard/techniciens/notifications");
+    changeSectionForTechnician("notifications");
     setSelectedNotificationTicket(notification.ticket_id);
     
     // Charger les tickets avec notifications
@@ -1692,7 +1730,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
         {/* Zone défilable : uniquement les sections du menu */}
         <div className="tech-sidebar-menu" style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "visible" }}>
         <div 
-          onClick={() => navigate("/dashboard/techniciens")}
+          onClick={() => changeSectionForTechnician("dashboard")}
           style={{ 
             display: "flex", 
             alignItems: "center", 
@@ -1713,7 +1751,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
         
         {/* Tickets en cours */}
         <div 
-          onClick={() => navigate("/dashboard/techniciens/ticketsencours")}
+          onClick={() => changeSectionForTechnician("tickets-en-cours")}
           style={{ 
             display: "flex", 
             alignItems: "center", 
@@ -1735,7 +1773,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
           <div style={{ fontSize: "16px", fontFamily: "'Inter', system-ui, sans-serif", fontWeight: "500" }}>Tickets en cours</div>
         </div>
         <div 
-          onClick={() => navigate("/dashboard/techniciens/ticketsresolus")}
+          onClick={() => changeSectionForTechnician("tickets-resolus")}
           style={{ 
             display: "flex", 
             alignItems: "center", 
@@ -1757,7 +1795,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
           <div style={{ fontSize: "16px", fontFamily: "'Inter', system-ui, sans-serif", fontWeight: "500" }}>Tickets Résolus</div>
         </div>
         <div 
-          onClick={() => navigate("/dashboard/techniciens/ticketsrejetes")}
+          onClick={() => changeSectionForTechnician("tickets-rejetes")}
           style={{ 
             display: "flex", 
             alignItems: "center", 
@@ -1802,7 +1840,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
           </div>
         </div>
         <div 
-          onClick={() => navigate("/dashboard/techniciens/actifs")}
+          onClick={() => changeSectionForTechnician("actifs")}
           style={{ 
             display: "flex", 
             alignItems: "center", 
@@ -1833,7 +1871,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
           }} />
           {/* Bouton Notifications */}
           <div
-            onClick={() => navigate("/dashboard/techniciens/notifications")}
+            onClick={() => changeSectionForTechnician("notifications")}
             style={{
               display: "flex",
               alignItems: "center",
@@ -5402,7 +5440,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                     </h3>
                     <button
                       onClick={() => {
-                        navigate("/dashboard/techniciens");
+                        changeSectionForTechnician("dashboard");
                         setSelectedNotificationTicket(null);
                         setSelectedNotificationTicketDetails(null);
                       }}
