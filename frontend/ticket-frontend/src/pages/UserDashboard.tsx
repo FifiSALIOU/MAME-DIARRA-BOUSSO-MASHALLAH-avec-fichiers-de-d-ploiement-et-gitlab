@@ -4839,7 +4839,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                 <button
                   onClick={() => handleAddCommentFromDetails(commentModalTicketId, modalCommentText.trim())}
                   disabled={loading || !modalCommentText.trim()}
-                  style={{ flex: 1, padding: "10px", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "4px", cursor: loading || !modalCommentText.trim() ? "not-allowed" : "pointer", opacity: loading || !modalCommentText.trim() ? 0.7 : 1 }}
+                  style={{ flex: 1, padding: "10px", backgroundColor: "hsl(25, 95%, 53%)", color: "white", border: "none", borderRadius: "4px", cursor: loading || !modalCommentText.trim() ? "not-allowed" : "pointer", opacity: loading || !modalCommentText.trim() ? 0.7 : 1 }}
                 >
                   Ajouter
                 </button>
@@ -4848,7 +4848,7 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                     setCommentModalTicketId(null);
                     setModalCommentText("");
                   }}
-                  style={{ flex: 1, padding: "10px", backgroundColor: "#6c757d", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
+                  style={{ flex: 1, padding: "10px", backgroundColor: "white", color: "black", border: "1px solid #ddd", borderRadius: "4px", cursor: "pointer" }}
                 >
                   Annuler
                 </button>
