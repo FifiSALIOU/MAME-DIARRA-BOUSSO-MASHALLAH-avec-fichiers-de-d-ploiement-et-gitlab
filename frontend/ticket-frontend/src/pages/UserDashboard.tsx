@@ -1435,10 +1435,10 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
   
   // Charger les tickets avec notifications quand on entre dans la section notifications
   useEffect(() => {
-    if (location.pathname === "/dashboard/user/notifications" && actualToken && notifications.length > 0) {
+    if (activeSection === "notifications" && actualToken && notifications.length > 0) {
       void loadNotificationsTickets();
     }
-  }, [location.pathname, actualToken, notifications]);
+  }, [activeSection, actualToken, notifications]);
   
   const [showCreateModal, setShowCreateModal] = useState(false);
   const ticketsListRef = useRef<HTMLDivElement>(null);
@@ -1879,6 +1879,10 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
               setTicketHistory([]);
               setViewTicketDetails(null);
               changeSectionForUser("notifications");
+              // Charger les tickets avec notifications
+              if (notifications.length > 0) {
+                void loadNotificationsTickets();
+              }
             }}
             style={{ 
               display: "flex", 
