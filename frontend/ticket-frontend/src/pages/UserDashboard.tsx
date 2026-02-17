@@ -2454,6 +2454,8 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                                     reason.includes("assignation par adjoint") ||
                                     reason.includes("secrétaire/adjoint dsi");
                                   if (isAssignmentBySecretary) return null;
+                                  // Ne pas afficher le reason pour les réassignations par DSI
+                                  if (reason.includes("réassignation par dsi")) return null;
                                   return (
                                     <div style={{ marginTop: "4px", fontSize: "13px", color: "#4B5563" }}>
                                       {(() => {
@@ -4334,11 +4336,16 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                                         Par: {h.user.full_name}
                                       </div>
                                     )}
-                                    {h.reason && (
-                                      <div style={{ marginTop: "4px", fontSize: "13px", color: "#4B5563" }}>
-                                        {h.reason}
-                                      </div>
-                                    )}
+                                    {h.reason && (() => {
+                                      const reason = (h.reason || "").toLowerCase();
+                                      // Ne pas afficher le reason pour les réassignations par DSI
+                                      if (reason.includes("réassignation par dsi")) return null;
+                                      return (
+                                        <div style={{ marginTop: "4px", fontSize: "13px", color: "#4B5563" }}>
+                                          {h.reason}
+                                        </div>
+                                      );
+                                    })()}
                                   </>
                                 )}
                               </div>
@@ -4579,11 +4586,16 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                                   Par: {h.user.full_name}
                                 </div>
                               )}
-                              {h.reason && (
-                                <div style={{ marginTop: "4px", fontSize: "13px", color: "#4B5563" }}>
-                                  {h.reason}
-                                </div>
-                              )}
+                              {h.reason && (() => {
+                                const reason = (h.reason || "").toLowerCase();
+                                // Ne pas afficher le reason pour les réassignations par DSI
+                                if (reason.includes("réassignation par dsi")) return null;
+                                return (
+                                  <div style={{ marginTop: "4px", fontSize: "13px", color: "#4B5563" }}>
+                                    {h.reason}
+                                  </div>
+                                );
+                              })()}
                             </>
                           )}
                         </div>
@@ -5623,11 +5635,16 @@ function UserDashboard({ token: tokenProp }: UserDashboardProps) {
                                             Par: {h.user.full_name}
                                           </div>
                                         )}
-                                        {h.reason && (
-                                          <div style={{ marginTop: "4px", fontSize: "13px", color: "#4B5563" }}>
-                                            {h.reason}
-                                          </div>
-                                        )}
+                                        {h.reason && (() => {
+                                          const reason = (h.reason || "").toLowerCase();
+                                          // Ne pas afficher le reason pour les réassignations par DSI
+                                          if (reason.includes("réassignation par dsi")) return null;
+                                          return (
+                                            <div style={{ marginTop: "4px", fontSize: "13px", color: "#4B5563" }}>
+                                              {h.reason}
+                                            </div>
+                                          );
+                                        })()}
                                       </>
                                     )}
                                   </div>
