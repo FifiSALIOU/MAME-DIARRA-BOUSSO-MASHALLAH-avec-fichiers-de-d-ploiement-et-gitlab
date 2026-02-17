@@ -408,7 +408,7 @@ function DSIDashboard({ token }: DSIDashboardProps) {
   }).length;
 
   const location = useLocation();
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   
   // Fonction pour déterminer la section depuis l'URL au montage
   const getInitialSection = (): string => {
@@ -587,7 +587,7 @@ function DSIDashboard({ token }: DSIDashboardProps) {
   });
 
   // Fonction helper pour obtenir le préfixe de route (DSI : toujours /dashboard/dsi)
-  const getRoutePrefix = (): string => {
+  const _getRoutePrefix = (): string => {
     return "/dashboard/dsi";
   };
   const [selectedReport, setSelectedReport] = useState<string>("");

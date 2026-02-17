@@ -278,8 +278,8 @@ export default function RegistrationPage() {
             </div>
 
             {[
-              { label: "Téléphone (optionnel)", value: phone, set: setPhone, icon: Phone },
-              { label: "Nom d'utilisateur", value: username, set: setUsername, icon: User, required: true },
+              { label: "Téléphone (optionnel)", value: phone, set: setPhone, icon: Phone, type: "text" as const },
+              { label: "Nom d'utilisateur", value: username, set: setUsername, icon: User, required: true, type: "text" as const },
             ].map(({ label, value, set, icon: Icon, type = "text", required }) => (
               <div key={label} style={{ marginBottom: "16px" }}>
                 <label style={{ display: "block", fontSize: "14px", fontWeight: "500", color: darkText, marginBottom: "6px" }}>{label}</label>

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
-import { Clock, CheckCircle, LayoutDashboard, PlusCircle, Ticket as TicketIcon, ChevronLeft, ChevronRight, ChevronDown, Bell, Wrench, Monitor, Search, Send, CheckCircle2, Pencil, Trash2, RefreshCcw, FileText, UserCheck, Users, MessageCircle, BookOpen, Lightbulb, HelpCircle, ChevronRight as ChevronRightIcon } from "lucide-react";
+import { Clock, CheckCircle, LayoutDashboard, PlusCircle, Ticket as TicketIcon, ChevronLeft, ChevronRight, ChevronDown, Bell, Wrench, Monitor, Search, Send, CheckCircle2, Pencil, Trash2, RefreshCcw, FileText, UserCheck, Users, MessageCircle, BookOpen, Lightbulb, HelpCircle } from "lucide-react";
 import helpdeskLogo from "../assets/helpdesk-logo.png";
 
 interface UserDashboardProps {

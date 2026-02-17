@@ -3890,15 +3890,17 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
     
     // Attendre un court instant pour que la section soit rendue, puis charger les données
     // Utiliser requestAnimationFrame pour s'assurer que le DOM est prêt
+    const ticketId = notification.ticket_id;
+    if (!ticketId) return;
     requestAnimationFrame(async () => {
       // Charger d'abord la liste des tickets avec notifications
       await loadNotificationsTickets();
       
       // Ensuite charger les détails complets du ticket sélectionné
-      await loadTicketFullDetails(notification.ticket_id);
+      await loadTicketFullDetails(ticketId);
       
       // Marquer les notifications du ticket comme lues
-      await markTicketNotificationsAsRead(notification.ticket_id);
+      await markTicketNotificationsAsRead(ticketId);
     });
   }
 

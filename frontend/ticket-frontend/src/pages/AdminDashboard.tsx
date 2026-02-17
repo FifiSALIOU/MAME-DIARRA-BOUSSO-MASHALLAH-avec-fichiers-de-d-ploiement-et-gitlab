@@ -474,7 +474,7 @@ function AdminDashboard({ token }: AdminDashboardProps) {
   // La synchronisation avec l'URL se fait uniquement au montage ou si l'URL change depuis l'extérieur
   const activeSection = userRole === "Admin" ? activeSectionState : getActiveSectionFromPath();
   
-  const showTicketsPlaceholder = activeSection === "tickets" && !ticketsSectionReady;
+  const _showTicketsPlaceholder = activeSection === "tickets" && !ticketsSectionReady;
 
   // Afficher la section Tickets : d'abord "En chargement", puis le contenu au frame suivant (Admin)
   // Le chargement ne bloque pas la navigation - on peut changer de section même pendant "En chargement"

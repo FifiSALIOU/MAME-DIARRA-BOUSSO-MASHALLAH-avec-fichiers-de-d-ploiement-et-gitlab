@@ -302,7 +302,7 @@ function OrangeSelect({
 function TechnicianDashboard({ token }: TechnicianDashboardProps) {
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const [allTickets, setAllTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
@@ -373,7 +373,7 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
     name: string;
     type_code: string;
   }>>([]);
-  const [activePrioritiesForAssign, setActivePrioritiesForAssign] = useState<Array<{
+  const [_activePrioritiesForAssign, _setActivePrioritiesForAssign] = useState<Array<{
     id: number;
     code: string;
     label: string;

@@ -1,6 +1,6 @@
 # Dockerfile pour le frontend React/Vite
 # Étape 1 : Build
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
