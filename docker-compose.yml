@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: tickets_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Passer123}
+      POSTGRES_DB: ${POSTGRES_DB:-tickets_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tickets_network
+    restart: unless-stopped
+
+  # Backend FastAPI
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tickets_backend
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Passer123}
+      POSTGRES_DB: ${POSTGRES_DB:-tickets_db}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      SECRET_KEY: ${SECRET_KEY:-changez_moi_avec_une_cle_secrete_longue_et_aleatoire_123456789}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-true}
+      SMTP_SERVER: ${SMTP_SERVER:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SENDER_EMAIL: ${SENDER_EMAIL:-}
+      SENDER_NAME: ${SENDER_NAME:-Système de Gestion des Tickets}
+      USE_TLS: ${USE_TLS:-true}
+      VERIFY_SSL: ${VERIFY_SSL:-true}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174}
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tickets_network
+    restart: unless-stopped
+    command: >
+      sh -c "
+        python init_db.py || true &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+      "
+
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend/ticket-frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    container_name: tickets_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - tickets_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  tickets_network:
+    driver: bridge

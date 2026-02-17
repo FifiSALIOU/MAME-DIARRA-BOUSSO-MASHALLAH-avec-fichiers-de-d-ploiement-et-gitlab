@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+import os
 
 from .routers import auth, tickets, users, notifications, settings, ticket_config, assets, maintenance
 from .scheduler import run_scheduled_tasks
@@ -11,14 +12,16 @@ def create_app() -> FastAPI:
     app = FastAPI(title="Système de gestion des tickets")
 
     # Configuration CORS pour permettre les requêtes depuis le frontend
+    # Récupérer les origines depuis les variables d'environnement ou utiliser les valeurs par défaut
+    allowed_origins_str = os.getenv(
+        "ALLOWED_ORIGINS",
+        "http://localhost:5173,http://localhost:5174,http://127.0.0.1:5173,http://127.0.0.1:5174"
+    )
+    allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",")]
+    
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://localhost:5173",
-            "http://localhost:5174",
-            "http://127.0.0.1:5173",
-            "http://127.0.0.1:5174",
-        ],
+        allow_origins=allowed_origins,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
         allow_headers=["*"],

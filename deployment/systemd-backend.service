@@ -1,0 +1,28 @@
+# Service systemd pour le backend
+# À copier dans /etc/systemd/system/tickets-backend.service
+# Puis: sudo systemctl daemon-reload && sudo systemctl enable tickets-backend
+
+[Unit]
+Description=Tickets Backend API
+After=network.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/tickets-app/BARKI-MAME-DIARRA-BOUSSO/backend
+Environment="PATH=/opt/tickets-app/BARKI-MAME-DIARRA-BOUSSO/backend/venv/bin"
+EnvironmentFile=/opt/tickets-app/BARKI-MAME-DIARRA-BOUSSO/backend/.env
+ExecStart=/opt/tickets-app/BARKI-MAME-DIARRA-BOUSSO/backend/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Sécurité
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
