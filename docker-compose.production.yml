@@ -1,0 +1,74 @@
+# docker-compose pour la production - utilise les images du GitLab Container Registry
+# À utiliser sur la VM après avoir fait: docker login registry.gitlab.com
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: tickets_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init_db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tickets_network
+    restart: unless-stopped
+
+  backend:
+    image: ${REGISTRY_IMAGE_BACKEND}
+    container_name: tickets_backend
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      SECRET_KEY: ${SECRET_KEY}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-true}
+      SMTP_SERVER: ${SMTP_SERVER}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SENDER_EMAIL: ${SENDER_EMAIL}
+      SENDER_NAME: ${SENDER_NAME:-Système de Gestion des Tickets}
+      USE_TLS: ${USE_TLS:-true}
+      VERIFY_SSL: ${VERIFY_SSL:-true}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tickets_network
+    restart: unless-stopped
+
+  frontend:
+    image: ${REGISTRY_IMAGE_FRONTEND}
+    container_name: tickets_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - tickets_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  tickets_network:
+    driver: bridge
