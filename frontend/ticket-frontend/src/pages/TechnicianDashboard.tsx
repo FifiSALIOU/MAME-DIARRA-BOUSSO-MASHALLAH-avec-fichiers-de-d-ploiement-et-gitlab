@@ -2020,6 +2020,8 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                   ? "Tickets en cours"
                   : currentActiveSection === "tickets-resolus"
                   ? "Tickets Résolus"
+                  : currentActiveSection === "tickets-rejetes"
+                  ? "Tickets Relancés"
                   : "Tableau de bord"}
               </div>
               <div style={{ 
@@ -2039,6 +2041,8 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                   ? "Suivez et gérez vos tickets en cours de traitement"
                   : currentActiveSection === "tickets-resolus"
                   ? "Consultez l'historique de vos tickets résolus et clôturés"
+                  : currentActiveSection === "tickets-rejetes"
+                  ? "Tickets relancés nécessitant une nouvelle analyse et traitement"
                   : "Vue d'ensemble de votre activité"}
               </div>
             </div>
