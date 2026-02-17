@@ -2012,7 +2012,13 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                 color: "#111827",
                 fontFamily: "system-ui, -apple-system, sans-serif"
               }}>
-                {currentActiveSection === "notifications" ? "Notifications" : currentActiveSection === "actifs" ? "Gestion des Actifs" : "Tableau de bord"}
+                {currentActiveSection === "notifications" 
+                  ? "Notifications" 
+                  : currentActiveSection === "actifs" 
+                  ? "Gestion des Actifs" 
+                  : currentActiveSection === "tickets-en-cours"
+                  ? "Tickets en cours"
+                  : "Tableau de bord"}
               </div>
               <div style={{ 
                 fontSize: "13px", 
@@ -2027,6 +2033,8 @@ function TechnicianDashboard({ token }: TechnicianDashboardProps) {
                   ? `${unreadCount} notification${unreadCount > 1 ? "s" : ""} non lue${unreadCount > 1 ? "s" : ""}`
                   : currentActiveSection === "actifs"
                   ? "Gérez l'inventaire des équipements informatiques"
+                  : currentActiveSection === "tickets-en-cours"
+                  ? "Suivez et gérez vos tickets en cours de traitement"
                   : "Vue d'ensemble de votre activité"}
               </div>
             </div>
