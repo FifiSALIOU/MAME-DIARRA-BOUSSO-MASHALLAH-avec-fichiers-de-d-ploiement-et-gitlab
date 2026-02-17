@@ -7531,6 +7531,10 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                                   if (isAssignmentBySecretary) {
                                     return null;
                                   }
+                                  // Ne pas afficher le reason pour les réassignations par DSI
+                                  if (reason.includes("réassignation par dsi")) {
+                                    return null;
+                                  }
                                   // Si c'est une validation rejetée, extraire seulement "Motif: ..."
                                   let displayReason = h.reason || "";
                                   if (reason.includes("validation utilisateur: rejeté") && displayReason.includes("Motif:")) {
