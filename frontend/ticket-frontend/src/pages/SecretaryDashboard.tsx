@@ -1715,17 +1715,21 @@ function SecretaryDashboard({ token }: SecretaryDashboardProps) {
 
   // Charger types et catégories quand le modal de création de ticket s'ouvre
   useEffect(() => {
-    if (showCreateTicketModal && roleName === "Adjoint DSI" && token) {
+    if (showCreateTicketModal && (roleName === "Adjoint DSI" || roleName === "Secrétaire DSI") && token) {
       (async () => {
         try {
-          const [typesRes, categoriesRes, prioritiesRes] = await Promise.all([
+          const requests: Promise<Response>[] = [
             fetch("http://localhost:8000/ticket-config/types", { headers: { Authorization: `Bearer ${token}` } }),
             fetch("http://localhost:8000/ticket-config/categories", { headers: { Authorization: `Bearer ${token}` } }),
-            fetch("http://localhost:8000/ticket-config/priorities", { headers: { Authorization: `Bearer ${token}` } }),
-          ]);
-          if (typesRes.ok) setTicketTypes((await typesRes.json()) || []);
-          if (categoriesRes.ok) setCategoriesList((await categoriesRes.json()) || []);
-          if (prioritiesRes.ok) setActivePrioritiesForAssign((await prioritiesRes.json()) || []);
+          ];
+          // Charger les priorités seulement pour Adjoint DSI
+          if (roleName === "Adjoint DSI") {
+            requests.push(fetch("http://localhost:8000/ticket-config/priorities", { headers: { Authorization: `Bearer ${token}` } }));
+          }
+          const responses = await Promise.all(requests);
+          if (responses[0].ok) setTicketTypes((await responses[0].json()) || []);
+          if (responses[1].ok) setCategoriesList((await responses[1].json()) || []);
+          if (roleName === "Adjoint DSI" && responses[2]?.ok) setActivePrioritiesForAssign((await responses[2].json()) || []);
         } catch (e) {
           console.error("Erreur chargement types/catégories/priorités pour création:", e);
         }
@@ -4485,7 +4489,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
           <div style={{ fontSize: "16px", fontFamily: "'Inter', system-ui, sans-serif", fontWeight: "500" }}>Tableau de Bord</div>
         </div>
         
-        {roleName === "Adjoint DSI" && (
+        {(roleName === "Adjoint DSI" || roleName === "Secrétaire DSI") && (
         <div 
           onClick={() => setShowCreateTicketModal(true)}
           style={{ 
@@ -13827,25 +13831,32 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     ))}
                 </select>
               </div>
-              <div style={{ marginBottom: "16px" }}>
-                <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>Définir la priorité</label>
-                <select
-                  value={newTicketPriority}
-                  onChange={(e) => setNewTicketPriority(e.target.value)}
-                  disabled={loading}
-                  style={{ width: "100%", padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }}
-                >
-                  <option value="">Sélectionner une priorité...</option>
-                  {activePrioritiesForAssign
-                    .slice()
-                    .sort((a, b) => a.display_order - b.display_order)
-                    .map((p) => (
-                      <option key={p.id} value={p.code}>
-                        {p.label}
-                      </option>
-                    ))}
-                </select>
-              </div>
+              {roleName === "Secrétaire DSI" && (
+                <div style={{ marginBottom: "16px", padding: "10px 12px", background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "6px", fontSize: "14px", color: "#0c4a6e" }}>
+                  Note : La priorité du ticket sera définie par l'équipe DSI lors de l'assignation
+                </div>
+              )}
+              {roleName === "Adjoint DSI" && (
+                <div style={{ marginBottom: "16px" }}>
+                  <label style={{ display: "block", marginBottom: "4px", fontWeight: "500" }}>Définir la priorité</label>
+                  <select
+                    value={newTicketPriority}
+                    onChange={(e) => setNewTicketPriority(e.target.value)}
+                    disabled={loading}
+                    style={{ width: "100%", padding: "10px", border: "1px solid #ddd", borderRadius: "4px" }}
+                  >
+                    <option value="">Sélectionner une priorité...</option>
+                    {activePrioritiesForAssign
+                      .slice()
+                      .sort((a, b) => a.display_order - b.display_order)
+                      .map((p) => (
+                        <option key={p.id} value={p.code}>
+                          {p.label}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
               
               <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
                 <button 
