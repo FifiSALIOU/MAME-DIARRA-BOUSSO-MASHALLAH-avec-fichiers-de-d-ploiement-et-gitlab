@@ -1290,23 +1290,29 @@ Cordialement,
         to_email: str,
         full_name: str,
         username: str,
-        password: str
+        password: str,
+        role_name: str
     ) -> bool:
         """
         Envoie les identifiants de connexion à un nouvel utilisateur par email.
         """
         if not to_email or not to_email.strip():
             return False
+        login_url = f"{self.app_base_url}/login"
         subject = "Vos identifiants de connexion - HelpDesk"
         body = f"""Bonjour {full_name},
 
-Votre compte a été créé sur le système HelpDesk.
+Votre compte a été créé sur le système HelpDesk (Caisse de Sécurité Sociale).
+
+Type de compte : {role_name}
 
 Identifiants de connexion :
 - Nom d'utilisateur : {username}
 - Mot de passe : {password}
 
-Connectez-vous à l'application et modifiez votre mot de passe après la première connexion.
+Connectez-vous à l'application ici : {login_url}
+
+À votre première connexion, vous devrez réinitialiser ce mot de passe pour en définir un personnel.
 
 Cordialement,
 {self.sender_name}
@@ -1315,13 +1321,15 @@ Cordialement,
 <html>
 <body style="font-family: sans-serif; line-height: 1.6; color: #333;">
     <p>Bonjour <strong>{full_name}</strong>,</p>
-    <p>Votre compte a été créé sur le système HelpDesk.</p>
+    <p>Votre compte a été créé sur le système HelpDesk (Caisse de Sécurité Sociale).</p>
+    <p><strong>Type de compte :</strong> {role_name}</p>
     <p><strong>Identifiants de connexion :</strong></p>
     <ul>
         <li>Nom d'utilisateur : <code>{username}</code></li>
         <li>Mot de passe : <code>{password}</code></li>
     </ul>
-    <p>Connectez-vous à l'application et modifiez votre mot de passe après la première connexion.</p>
+    <p>Connectez-vous à l'application <a href="{login_url}">ici</a>.</p>
+    <p>À votre première connexion, vous devrez réinitialiser ce mot de passe pour en définir un personnel.</p>
     <p>Cordialement,<br>{self.sender_name}</p>
 </body>
 </html>

@@ -3,7 +3,7 @@ import secrets
 import string
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -262,6 +262,7 @@ def get_technician_stats(
 @router.post("/", response_model=schemas.UserRead)
 def create_user(
     user_in: schemas.UserCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(require_role("DSI", "Admin")),
 ):
@@ -289,18 +290,25 @@ def create_user(
             detail="Role not found"
         )
     
+    # Générer un mot de passe par défaut si non fourni
+    if user_in.password:
+        default_password = user_in.password
+    else:
+        default_password = secrets.token_urlsafe(10)  # mot de passe par défaut généré automatiquement
+    
     db_user = models.User(
         full_name=user_in.full_name,
         email=user_in.email,
         agency=user_in.agency,
         phone=user_in.phone,
         username=user_in.username,
-        password_hash=get_password_hash(user_in.password),
+        password_hash=get_password_hash(default_password),
         role_id=user_in.role_id,
         specialization=user_in.specialization,
         max_tickets_capacity=user_in.max_tickets_capacity,
         notes=user_in.notes,
-        actif=True
+        actif=True,
+        must_change_password=True  # Forcer le changement de mot de passe à la première connexion
     )
     db.add(db_user)
     db.commit()
@@ -309,17 +317,16 @@ def create_user(
     # Charger le rôle pour la réponse
     db_user.role = role
     
-    # Envoyer les identifiants par email si demandé
-    if getattr(user_in, "send_credentials_email", False):
-        try:
-            email_service.send_user_credentials(
-                to_email=db_user.email,
-                full_name=db_user.full_name,
-                username=user_in.username,
-                password=user_in.password,
-            )
-        except Exception as e:
-            print(f"[USERS] Envoi des identifiants par email échoué: {e}")
+    # Envoyer automatiquement l'email avec les identifiants
+    if user_in.email and user_in.email.strip():
+        background_tasks.add_task(
+            email_service.send_user_credentials,
+            to_email=user_in.email.strip(),
+            full_name=user_in.full_name,
+            username=user_in.username,
+            password=default_password,
+            role_name=role.name,
+        )
     
     return db_user
 

@@ -1038,11 +1038,6 @@ function AdminDashboard({ token }: AdminDashboardProps) {
     agency: "",
     role: "",
     actif: true,
-    password: "",
-    confirmPassword: "",
-    generateRandomPassword: true,
-    sendEmail: true,
-    // Par défaut : 08h-13h / 14h-17h avec une heure de pause déjeuner
   });
   const [editUser, setEditUser] = useState({
     full_name: "",
@@ -1256,13 +1251,6 @@ function AdminDashboard({ token }: AdminDashboardProps) {
     }
   };
 
-  const randomPassword = (length: number = 12) => {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-    let s = "";
-    for (let i = 0; i < length; i++) s += chars[Math.floor(Math.random() * chars.length)];
-    return s;
-  };
-
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
@@ -1276,20 +1264,6 @@ function AdminDashboard({ token }: AdminDashboardProps) {
       "DSI": "DSI",
       "Administrateur": "Admin"
     };
-
-    let password = newUser.password;
-    if (newUser.generateRandomPassword) {
-      password = randomPassword(12);
-    } else {
-      if (newUser.password !== newUser.confirmPassword) {
-        alert("Les mots de passe ne correspondent pas.");
-        return;
-      }
-      if (!newUser.password || newUser.password.length < 6) {
-        alert("Le mot de passe doit contenir au moins 6 caractères.");
-        return;
-      }
-    }
 
     const username = newUser.email.trim() || "user";
     const roleName = roleMap[newUser.role] || newUser.role;
@@ -1319,10 +1293,8 @@ function AdminDashboard({ token }: AdminDashboardProps) {
         agency: newUser.agency || null,
         phone: newUser.phone?.trim() || null,
         username,
-        password,
         role_id: role.id,
         specialization: newUser.role === "Technicien (Matériel)" ? "materiel" : newUser.role === "Technicien (Applicatif)" ? "applicatif" : null,
-        send_credentials_email: !!newUser.sendEmail
       };
 
       const res = await fetch("http://localhost:8000/users/", {
@@ -1350,18 +1322,8 @@ function AdminDashboard({ token }: AdminDashboardProps) {
           agency: "",
           role: "",
           actif: true,
-          password: "",
-          confirmPassword: "",
-          generateRandomPassword: true,
-          sendEmail: true
         });
-        if (newUser.sendEmail) {
-          alert(`Utilisateur créé avec succès.\n\nLes identifiants ont été envoyés par email à ${newUser.email.trim()}.`);
-        } else if (newUser.generateRandomPassword) {
-          alert(`Utilisateur créé avec succès.\n\nMot de passe généré : ${password}\n\nCopiez ce mot de passe et communiquez-le à l'utilisateur.`);
-        } else {
-          alert("Utilisateur créé avec succès !");
-        }
+        alert(`Utilisateur créé avec succès.\n\nLes identifiants ont été envoyés par email à ${newUser.email.trim()}.`);
       } else {
         const err = await res.json();
         let msg = "Impossible de créer l'utilisateur.";
@@ -10193,8 +10155,10 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                maxWidth: "480px",
                maxHeight: "90vh",
                overflowY: "auto",
+               overflowX: "visible",
                boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
-               padding: "24px"
+               padding: "24px",
+               position: "relative"
              }}
            >
              <div style={{ marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -10221,8 +10185,8 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                </button>
              </div>
 
-             <form onSubmit={handleCreateUser}>
-               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+             <form onSubmit={handleCreateUser} style={{ position: "relative" }}>
+               <div style={{ display: "flex", flexDirection: "column", gap: "16px", position: "relative" }}>
                  <div>
                    <label style={{ display: "block", marginBottom: "6px", fontSize: "14px", fontWeight: "500", color: "#374151" }}>
                      Nom complet <span style={{ color: "#dc3545" }}>*</span>
@@ -10265,7 +10229,7 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                      ))}
                    </select>
                  </div>
-                 <div>
+                 <div style={{ position: "relative", zIndex: 1001 }}>
                    <label style={{ display: "block", marginBottom: "6px", fontSize: "14px", fontWeight: "500", color: "#374151" }}>
                      Agence <span style={{ color: "#dc3545" }}>*</span>
                    </label>
@@ -10273,7 +10237,17 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                     required
                     value={newUser.agency}
                     onChange={(e) => setNewUser({ ...newUser, agency: e.target.value })}
-                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #e5e7eb", borderRadius: "8px", fontSize: "14px", backgroundColor: "white", cursor: "pointer" }}
+                    style={{ 
+                      width: "100%", 
+                      padding: "10px 12px", 
+                      border: "1px solid #e5e7eb", 
+                      borderRadius: "8px", 
+                      fontSize: "14px", 
+                      backgroundColor: "white", 
+                      cursor: "pointer",
+                      position: "relative",
+                      zIndex: 1001
+                    }}
                   >
                     <option value="">Sélectionner une agence</option>
                     {assetDepartments.filter(d => d.is_active).map((dept) => (
@@ -10307,74 +10281,22 @@ Les données détaillées seront disponibles dans une prochaine version.</pre>
                      <span>Actif</span>
                    </label>
                  </div>
-                 <div>
-                   <label style={{ display: "block", marginBottom: "6px", fontSize: "14px", fontWeight: "500", color: "#374151" }}>
-                     Mot de passe <span style={{ color: "#dc3545" }}>*</span>
-                   </label>
-                   <input
-                     type="password"
-                     required={!newUser.generateRandomPassword}
-                     disabled={newUser.generateRandomPassword}
-                     value={newUser.password}
-                     onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                     style={{ width: "100%", padding: "10px 12px", border: "1px solid #e5e7eb", borderRadius: "8px", fontSize: "14px", backgroundColor: newUser.generateRandomPassword ? "#f9fafb" : "white" }}
-                     placeholder="Mot de passe"
-                   />
-                 </div>
-                 <div>
-                   <label style={{ display: "block", marginBottom: "6px", fontSize: "14px", fontWeight: "500", color: "#374151" }}>
-                     Confirmer le mot de passe <span style={{ color: "#dc3545" }}>*</span>
-                   </label>
-                   <input
-                     type="password"
-                     required={!newUser.generateRandomPassword}
-                     disabled={newUser.generateRandomPassword}
-                     value={newUser.confirmPassword}
-                     onChange={(e) => setNewUser({ ...newUser, confirmPassword: e.target.value })}
-                     style={{ width: "100%", padding: "10px 12px", border: "1px solid #e5e7eb", borderRadius: "8px", fontSize: "14px", backgroundColor: newUser.generateRandomPassword ? "#f9fafb" : "white" }}
-                     placeholder="Confirmer le mot de passe"
-                   />
-                 </div>
-                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                   <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "14px", color: "#374151" }}>
-                     <input
-                       type="checkbox"
-                       checked={newUser.generateRandomPassword}
-                       onChange={(e) => setNewUser({ ...newUser, generateRandomPassword: e.target.checked })}
-                       style={{ cursor: "pointer" }}
-                     />
-                     <span>Générer un mot de passe aléatoire</span>
-                   </label>
-                   <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "14px", color: "#374151" }}>
-                     <input
-                       type="checkbox"
-                       checked={newUser.sendEmail}
-                       onChange={(e) => setNewUser({ ...newUser, sendEmail: e.target.checked })}
-                       style={{ cursor: "pointer" }}
-                     />
-                     <span>Envoyer les identifiants par email</span>
-                   </label>
-                 </div>
                </div>
 
                <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
                  <button
                    type="button"
-                   onClick={() => {
-                     setShowAddUserModal(false);
-                     setNewUser({
-                       full_name: "",
-                       email: "",
-                       phone: "",
-                       agency: "",
-                       role: "",
-                       actif: true,
-                       password: "",
-                       confirmPassword: "",
-                       generateRandomPassword: true,
-                       sendEmail: true,
-                     });
-                   }}
+                  onClick={() => {
+                    setShowAddUserModal(false);
+                    setNewUser({
+                      full_name: "",
+                      email: "",
+                      phone: "",
+                      agency: "",
+                      role: "",
+                      actif: true,
+                    });
+                  }}
                    style={{
                      padding: "10px 20px",
                      backgroundColor: "white",
