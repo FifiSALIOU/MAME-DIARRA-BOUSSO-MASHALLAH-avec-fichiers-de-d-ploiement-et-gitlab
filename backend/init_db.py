@@ -7,6 +7,37 @@ from app import models
 from app.security import get_password_hash
 from sqlalchemy import text
 
+
+def _table_exists(conn, table_name: str) -> bool:
+    """Vérifie si une table existe dans la base."""
+    result = conn.execute(
+        text(
+            "SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = :t"
+        ),
+        {"t": table_name},
+    )
+    return result.first() is not None
+
+
+def init_departments_table():
+    """Crée la table departments si elle n'existe pas (utilisée par /auth/register-info)."""
+    with engine.connect() as conn:
+        if _table_exists(conn, "departments"):
+            return
+        conn.execute(
+            text(
+                """
+                CREATE TABLE departments (
+                    id        SERIAL PRIMARY KEY,
+                    name      TEXT NOT NULL UNIQUE,
+                    is_active BOOLEAN NOT NULL DEFAULT TRUE
+                );
+                """
+            )
+        )
+        conn.commit()
+    print("OK - Table departments creee")
+
 def init_roles(db):
     """Crée les rôles par défaut"""
     roles_data = [
@@ -138,6 +169,9 @@ def main():
     print("\nCreation des tables...")
     Base.metadata.create_all(bind=engine)
     print("OK - Tables creees")
+
+    # Table departments (pour inscription publique /auth/register-info)
+    init_departments_table()
 
     # Initialiser les rôles
     print("\nCreation des roles...")

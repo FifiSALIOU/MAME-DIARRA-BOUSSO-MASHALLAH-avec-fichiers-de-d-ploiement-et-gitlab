@@ -1,8 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 import os
+import traceback
 
 from .routers import auth, tickets, users, notifications, settings, ticket_config, assets, maintenance
 from .scheduler import run_scheduled_tasks
@@ -10,6 +12,16 @@ from .scheduler import run_scheduled_tasks
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Système de gestion des tickets")
+
+    @app.exception_handler(Exception)
+    async def log_unhandled_exception(request: Request, exc: Exception):
+        """Log toute exception non gérée avec la trace pour faciliter le diagnostic des 500."""
+        tb = traceback.format_exc()
+        print(f"[500] Unhandled exception on {request.method} {request.url.path}\n{tb}")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error"},
+        )
 
     # Configuration CORS pour permettre les requêtes depuis le frontend
     # Récupérer les origines depuis les variables d'environnement ou utiliser les valeurs par défaut

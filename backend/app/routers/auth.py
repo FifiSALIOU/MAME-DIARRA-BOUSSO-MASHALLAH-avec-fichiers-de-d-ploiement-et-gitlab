@@ -36,10 +36,15 @@ def get_register_info(db: Session = Depends(get_db)):
             detail="Registration is not available",
         )
     # Liste des agences (départements actifs) pour le formulaire d'inscription
-    result = db.execute(
-        text("SELECT name FROM departments WHERE is_active = TRUE ORDER BY name ASC")
-    )
-    agencies = [row[0] for row in result.fetchall()]
+    agencies: List[str] = []
+    try:
+        result = db.execute(
+            text("SELECT name FROM departments WHERE is_active = TRUE ORDER BY name ASC")
+        )
+        agencies = [row[0] for row in result.fetchall()]
+    except Exception:
+        # Table departments peut ne pas exister si init_db n'a pas été réexécuté après mise à jour
+        pass
     return schemas.RegisterInfo(default_role_id=role.id, agencies=agencies)
 
 
