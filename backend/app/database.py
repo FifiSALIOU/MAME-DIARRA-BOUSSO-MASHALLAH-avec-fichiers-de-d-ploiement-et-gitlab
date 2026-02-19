@@ -8,17 +8,22 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
-POSTGRES_USER = os.getenv("POSTGRES_USER", "tickets_user")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "password")
-POSTGRES_DB = os.getenv("POSTGRES_DB", "tickets_db")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
-
-DATABASE_URL = (
-    f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}"
-    f"@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
-)
+# Render et d'autres plateformes fournissent une seule variable DATABASE_URL
+# Sinon on construit l'URL à partir des variables POSTGRES_*
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    POSTGRES_USER = os.getenv("POSTGRES_USER", "tickets_user")
+    POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "password")
+    POSTGRES_DB = os.getenv("POSTGRES_DB", "tickets_db")
+    POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
+    POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
+    DATABASE_URL = (
+        f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}"
+        f"@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
+    )
+# Certains hébergeurs (ex. Render) utilisent "postgres://" ; SQLAlchemy attend "postgresql://"
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # Ajouter un timeout de connexion pour éviter les blocages
 engine = create_engine(
