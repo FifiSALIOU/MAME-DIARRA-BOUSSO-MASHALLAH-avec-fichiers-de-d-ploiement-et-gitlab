@@ -46,7 +46,7 @@ services:
       SENDER_NAME: ${SENDER_NAME:-Système de Gestion des Tickets}
       USE_TLS: ${USE_TLS:-true}
       VERIFY_SSL: ${VERIFY_SSL:-true}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174,http://localhost:3000}
     volumes:
       - ./backend:/app
     ports:
