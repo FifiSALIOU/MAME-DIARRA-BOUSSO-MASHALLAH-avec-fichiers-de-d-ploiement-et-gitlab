@@ -44,6 +44,10 @@ ENV/
 *.sqlite
 *.sqlite3
 
+# Sauvegardes (ne pas versionner les dumps)
+backups/
+*.sql.gz
+
 # Logs
 *.log
 logs/
