@@ -26,10 +26,10 @@ Ce guide explique **comment déployer l’application sur une machine (VM ou ser
 2. Allez dans **Deploy** → **Container registry** (ou **Packages & Registries** → **Container Registry**).
 3. Vous voyez les dépôts **backend** et **frontend**.
 4. Cliquez sur **CLI commands** (bouton en haut à droite) pour afficher les commandes de connexion et de pull.
-5. Notez les chemins complets des images, du type :
-   - `registry.gitlab.com/VOTRE-GROUPE/barki-mame-diarra-bousso/backend:latest`
-   - `registry.gitlab.com/VOTRE-GROUPE/barki-mame-diarra-bousso/frontend:latest`  
-   Remplacez **VOTRE-GROUPE** par le nom réel du groupe ou de l’utilisateur GitLab (par ex. si l’URL du projet est `gitlab.com/mon-groupe/barki-mame-diarra-bousso`, alors VOTRE-GROUPE = `mon-groupe`).
+5. Notez les chemins complets des images. **On n’utilise plus le tag `latest`** : le tag est le nom de la branche (**ref slug**), par ex. `main` pour la production, `dev` pour la branche de développement :
+   - `registry.gitlab.com/VOTRE-GROUPE/barki-mame-diarra-bousso/backend:main` (ou `:dev`)
+   - `registry.gitlab.com/VOTRE-GROUPE/barki-mame-diarra-bousso/frontend:main` (ou `:dev`)  
+   Remplacez **VOTRE-GROUPE** par le nom réel du groupe. Utilisez **:main** pour la prod, **:dev** pour la branche dev.
 
 ---
 
@@ -131,9 +131,9 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=ChoisirUnMotDePasseSecurise
 POSTGRES_DB=tickets_db
 
-# Images du GitLab Container Registry (remplacer VOTRE-GROUPE par votre groupe GitLab)
-REGISTRY_IMAGE_BACKEND=registry.gitlab.com/VOTRE-GROUPE/barki-mame-diarra-bousso/backend:latest
-REGISTRY_IMAGE_FRONTEND=registry.gitlab.com/VOTRE-GROUPE/barki-mame-diarra-bousso/frontend:latest
+# Images du GitLab Container Registry : tag = branche (main pour prod, dev pour dev), pas "latest"
+REGISTRY_IMAGE_BACKEND=registry.gitlab.com/VOTRE-GROUPE/barki-mame-diarra-bousso/backend:main
+REGISTRY_IMAGE_FRONTEND=registry.gitlab.com/VOTRE-GROUPE/barki-mame-diarra-bousso/frontend:main
 
 # Backend
 SECRET_KEY=generer_une_cle_longue_aleatoire

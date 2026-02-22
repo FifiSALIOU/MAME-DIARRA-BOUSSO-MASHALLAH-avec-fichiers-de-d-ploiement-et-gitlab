@@ -54,10 +54,11 @@ variables:
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
   # Préfixe des images dans le GitLab Container Registry
-  BACKEND_IMAGE: $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
-  FRONTEND_IMAGE: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA
-  BACKEND_IMAGE_LATEST: $CI_REGISTRY_IMAGE/backend:latest
-  FRONTEND_IMAGE_LATEST: $CI_REGISTRY_IMAGE/frontend:latest
+  BACKEND_IMAGE: $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG
+  FRONTEND_IMAGE: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG
+  BACKEND_IMAGE_LATEST: $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_REF_SLUG
+  FRONTEND_IMAGE_LATEST: $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_REF_SLUG
+  # Tag = ref slug (main, dev, etc.), pas "latest"
 
 # Build et push de l'image backend
 build-backend:
@@ -145,11 +146,9 @@ votre-repo/
 Une fois le pipeline exécuté avec succès :
 
 1. Aller dans **Deploy** → **Container Registry** de votre projet
-2. Les images apparaissent :
-   - `registry.gitlab.com/votre-groupe/votre-projet/backend:latest`
-   - `registry.gitlab.com/votre-groupe/votre-projet/backend:<commit-sha>`
-   - `registry.gitlab.com/votre-groupe/votre-projet/frontend:latest`
-   - `registry.gitlab.com/votre-groupe/votre-projet/frontend:<commit-sha>`
+2. Les images apparaissent avec le **tag = nom de la branche** (ref slug), pas `latest` : ex. **:main** ou **:dev** :
+   - `registry.gitlab.com/votre-groupe/votre-projet/backend:main`
+   - `registry.gitlab.com/votre-groupe/votre-projet/frontend:main`
 
 ### Activer le Container Registry
 
@@ -195,7 +194,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: ${REGISTRY_IMAGE_BACKEND:-registry.gitlab.com/votre-groupe/votre-projet/backend:latest}
+    image: ${REGISTRY_IMAGE_BACKEND:-registry.gitlab.com/votre-groupe/votre-projet/backend:main}
     container_name: tickets_backend
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -225,7 +224,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ${REGISTRY_IMAGE_FRONTEND:-registry.gitlab.com/votre-groupe/votre-projet/frontend:latest}
+    image: ${REGISTRY_IMAGE_FRONTEND:-registry.gitlab.com/votre-groupe/votre-projet/frontend:main}
     container_name: tickets_frontend
     ports:
       - "3000:80"
@@ -281,9 +280,9 @@ VERIFY_SSL=true
 # CORS - URL publique du frontend
 ALLOWED_ORIGINS=https://votre-domaine.com,http://IP_VM:3000
 
-# Images du registry (optionnel si vous utilisez les valeurs par défaut)
-REGISTRY_IMAGE_BACKEND=registry.gitlab.com/votre-groupe/votre-projet/backend:latest
-REGISTRY_IMAGE_FRONTEND=registry.gitlab.com/votre-groupe/votre-projet/frontend:latest
+# Images du registry : tag = branche (main pour prod, dev pour dev), pas "latest"
+REGISTRY_IMAGE_BACKEND=registry.gitlab.com/votre-groupe/votre-projet/backend:main
+REGISTRY_IMAGE_FRONTEND=registry.gitlab.com/votre-groupe/votre-projet/frontend:main
 ```
 
 ### 5.5 Lancer le déploiement sur la VM
